@@ -1,5 +1,6 @@
 import React from 'react';
 import mainimage from './images/ePrescribing-Market-Website-1-New-e1652693967748.jpg';
+import logo from '../Main_Interface_UI/images/logo.png';
 
 function App() {
   return (
@@ -7,7 +8,7 @@ function App() {
       {/* Header */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 50px', borderBottom: '1px solid #eee' }}>
         <div>
-          <img src="./images/logo.png" alt="E-Prescribe Logo" style={{ height: '30px' }} /> {/* Replace with your actual logo path */}
+        <img src={logo} alt="E-Prescribe Logo" style={{ height: '10px' }} />
         </div>
         <nav>
           <ul style={{ listStyle: 'none', display: 'flex', gap: '20px', margin: 0, padding: 0 }}>
