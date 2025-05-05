@@ -1,5 +1,5 @@
 import React from 'react';
-import mainimage from './images/Main_img_01.jpeg';
+import mainimage from './images/ePrescribing-Market-Website-1-New-e1652693967748.jpg';
 
 function App() {
   return (
@@ -7,7 +7,7 @@ function App() {
       {/* Header */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 50px', borderBottom: '1px solid #eee' }}>
         <div>
-          <img src="/logo.png" alt="E-Prescribe Logo" style={{ height: '30px' }} /> {/* Replace with your actual logo path */}
+          <img src="./images/logo.png" alt="E-Prescribe Logo" style={{ height: '30px' }} /> {/* Replace with your actual logo path */}
         </div>
         <nav>
           <ul style={{ listStyle: 'none', display: 'flex', gap: '20px', margin: 0, padding: 0 }}>
@@ -31,8 +31,8 @@ function App() {
     src={mainimage}
     alt="Medical Dashboard"
     style={{
-      width: '1000px',
-      height: '400px',
+      width: 'fitted',
+      height: 'fitted',
       objectFit: 'contain',
       marginLeft: '20px', // Adjust as needed for more spacing from the very left
     }}
