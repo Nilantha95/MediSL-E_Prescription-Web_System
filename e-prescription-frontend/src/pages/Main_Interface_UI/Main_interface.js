@@ -1,5 +1,5 @@
 import React from 'react';
-import mainImage from './Images/Main_img_01.jpeg';
+import mainimage from './images/Main_img_01.jpeg';
 
 function App() {
   return (
@@ -28,10 +28,10 @@ function App() {
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
   <img
-    src={mainImage}
+    src={mainimage}
     alt="Medical Dashboard"
     style={{
-      width: '500px',
+      width: '1000px',
       height: '400px',
       objectFit: 'contain',
       marginLeft: '20px', // Adjust as needed for more spacing from the very left
