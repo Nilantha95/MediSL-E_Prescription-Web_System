@@ -1,6 +1,17 @@
 import React from 'react';
-import mainimage from './images/ePrescribing-Market-Website-1-New-e1652693967748.jpg';
+//import mainimage from './images/ePrescribing-Market-Website-1-New-e1652693967748.jpg';
 import logo from '../Main_Interface_UI/images/Logo_02.png';
+import doc from '../Main_Interface_UI/images/Doctor.png';
+import patient from './images/Patient.png';
+import phar from './images/pharmacist.png';
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css"; 
+import "slick-carousel/slick/slick-theme.css";
+import slide1 from './images/ePrescribing-Market-Website-1-New-e1652693967748.jpg';
+import slide2 from './images/ePrescribing-Market-Website-1-New-e1652693967748.jpg';
+import slide3 from './images/ePrescribing-Market-Website-1-New-e1652693967748.jpg';
+
+
 
 function App() {
   return (
@@ -27,18 +38,33 @@ function App() {
           <p style={{ fontSize: '1em', color: '#555', lineHeight: '1.6' }}>Streamline your healthcare experience with our secure e-prescription platform connecting patients, doctors, and pharmacists.</p>
           <button style={{ padding: '15px 30px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', marginTop: '30px' }}>Get Started</button>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-  <img
-    src={mainimage}
-    alt="Medical Dashboard"
-    style={{
-      width: 'fitted',
-      height: 'fitted',
-      objectFit: 'contain',
-      marginLeft: '20px', // Adjust as needed for more spacing from the very left
-    }}
-  />
-</div>
+        <div style={{ width: '500px', marginLeft: '20px' }}>
+            <Slider
+              dots={true}
+              infinite={true}
+              speed={500}
+              slidesToShow={1}
+              slidesToScroll={1}
+              autoplay={true}
+              autoplaySpeed={3000}
+            >
+                  {[slide1, slide2, slide3].map((img, idx) => (
+                    <div key={idx}>
+                      <img
+                        src={img}
+                        alt={`Slide ${idx + 1}`}
+                        style={{
+                          width: '100%',
+                          height: 'auto',
+                          objectFit: 'contain',
+                          borderRadius: '10px'
+                        }}
+                      />
+                    </div>
+                ))}
+              </Slider>
+            </div>
+
      </section>
 
       {/* Why Choose E-Prescribe? Section */}
@@ -46,17 +72,39 @@ function App() {
         <h2 style={{ fontSize: '2em', fontWeight: 'bold', color: '#333', textAlign: 'center', marginBottom: '40px' }}>Why Choose E-Prescribe?</h2>
         <div style={{ display: 'flex', justifyContent: 'space-around', gap: '30px' }}>
           <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', textAlign: 'center' }}>
-            <img src="/doctor_icon.png" alt="For Doctors" style={{ height: '40px', marginBottom: '10px' }} /> {/* Replace with your actual icon path */}
+          <img 
+            src={doc} 
+            alt="For Doctors" 
+            style={{ 
+                    height: '100px', 
+                    marginBottom: '10px', 
+                    borderRadius: '100%' 
+                  }} 
+/> {/* Replace with your actual icon path */}
             <h3 style={{ fontSize: '1.2em', fontWeight: 'bold', color: '#333', marginBottom: '10px' }}>For Doctors</h3>
             <p style={{ fontSize: '0.9em', color: '#555', lineHeight: '1.4' }}>Easily create and manage digital prescriptions, access patient history, and ensure accurate medication details.</p>
           </div>
           <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', textAlign: 'center' }}>
-            <img src="/patient_icon.png" alt="For Patients" style={{ height: '40px', marginBottom: '10px' }} /> {/* Replace with your actual icon path */}
+          <img 
+            src={patient} 
+            alt="For Doctors" 
+            style={{ 
+                    height: '100px', 
+                    marginBottom: '10px', 
+                    borderRadius: '100%' 
+                  }} />
             <h3 style={{ fontSize: '1.2em', fontWeight: 'bold', color: '#333', marginBottom: '10px' }}>For Patients</h3>
             <p style={{ fontSize: '0.9em', color: '#555', lineHeight: '1.4' }}>Access your prescriptions anywhere, receive medication reminders, and share records securely with healthcare providers.</p>
           </div>
           <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', textAlign: 'center' }}>
-            <img src="/pharmacist_icon.png" alt="For Pharmacists" style={{ height: '40px', marginBottom: '10px' }} /> {/* Replace with your actual icon path */}
+            <img 
+            src={phar} 
+            alt="For Doctors" 
+            style={{ 
+                    height: '100px', 
+                    marginBottom: '10px', 
+                    borderRadius: '100%' 
+                  }} />
             <h3 style={{ fontSize: '1.2em', fontWeight: 'bold', color: '#333', marginBottom: '10px' }}>For Pharmacists</h3>
             <p style={{ fontSize: '0.9em', color: '#555', lineHeight: '1.4' }}>Process prescriptions efficiently, reduce errors, and maintain digital records of dispensed medications.</p>
           </div>
