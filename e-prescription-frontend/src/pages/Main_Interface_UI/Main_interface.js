@@ -7,9 +7,9 @@ import phar from './images/pharmacist.png';
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css"; 
 import "slick-carousel/slick/slick-theme.css";
-import slide1 from './images/ePrescribing-Market-Website-1-New-e1652693967748.jpg';
-import slide2 from './images/ePrescribing-Market-Website-1-New-e1652693967748.jpg';
-import slide3 from './images/ePrescribing-Market-Website-1-New-e1652693967748.jpg';
+import slide1 from './images/slide01.png';
+import slide2 from './images/slide02.jpg';
+import slide3 from './images/slide03.png';
 
 
 
