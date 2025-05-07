@@ -1,35 +1,83 @@
 import React from 'react';
-//import mainimage from './images/ePrescribing-Market-Website-1-New-e1652693967748.jpg';
 import logo from '../Main_Interface_UI/images/Logo_02.png';
 import doc from '../Main_Interface_UI/images/Doctor.png';
 import patient from './images/Patient.png';
 import phar from './images/pharmacist.png';
 import Slider from "react-slick";
-import "slick-carousel/slick/slick.css"; 
+import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import slide1 from './images/slide01.png';
 import slide2 from './images/slide02.png';
 import slide3 from './images/slide03.png';
-
-
+import user1 from './images/aboutdoc.png';
+import user2 from './images/phar.png';
+import { FaFacebookF, FaTwitter} from 'react-icons/fa';
+import { IoIosArrowForward, IoIosArrowDown } from 'react-icons/io';
+import { FaPhoneAlt } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 function App() {
   return (
     <div style={{ fontFamily: 'sans-serif' }}>
       {/* Header */}
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 50px', borderBottom: '1px solid #eee' }}>
-        <div>
-        <img src={logo} alt="E-Prescribe Logo" style={{ height: '50px' }} />
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 50px', backgroundColor: '#f8f8f8' }}>
+        {/* Left Section: Logo and Team Name (Adjusted for E-Prescribe) */}
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <img src={logo} alt="E-Prescribe Logo" style={{ height: '40px', marginRight: '10px' }} />
+          <div>
+            <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#333' }}>E-Prescribe</h1>
+            <p style={{ margin: 0, fontSize: '12px', color: '#777' }}>Digital Healthcare</p>
+          </div>
         </div>
-        <nav>
-          <ul style={{ listStyle: 'none', display: 'flex', gap: '20px', margin: 0, padding: 0 }}>
-            <li><a href="/" style={{ textDecoration: 'none', color: '#333' }}>Home</a></li>
-            <li><a href="/about" style={{ textDecoration: 'none', color: '#333' }}>About Us</a></li>
-            <li><a href="/contact" style={{ textDecoration: 'none', color: '#333' }}>Contact</a></li>
-          </ul>
-        </nav>
-        <button style={{ padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Login</button>
+
+        {/* Right Section: Contact Info and Register Button */}
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginRight: '20px', color: '#007bff' }}>
+            <FaPhoneAlt style={{ marginRight: '5px' }} />
+            <span>+94 (011) 519-51919</span>
+          </div>
+          <Link to="/register" style={{ textDecoration: 'none' }}> {/* Use Link instead of button */}
+            <div
+              style={{
+                padding: '10px 20px',
+                border: '1px solid #ddd',
+                borderRadius: '20px',
+                backgroundColor: 'transparent',
+                color: '#007bff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              <span>REGISTER</span>
+              <IoIosArrowForward style={{ marginLeft: '5px' }} />
+            </div>
+          </Link>
+        </div>
       </header>
+
+      {/* Navigation Bar */}
+      <nav style={{ backgroundColor: '#fff', borderBottom: '1px solid #eee', padding: '15px 50px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <ul style={{ listStyle: 'none', display: 'flex', gap: '30px', margin: 0, padding: 0 }}>
+          <li><a href="/" style={{ textDecoration: 'none', color: '#333', fontSize: '14px', fontWeight: 'bold' }}>HOME</a></li>
+          <li><a href="/features" style={{ textDecoration: 'none', color: '#333', fontSize: '14px', fontWeight: 'bold' }}>FEATURES</a></li>
+          <li><a href="/doctors" style={{ textDecoration: 'none', color: '#333', fontSize: '14px', fontWeight: 'bold' }}>DOCTORS</a></li>
+          <li><a href="/patients" style={{ textDecoration: 'none', color: '#333', fontSize: '14px', fontWeight: 'bold' }}>PATIENTS</a></li>
+          <li style={{ position: 'relative' }}>
+            <a href="/pages" style={{ textDecoration: 'none', color: '#333', fontSize: '14px', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
+              PAGES <IoIosArrowDown style={{ marginLeft: '5px' }} />
+            </a>
+            {/* Add dropdown menu here if needed */}
+          </li>
+          <li><a href="/blog" style={{ textDecoration: 'none', color: '#333', fontSize: '14px', fontWeight: 'bold' }}>BLOG</a></li>
+          <li><a href="/contact" style={{ textDecoration: 'none', color: '#333', fontSize: '14px', fontWeight: 'bold' }}>CONTACT</a></li>
+        </ul>
+        <div style={{ display: 'flex', gap: '15px', color: '#ccc' }}>
+          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" style={{ color: '#007bff' }}><FaFacebookF /></a>
+          <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" style={{ color: '#1da1f2' }}><FaTwitter /></a>
+          {/* Add other social media icons as needed */}
+        </div>
+      </nav>
 
       {/* Hero Section */}
       <section style={{ padding: '80px 50px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -39,72 +87,71 @@ function App() {
           <button style={{ padding: '15px 30px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', marginTop: '30px' }}>Get Started</button>
         </div>
         <div style={{ width: '500px', marginLeft: '20px' }}>
-            <Slider
-              dots={true}
-              infinite={true}
-              speed={500}
-              slidesToShow={1}
-              slidesToScroll={1}
-              autoplay={true}
-              autoplaySpeed={3000}
-            >
-                  {[slide1, slide2, slide3].map((img, idx) => (
-                    <div key={idx}>
-                      <img
-                        src={img}
-                        alt={`Slide ${idx + 1}`}
-                        style={{
-                          width: '100%',
-                          height: 'auto',
-                          objectFit: 'contain',
-                          borderRadius: '10px'
-                        }}
-                      />
-                    </div>
-                ))}
-              </Slider>
-            </div>
-
-     </section>
+          <Slider
+            dots={true}
+            infinite={true}
+            speed={500}
+            slidesToShow={1}
+            slidesToScroll={1}
+            autoplay={true}
+            autoplaySpeed={3000}
+          >
+            {[slide1, slide2, slide3].map((img, idx) => (
+              <div key={idx}>
+                <img
+                  src={img}
+                  alt={`Slide ${idx + 1}`}
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    objectFit: 'contain',
+                    borderRadius: '10px'
+                  }}
+                />
+              </div>
+            ))}
+          </Slider>
+        </div>
+      </section>
 
       {/* Why Choose E-Prescribe? Section */}
       <section style={{ padding: '60px 50px', backgroundColor: '#f9f9f9' }}>
         <h2 style={{ fontSize: '2em', fontWeight: 'bold', color: '#333', textAlign: 'center', marginBottom: '40px' }}>Why Choose E-Prescribe?</h2>
         <div style={{ display: 'flex', justifyContent: 'space-around', gap: '30px' }}>
           <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', textAlign: 'center' }}>
-          <img 
-            src={doc} 
-            alt="For Doctors" 
-            style={{ 
-                    height: '100px', 
-                    marginBottom: '10px', 
-                    borderRadius: '100%' 
-                  }} 
-/> {/* Replace with your actual icon path */}
+            <img
+              src={doc}
+              alt="For Doctors"
+              style={{
+                height: '100px',
+                marginBottom: '10px',
+                borderRadius: '100%'
+              }}
+            /> {/* Replace with your actual icon path */}
             <h3 style={{ fontSize: '1.2em', fontWeight: 'bold', color: '#333', marginBottom: '10px' }}>For Doctors</h3>
             <p style={{ fontSize: '0.9em', color: '#555', lineHeight: '1.4' }}>Easily create and manage digital prescriptions, access patient history, and ensure accurate medication details.</p>
           </div>
           <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', textAlign: 'center' }}>
-          <img 
-            src={patient} 
-            alt="For Doctors" 
-            style={{ 
-                    height: '100px', 
-                    marginBottom: '10px', 
-                    borderRadius: '100%' 
-                  }} />
+            <img
+              src={patient}
+              alt="For Patients"
+              style={{
+                height: '100px',
+                marginBottom: '10px',
+                borderRadius: '100%'
+              }} />
             <h3 style={{ fontSize: '1.2em', fontWeight: 'bold', color: '#333', marginBottom: '10px' }}>For Patients</h3>
             <p style={{ fontSize: '0.9em', color: '#555', lineHeight: '1.4' }}>Access your prescriptions anywhere, receive medication reminders, and share records securely with healthcare providers.</p>
           </div>
           <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', textAlign: 'center' }}>
-            <img 
-            src={phar} 
-            alt="For Doctors" 
-            style={{ 
-                    height: '100px', 
-                    marginBottom: '10px', 
-                    borderRadius: '100%' 
-                  }} />
+            <img
+              src={phar}
+              alt="For Pharmacists"
+              style={{
+                height: '100px',
+                marginBottom: '10px',
+                borderRadius: '100%'
+              }} />
             <h3 style={{ fontSize: '1.2em', fontWeight: 'bold', color: '#333', marginBottom: '10px' }}>For Pharmacists</h3>
             <p style={{ fontSize: '0.9em', color: '#555', lineHeight: '1.4' }}>Process prescriptions efficiently, reduce errors, and maintain digital records of dispensed medications.</p>
           </div>
@@ -117,9 +164,9 @@ function App() {
         <div style={{ display: 'flex', justifyContent: 'space-around', gap: '30px' }}>
           <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
-              <img src="/user1.png" alt="Dr. Sarah Johnson" style={{ height: '50px', width: '50px', borderRadius: '50%', marginRight: '15px', objectFit: 'cover' }} /> {/* Replace with your actual image path */}
+              <img src={user1} alt="Dr. John Cena" style={{ height: '80px', width: '80px', borderRadius: '50%', marginRight: '15px', objectFit: 'cover' }} /> {/* Replace with your actual image path */}
               <div>
-                <h4 style={{ fontSize: '1em', fontWeight: 'bold', color: '#333', marginBottom: '5px' }}>Dr. Sarah Johnson</h4>
+                <h4 style={{ fontSize: '1em', fontWeight: 'bold', color: '#333', marginBottom: '5px' }}>Dr. John Cena</h4>
                 <p style={{ fontSize: '0.8em', color: '#777' }}>General Practitioner</p>
               </div>
             </div>
@@ -127,9 +174,9 @@ function App() {
           </div>
           <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
-              <img src="/user2.png" alt="Michael Chen" style={{ height: '50px', width: '50px', borderRadius: '50%', marginRight: '15px', objectFit: 'cover' }} /> {/* Replace with your actual image path */}
+              <img src={user2} alt="Menoli Silva" style={{ height: '80px', width: '80px', borderRadius: '80%', marginRight: '15px', objectFit: 'cover' }} /> {/* Replace with your actual image path */}
               <div>
-                <h4 style={{ fontSize: '1em', fontWeight: 'bold', color: '#333', marginBottom: '5px' }}>Michael Chen</h4>
+                <h4 style={{ fontSize: '1em', fontWeight: 'bold', color: '#333', marginBottom: '5px' }}>Menoli Silva</h4>
                 <p style={{ fontSize: '0.8em', color: '#777' }}>Pharmacist</p>
               </div>
             </div>
@@ -148,7 +195,7 @@ function App() {
           <h4 style={{ marginBottom: '15px' }}>Quick Links</h4>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
             <li><a href="/" style={{ textDecoration: 'none', color: '#eee' }}>Home</a></li>
-            <li><a href="/about" style={{ textDecoration: 'none', color: '#eee' }}>About Us</a></li>
+            <li><a href="/features" style={{ textDecoration: 'none', color: '#eee' }}>Features</a></li>
             <li><a href="/contact" style={{ textDecoration: 'none', color: '#eee' }}>Contact</a></li>
           </ul>
         </div>
@@ -159,11 +206,10 @@ function App() {
         </div>
         <div>
           <h4 style={{ marginBottom: '15px' }}>Follow Us</h4>
-          {/* Add social media icons here */}
-          <div>
-            <a href="/" style={{ color: '#eee', marginRight: '10px' }}>{/* Facebook Icon */}</a>
-            <a href="/" style={{ color: '#eee', marginRight: '10px' }}>{/* Twitter Icon */}</a>
-            <a href="/" style={{ color: '#eee' }}>{/* LinkedIn Icon */}</a>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <a href="https://facebook.com" style={{ color: '#eee' }}><FaFacebookF size={20} /></a>
+            <a href="https://twitter.com" style={{ color: '#eee' }}><FaTwitter size={20} /></a>
+            {/* Add other social media icons as needed */}
           </div>
         </div>
       </footer>
