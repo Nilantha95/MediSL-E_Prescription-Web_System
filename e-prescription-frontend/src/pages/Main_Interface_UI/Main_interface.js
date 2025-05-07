@@ -8,7 +8,7 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css"; 
 import "slick-carousel/slick/slick-theme.css";
 import slide1 from './images/slide01.png';
-import slide2 from './images/slide02.jpg';
+import slide2 from './images/slide02.png';
 import slide3 from './images/slide03.png';
 
 
