@@ -11,7 +11,7 @@ import slide2 from './images/slide02.png';
 import slide3 from './images/slide03.png';
 import user1 from './images/aboutdoc.png';
 import user2 from './images/phar.png';
-import { FaFacebookF, FaTwitter} from 'react-icons/fa';
+import { FaFacebookF, FaTwitter, FaInstagram, FaPinterest, FaWhatsapp} from 'react-icons/fa';
 import { IoIosArrowForward, IoIosArrowDown } from 'react-icons/io';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
@@ -186,38 +186,158 @@ function App() {
       </section>
 
       {/* Footer */}
-      <footer style={{ backgroundColor: '#222', color: 'white', padding: '40px 50px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', fontSize: '0.9em' }}>
-        <div>
-          <h4 style={{ marginBottom: '15px' }}>E-Prescribe</h4>
-          <p>Making healthcare more accessible and efficient through digital solutions.</p>
-        </div>
-        <div>
-          <h4 style={{ marginBottom: '15px' }}>Quick Links</h4>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            <li><a href="/" style={{ textDecoration: 'none', color: '#eee' }}>Home</a></li>
-            <li><a href="/features" style={{ textDecoration: 'none', color: '#eee' }}>Features</a></li>
-            <li><a href="/contact" style={{ textDecoration: 'none', color: '#eee' }}>Contact</a></li>
+      <footer style={footerStyle}>
+      <div style={containerStyle}>
+        <div style={sectionStyle}>
+          <h3 style={headingStyle}>Shop Matcha</h3>
+          <ul style={listStyle}>
+            <li style={listItemStyle}>Starter Kits</li>
+            <li style={listItemStyle}>Lattes & Sweetened</li>
+            <li style={listItemStyle}>Just the Matcha</li>
+            <li style={listItemStyle}>Matchaware</li>
+            <li style={listItemStyle}>Shop All</li>
           </ul>
         </div>
-        <div>
-          <h4 style={{ marginBottom: '15px' }}>Contact Us</h4>
-          <p>Email: <a href="mailto:info@eprescribe.com" style={{ color: '#eee', textDecoration: 'none' }}>info@eprescribe.com</a></p>
-          <p>Phone: +1 (555) 123-4567</p>
+
+        <div style={sectionStyle}>
+          <h3 style={headingStyle}>Learn</h3>
+          <ul style={listStyle}>
+            <li style={listItemStyle}>Our Story</li>
+            <li style={listItemStyle}>Matcha Recipes</li>
+            <li style={listItemStyle}>Caffeine Content</li>
+            <li style={listItemStyle}>Health Benefits</li>
+            <li style={listItemStyle}>FAQ's</li>
+          </ul>
         </div>
-        <div>
-          <h4 style={{ marginBottom: '15px' }}>Follow Us</h4>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <a href="https://facebook.com" style={{ color: '#eee' }}><FaFacebookF size={20} /></a>
-            <a href="https://twitter.com" style={{ color: '#eee' }}><FaTwitter size={20} /></a>
-            {/* Add other social media icons as needed */}
+
+        <div style={sectionStyle}>
+          <h3 style={headingStyle}>More from Tenzo</h3>
+          <ul style={listStyle}>
+            <li style={listItemStyle}>Sign In</li>
+            <li style={listItemStyle}>Wholesale Opportunities</li>
+            <li style={listItemStyle}>Affiliate</li>
+            <li style={listItemStyle}>Contact Us</li>
+          </ul>
+        </div>
+
+        <div style={followUsStyle}>
+            <h3 style={headingStyle}>Follow us</h3>
+            <div style={socialIconStyle}>
+              <a href="#" style={iconLinkStyle}><FaPinterest style={socialIconStyle} /></a>
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" style={iconLinkStyle}><FaFacebookF style={socialIconStyle} /></a>
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={iconLinkStyle}><FaInstagram style={socialIconStyle} /></a>
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" style={iconLinkStyle}><FaTwitter style={socialIconStyle} /></a>
+              <a href="https://whatsapp.com" target="_blank" rel="noopener noreferrer" style={iconLinkStyle}><FaWhatsapp style={socialIconStyle} /></a>
+            </div>
           </div>
+      </div>
+      <div style={bottomBarStyle}>
+        <p style={copyrightStyle}>© 2025 tenzotea.co</p>
+        <div style={linksStyle}>
+          <a href="#" style={bottomLinkStyle}>Terms of Service</a>
+          <span style={separatorStyle}>|</span>
+          <a href="#" style={bottomLinkStyle}>Privacy Policy</a>
+          <span style={separatorStyle}>|</span>
+          <a href="#" style={bottomLinkStyle}>Refund Policy</a>
+          <span style={separatorStyle}>|</span>
+          <a href="#" style={bottomLinkStyle}>Accessibility Policy</a>
         </div>
-      </footer>
+      </div>
+    </footer>
       <div style={{ backgroundColor: '#111', color: '#ddd', textAlign: 'center', padding: '10px' }}>
         <p>© 2025 E-Prescribe. All rights reserved.</p>
       </div>
     </div>
   );
 }
+
+const footerStyle = {
+  backgroundColor: '#d7f3d2', // Light green background
+  padding: '20px',
+};
+
+const containerStyle = {
+  display: 'flex',
+  justifyContent: 'space-around',
+  paddingBottom: '20px',
+};
+
+const sectionStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+};
+
+const headingStyle = {
+  fontSize: '1.2em',
+  marginBottom: '10px',
+  color: '#333',
+};
+
+const listStyle = {
+  listStyle: 'none',
+  padding: 0,
+  margin: 0,
+};
+
+const listItemStyle = {
+  marginBottom: '5px',
+  color: '#555',
+};
+
+const followUsStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+};
+
+const socialIconStyle = {
+  display: 'flex',
+};
+
+const iconLinkStyle = {
+  marginRight: '10px',
+  textDecoration: 'none',
+  color: '#333', // Placeholder for icon color
+};
+
+const socialIcon = {
+  backgroundColor: '#333', // Placeholder for icon background
+  borderRadius: '50%',
+  width: '30px',
+  height: '30px',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  fontSize: '1em',
+};
+
+const bottomBarStyle = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  paddingTop: '10px',
+  borderTop: '1px solid #ccc',
+};
+
+const copyrightStyle = {
+  fontSize: '0.8em',
+  color: '#777',
+};
+
+const linksStyle = {
+  display: 'flex',
+};
+
+const bottomLinkStyle = {
+  color: '#555',
+  textDecoration: 'none',
+  fontSize: '0.8em',
+  marginRight: '10px',
+};
+
+const separatorStyle = {
+  color: '#ccc',
+  marginRight: '10px',
+};
 
 export default App;
