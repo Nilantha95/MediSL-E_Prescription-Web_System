@@ -1,5 +1,5 @@
 import React from 'react';
-import logo from '../Main_Interface_UI/images/Logo_02.png';
+import logo from '../Main_Interface_UI/images/Logo01.png';
 import doc from '../Main_Interface_UI/images/Doctor.png';
 import patient from './images/Patient.png';
 import phar from './images/pharmacist.png';
@@ -20,10 +20,10 @@ function App() {
   return (
     <div style={{ fontFamily: 'sans-serif' }}>
       {/* Header */}
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 50px', backgroundColor: '#f8f8f8' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 50px', backgroundColor: '#d7f3d2' }}>
         {/* Left Section: Logo and Team Name (Adjusted for E-Prescribe) */}
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <img src={logo} alt="E-Prescribe Logo" style={{ height: '40px', marginRight: '10px' }} />
+          <img src={logo} alt="E-Prescribe Logo" style={{ height: '50px', marginRight: '10px' }} />
           <div>
             <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#333' }}>E-Prescribe</h1>
             <p style={{ margin: 0, fontSize: '12px', color: '#777' }}>Digital Healthcare</p>
@@ -42,7 +42,7 @@ function App() {
                 padding: '10px 20px',
                 border: '1px solid #ddd',
                 borderRadius: '20px',
-                backgroundColor: 'transparent',
+                backgroundColor: 'lightblue',
                 color: '#007bff',
                 cursor: 'pointer',
                 display: 'flex',
@@ -280,7 +280,7 @@ const listStyle = {
 };
 
 const listItemStyle = {
-  marginBottom: '5px',
+  marginBottom: '10px',
   color: '#555',
 };
 
