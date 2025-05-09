@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import logo from '../Main_Interface_UI/images/Logo01.png';// Assuming the logo path
 import pic from '../Main_Interface_UI/images/Doctor.png'
 import { FaPhoneAlt } from 'react-icons/fa';
@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { FaFacebookF, FaTwitter, FaInstagram, FaPinterest, FaWhatsapp} from 'react-icons/fa';
 
 const DoctorDashboard = () => {
+
   const navBarStyle = {
     display: 'flex',
     justifyContent: 'space-between',
@@ -152,6 +153,7 @@ const DoctorDashboard = () => {
 
   const recentPrescriptionsTableCellStyle = {
     padding: '8px',
+    textAlign: 'left', // Add this line
   };
 
   const recentPatientsStyle = {
@@ -185,7 +187,8 @@ const DoctorDashboard = () => {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: '0 auto 10px',
+    margin: '0 10px 0 0', // Adjust margin to the right of the avatar
+    textAlign: 'center', // Keep this to center single-line text if needed as a fallback
   };
 
   const patientNameStyle = {
@@ -289,40 +292,44 @@ const DoctorDashboard = () => {
   };
 
   const doctorInfoContainerStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    padding: '15px 0',
-    borderTop: '1px solid #eee',
-  };
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: '15px 0',
+    borderTop: '1px solid #eee',
+  };
 
-const doctorAvatarStyle = {
-    width: '60px',
-    height: '60px',
-    borderRadius: '50%',
-    backgroundColor: '#00cba9', // Example color
-    color: '#fff',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '1.5em',
-    fontWeight: 'bold',
-    marginBottom: '5px',
-  };
+  const doctorAvatarStyle = {
+    width: '60px',
+    height: '60px',
+    borderRadius: '50%',
+    backgroundColor: '#00cba9', // Example fixed color
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '1.5em',
+    fontWeight: 'bold',
+    marginBottom: '5px',
+  };
 
-const doctorNameStyle = {
-    fontSize: '1em',
-    color: '#555',
-    margin: 0,
-  };
+  const doctorNameStyle = {
+    fontSize: '1em',
+    color: '#555',
+    margin: 0,
+  };
 
-const doctorInfoStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    padding: '15px 0',
-    borderTop: '1px solid #eee',
-  };
+  const doctorInfoStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: '15px 0',
+    borderTop: '1px solid #eee',
+    backgroundColor: '#d7f3d2', // Another example fixed color (aliceblue)
+    padding: '10px',
+    borderRadius: '5px',
+    margin: '10px 0',
+  };
 
   const bottomLinkStyle = {
     color: '#555',
@@ -373,11 +380,11 @@ return (
           <Link to="/settings" style={sidebarLinkStyle}>Settings</Link>
 
           <div style={doctorInfoStyle}>
-            <div style={doctorAvatarStyle}>
-              <img src={pic} alt="Doctor Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-            </div>
-            <p style={doctorNameStyle}>Dr. John Smith</p> {/* Replace with actual doctor name */}
-</div>
+            <div style={doctorAvatarStyle}>
+              <img src={pic} alt="Doctor Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+            </div>
+            <p style={doctorNameStyle}>Dr. John Smith</p> {/* Replace with actual doctor name */}
+          </div>
         </aside>
 
         {/* Main Content */}
@@ -414,12 +421,12 @@ return (
               </thead>
                <tbody>
                     <tr style={recentPrescriptionsTableRowStyle}>
-                        <td style={recentPrescriptionsTableCellStyle}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
-                            <div style={patientAvatarStyle}>JD</div>
-                            <span style={{ marginLeft: '10px' }}>John Doe</span>
-                        </div>
-                        </td>
+                       <td style={recentPrescriptionsTableCellStyle}>
+                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
+                      <div style={patientAvatarStyle}>JD</div>
+                         <span style={{ marginLeft: '10px' }}>John Doe</span>
+                     </div>
+                     </td>
                         <td style={recentPrescriptionsTableCellStyle}>Apr 27, 2025</td>
                         <td style={recentPrescriptionsTableCellStyle}>Filled</td>
                         <td style={recentPrescriptionsTableCellStyle}>...</td>
