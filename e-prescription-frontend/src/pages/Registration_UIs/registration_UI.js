@@ -103,10 +103,11 @@ const RegistrationForm = () => {
         </div>
       </header>
 
-      <div style={{ ...styles.container, backgroundImage: `url(${backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+      <div style={styles.container}>
+        <div style={styles.backgroundOverlay} />
         <div style={styles.formContainer}>
-          <h2 style={styles.heading}>Create an Account</h2>
-          <p style={styles.subHeading}>Join our E-prescription management system</p>
+          <h2 style={{ ...styles.heading, textAlign: 'center' }}>Create an Account</h2>
+          <p style={{ ...styles.subHeading, textAlign: 'center' }}>Join our E-prescription management system</p>
           <div style={styles.userType}>
             <p style={styles.label}>I am a</p>
             <div style={styles.userTypeButtons}>
@@ -256,7 +257,7 @@ const RegistrationForm = () => {
           </form>
 
           <p style={styles.loginLink}>
-            Already have an account? <a href="/login" style={styles.link}>Sign in</a>
+            Already have an account? <Link to="./signin.js" style={styles.link}>Sign in</Link>
           </p>
         </div>
       </div>
@@ -328,13 +329,26 @@ const RegistrationForm = () => {
 };
 
 const styles = {
-  container: {
+ container: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     padding: '40px',
     fontFamily: 'Arial, sans-serif',
-    backgroundColor: '#f8f9fa',
+    position: 'relative', // Make container relative for absolute positioning of overlay
+    overflow: 'hidden', // Clip the background image within the container bounds
+  },
+  backgroundOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundImage: `url(${backgroundImage})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    filter: 'blur(5px)', // Adjust the blur intensity as needed
+    zIndex: -1, // Place the overlay behind the form container
   },
   heading: {
     fontSize: '2.5em',
@@ -347,12 +361,16 @@ const styles = {
     marginBottom: '30px',
   },
   formContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: '#d7f3d2', // Add your desired background color here
     padding: '30px',
     borderRadius: '8px',
     boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
     width: '400px',
     maxWidth: '90%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    zIndex: 1, // Ensure the form container is above the blurred background
   },
   userType: {
     marginBottom: '20px',
