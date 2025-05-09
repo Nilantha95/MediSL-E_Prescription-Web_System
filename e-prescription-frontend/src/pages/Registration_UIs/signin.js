@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import logo from '../Main_Interface_UI/images/Logo01.png';
 import { IoIosArrowForward } from 'react-icons/io';
 import { FaPhoneAlt } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaFacebookF, FaTwitter, FaInstagram, FaPinterest, FaWhatsapp} from 'react-icons/fa';
-import backgroundImage from '../Main_Interface_UI/images/background.jpg'; // Import your image
+import backgroundImage from '../Main_Interface_UI/images/background.jpg';
 
 const SignInForm = () => {
   const [userType, setUserType] = useState('patient'); // Default to patient
@@ -12,6 +12,7 @@ const SignInForm = () => {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleUserTypeChange = (type) => {
     setUserType(type);
@@ -25,7 +26,7 @@ const SignInForm = () => {
       return;
     }
 
-    // In a real application, you would authenticate the user here
+    // **Replace this with your actual backend authentication logic**
     const loginData = {
       userType,
       email,
@@ -33,8 +34,31 @@ const SignInForm = () => {
       rememberMe,
     };
     console.log('Sign In Data:', loginData);
-    alert('Sign In Successful (for demonstration)'); // Replace with actual authentication logic
-    // Optionally redirect the user after successful login
+
+    // **Simulate successful login and conditional navigation**
+    if (userType === 'doctor' && email === 'doctor@example.com' && password === 'doctortest') {
+      console.log('Doctor signed in successfully!');
+      navigate('/doctor/dashboard');
+      return;
+    } else if (userType === 'patient' && email === 'patient@example.com' && password === 'patienttest') {
+      console.log('Patient signed in successfully!');
+      alert('Patient Sign In Successful (for demonstration)');
+      // In a real app, you'd navigate to the patient dashboard here
+      return;
+    } else if (userType === 'pharmacist' && email === 'pharmacist@example.com' && password === 'pharmacisttest') {
+      console.log('Pharmacist signed in successfully!');
+      alert('Pharmacist Sign In Successful (for demonstration)');
+      // In a real app, you'd navigate to the pharmacist dashboard here
+      return;
+    } else {
+      setError('Invalid credentials.');
+    }
+
+    // The alert below is for general demonstration purposes for unsuccessful attempts
+    // or if the specific doctor credentials weren't met.
+    if (userType !== 'doctor' || email !== 'doctor@example.com' || password !== 'doctortest') {
+      console.log(`Sign In Attempt as ${userType} failed or was not the specific doctor.`);
+    }
   };
 
   return (
@@ -80,21 +104,6 @@ const SignInForm = () => {
         <div style={signInStyles.backgroundOverlay} />
         <div style={signInStyles.formContainer}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
-            <div
-              style={{
-                backgroundColor: '#f8f9fa',
-                borderRadius: '8px',
-                padding: '20px',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                marginBottom: '15px',
-              }}
-            >
-              <img
-                src="URL_TO_YOUR_SIGN_IN_IMAGE" // Replace with the actual URL or import of your sign-in image
-                alt="Sign In"
-                style={{ width: '100%', maxWidth: '200px', height: 'auto', display: 'block', margin: '0 auto' }}
-              />
-            </div>
             <h2 style={signInStyles.heading}>Sign in to your account</h2>
           </div>
 
@@ -185,9 +194,9 @@ const SignInForm = () => {
             </button>
           </form>
 
-          <p style={signInStyles.registerLink}>
-            Don't have an account? <Link to="/register" style={signInStyles.link}>Register here</Link>
-          </p>
+                <p style={signInStyles.registerLink}>
+                    Don't have an account? <Link to="/register" style={signInStyles.link}>Register here</Link>
+                </p>
         </div>
       </div>
 
