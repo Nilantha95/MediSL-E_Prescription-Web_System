@@ -11,6 +11,7 @@ import slide2 from './images/slide02.png';
 import slide3 from './images/slide03.png';
 import user1 from './images/aboutdoc.png';
 import user2 from './images/phar.png';
+import background from './images/interfacescrolling.jpg';
 import { FaFacebookF, FaTwitter, FaInstagram, FaPinterest, FaWhatsapp} from 'react-icons/fa';
 import { IoIosArrowForward, IoIosArrowDown } from 'react-icons/io';
 import { FaPhoneAlt } from 'react-icons/fa';
@@ -155,6 +156,49 @@ function App() {
             <h3 style={{ fontSize: '1.2em', fontWeight: 'bold', color: '#333', marginBottom: '10px' }}>For Pharmacists</h3>
             <p style={{ fontSize: '0.9em', color: '#555', lineHeight: '1.4' }}>Process prescriptions efficiently, reduce errors, and maintain digital records of dispensed medications.</p>
           </div>
+        </div>
+      </section>
+
+     {/* Parallax Section */}
+      <section style={{
+        backgroundAttachment: 'fixed',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        color: '#333', // Darker text color for better contrast
+        padding: '100px 50px',
+        textAlign: 'center',
+        position: 'relative', // Needed for overlay and background styling
+      }}>
+        {/* Background Image with Blur */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundImage: `url(${background})`,
+          backgroundAttachment: 'fixed',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          filter: 'blur(5px)',
+          zIndex: 0, // Place the background behind other content
+        }} />
+        {/* Overlay to darken the background slightly for better text readability */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.3)', // Semi-transparent dark overlay
+          zIndex: 1, // Place the overlay above the background
+        }} />
+        {/* Text Content */}
+        <div style={{ position: 'relative', zIndex: 2 }}> {/* Ensure text is above the overlay and background */}
+          <h2 style={{ fontSize: '3.0em', fontWeight: 'bold', marginBottom: '25px', color: '#eee', textShadow: '2px 2px 4px #000000' }}>Experience the Future of Prescriptions</h2>
+          <p style={{ fontSize: '1.2em', lineHeight: '1.9', maxWidth: '850px', margin: '0 auto', color: '#ddd', textShadow: '1px 1px 2px #000000' }}>
+            Experience the future of prescriptions with our smart, secure, and AI-powered platform. Manage medications effortlessly, eliminate paper trails, and connect doctors and pharmacies seamlessly—all in one digital solution.
+          </p>
         </div>
       </section>
 
