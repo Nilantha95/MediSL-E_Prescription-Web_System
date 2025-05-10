@@ -7,6 +7,7 @@ import RegistrationUI from './pages/Registration_UIs/registration_UI'; // Assumi
 import SignIn from './pages/Registration_UIs/signin'; // Import your SignIn component (adjust path if needed)
 import DoctorDashboard from './pages/Doctor_UIs/dashboard';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Contact from './pages/Main_Interface_UI/contactus';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -19,6 +20,7 @@ root.render(
         <Route path="/home2" element={<MainInterface />} /> {}
         <Route path="/signin" element={<SignIn />} /> {/* This route is crucial */}
         <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
+        <Route path="/contact" element={<Contact />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
