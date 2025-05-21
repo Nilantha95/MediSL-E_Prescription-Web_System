@@ -8,6 +8,7 @@ import SignIn from './pages/Registration_UIs/signin'; // Import your SignIn comp
 import DoctorDashboard from './pages/Doctor_UIs/dashboard';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Contact from './pages/Main_Interface_UI/contactus';
+import NewPrescriptionForm from './pages/Doctor_UIs/add_prescription';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -21,6 +22,7 @@ root.render(
         <Route path="/signin" element={<SignIn />} /> {/* This route is crucial */}
         <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/newprescription" element={<NewPrescriptionForm />}/>
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
