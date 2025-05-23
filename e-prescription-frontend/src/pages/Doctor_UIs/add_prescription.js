@@ -84,6 +84,151 @@ const NewPrescriptionForm = () => {
     alignItems: 'center',
   };
 
+  const sidebarStyle = {
+    width: '200px',
+    backgroundColor: '#f8f9fa',
+    padding: '20px',
+    borderRadius: '5px',
+    marginRight: '20px',
+  };
+
+  const sidebarLinkStyle = {
+    display: 'block',
+    padding: '10px 0',
+    color: '#333',
+    textDecoration: 'none',
+    borderBottom: '1px solid #eee',
+  };
+
+  const sidebarLinkActiveStyle = {
+    color: '#007bff',
+    fontWeight: 'bold',
+  };
+  const dashboardContainerStyle = {
+    display: 'flex',
+    padding: '20px',
+    fontFamily: 'sans-serif',
+  };
+
+  const doctorInfoContainerStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: '15px 0',
+    borderTop: '1px solid #eee',
+  };
+
+  const doctorAvatarStyle = {
+    width: '60px',
+    height: '60px',
+    borderRadius: '50%',
+    backgroundColor: '#00cba9', // Example fixed color
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '1.5em',
+    fontWeight: 'bold',
+    marginBottom: '5px',
+  };
+
+  const doctorNameStyle = {
+    fontSize: '1em',
+    color: '#555',
+    margin: 0,
+  };
+
+  const doctorInfoStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: '15px 0',
+    borderTop: '1px solid #eee',
+    backgroundColor: '#d7f3d2', // Another example fixed color (aliceblue)
+    padding: '10px',
+    borderRadius: '5px',
+    margin: '10px 0',
+  };
+
+  const footerStyle = {
+    backgroundColor: '#d7f3d2',
+    padding: '20px',
+    marginTop: '20px',
+  };
+
+  const containerStyle = {
+    display: 'flex',
+    justifyContent: 'space-around',
+    paddingBottom: '20px',
+  };
+
+  const sectionStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+  };
+
+  const headingStyle = {
+    fontSize: '1.2em',
+    marginBottom: '10px',
+    color: '#333',
+  };
+
+  const listStyle = {
+    listStyle: 'none',
+    padding: 0,
+    margin: 0,
+  };
+
+  const listItemStyle = {
+    marginBottom: '10px',
+    color: '#555',
+  };
+
+  const followUsStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  };
+
+  const socialIconStyle = {
+    display: 'flex',
+  };
+
+  const iconLinkStyle = {
+    marginRight: '10px',
+    textDecoration: 'none',
+    color: '#333',
+  };
+
+  const bottomBarStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: '10px',
+    borderTop: '1px solid #ccc',
+  };
+
+  const copyrightStyle = {
+    fontSize: '0.8em',
+    color: '#777',
+  };
+
+  const linksStyle = {
+    display: 'flex',
+  };
+
+  const bottomLinkStyle = {
+    color: '#555',
+    textDecoration: 'none',
+    fontSize: '0.8em',
+    marginRight: '10px',
+  };
+
+  const separatorStyle = {
+    color: '#ccc',
+    marginRight: '10px',
+  };
+
   const handleRemoveMedicine = (id) => {
     setMedications(medications.filter((med) => med.id !== id));
   };
@@ -351,198 +496,282 @@ const NewPrescriptionForm = () => {
                   </Link>
                 </div>
               </header>
-      <div style={headerStyle}>
-        <h2 style={h2Style}>Create New Prescription</h2>
-        <span style={dateStyle}>Date: {today}</span>
-      </div>
 
-      <form onSubmit={handleSubmit}>
-        <div style={sectionGridStyle}>
-          <div style={inputGroupStyle}>
-            <label htmlFor="patientName" style={labelStyle}>Patient Name</label>
-            <input
-              type="text"
-              id="patientName"
-              placeholder="Enter patient name"
-              value={patientName}
-              onChange={(e) => setPatientName(e.target.value)}
-              style={inputFieldStyle}
-            />
-          </div>
-          <div style={inputGroupStyle}>
-            <label htmlFor="patientID" style={labelStyle}>Patient ID</label>
-            <input
-              type="text"
-              id="patientID"
-              placeholder="Enter Patient ID"
-              value={patientID}
-              onChange={(e) => setPatientID(e.target.value)}
-              style={inputFieldStyle}
-            />
-          </div>
-          <div style={inputGroupStyle}>
-            <label htmlFor="age" style={labelStyle}>Age</label>
-            <input
-              type="number"
-              id="age"
-              placeholder="Enter age"
-              value={age}
-              onChange={(e) => setAge(e.target.value)}
-              style={inputFieldStyle}
-            />
-          </div>
-          <div style={inputGroupStyle}>
-            <label htmlFor="contactNumber" style={labelStyle}>Contact Number</label>
-            <input
-              type="text"
-              id="contactNumber"
-              placeholder="Enter contact number"
-              value={contactNumber}
-              onChange={(e) => setContactNumber(e.target.value)}
-              style={inputFieldStyle}
-            />
-          </div>
-          <div style={inputGroupStyle}>
-            <label htmlFor="gender" style={labelStyle}>Gender</label>
-            <select
-              id="gender"
-              value={gender}
-              onChange={(e) => setGender(e.target.value)}
-              style={selectFieldStyle}
-            >
-              <option value="">Select gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div style={inputGroupStyle}>
-            <label htmlFor="bloodGroup" style={labelStyle}>Blood Group</label>
-            <select
-              id="bloodGroup"
-              value={bloodGroup}
-              onChange={(e) => setBloodGroup(e.target.value)}
-              style={selectFieldStyle}
-            >
-              <option value="">Select blood group</option>
-              <option value="A+">A+</option>
-              <option value="A-">A-</option>
-              <option value="B+">B+</option>
-              <option value="B-">B-</option>
-              <option value="AB+">AB+</option>
-              <option value="AB-">AB-</option>
-              <option value="O+">O+</option>
-              <option value="O-">O-</option>
-            </select>
-          </div>
-        </div>
+              {/* Dashboard Content */}
+                    <div style={dashboardContainerStyle}>
+                      {/* Sidebar */}
+                      <aside style={sidebarStyle}>
+                        <Link to="/dashboard" style={{ ...sidebarLinkStyle, ...sidebarLinkActiveStyle }}>Dashboard</Link>
+                        <Link to="/newprescription" style={sidebarLinkStyle}>Patients</Link>
+                        <Link to="/prescriptions" style={sidebarLinkStyle}>Prescriptions</Link>
+                        <Link to="/appointments" style={sidebarLinkStyle}>Appointments</Link>
+                        <Link to="/settings" style={sidebarLinkStyle}>Settings</Link>
+              
+                        <div style={doctorInfoStyle}>
+                          <div style={doctorAvatarStyle}>
+                            <img src={pic} alt="Doctor Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                          </div>
+                          <p style={doctorNameStyle}>Dr. John Smith</p> {/* Replace with actual doctor name */}
+                        </div>
+                      </aside>
+                      
+          {/* New prescription add form */}
+                <div style={headerStyle}>
+                  <h2 style={h2Style}>Create New Prescription</h2>
+                  <span style={dateStyle}>Date: {today}</span>
+                </div>
 
-        <div style={sectionFullWidthStyle}>
-          <label htmlFor="diagnosis" style={labelStyle}>Diagnosis</label>
-          <textarea
-            id="diagnosis"
-            placeholder="Enter diagnosis details"
-            value={diagnosis}
-            onChange={(e) => setDiagnosis(e.target.value)}
-            rows="4"
-            style={textareaStyle}
-          ></textarea>
-        </div>
+                <form onSubmit={handleSubmit}>
+                  <div style={sectionGridStyle}>
+                    <div style={inputGroupStyle}>
+                      <label htmlFor="patientName" style={labelStyle}>Patient Name</label>
+                      <input
+                        type="text"
+                        id="patientName"
+                        placeholder="Enter patient name"
+                        value={patientName}
+                        onChange={(e) => setPatientName(e.target.value)}
+                        style={inputFieldStyle}
+                      />
+                    </div>
+                    <div style={inputGroupStyle}>
+                      <label htmlFor="patientID" style={labelStyle}>Patient ID</label>
+                      <input
+                        type="text"
+                        id="patientID"
+                        placeholder="Enter Patient ID"
+                        value={patientID}
+                        onChange={(e) => setPatientID(e.target.value)}
+                        style={inputFieldStyle}
+                      />
+                    </div>
+                    <div style={inputGroupStyle}>
+                      <label htmlFor="age" style={labelStyle}>Age</label>
+                      <input
+                        type="number"
+                        id="age"
+                        placeholder="Enter age"
+                        value={age}
+                        onChange={(e) => setAge(e.target.value)}
+                        style={inputFieldStyle}
+                      />
+                    </div>
+                    <div style={inputGroupStyle}>
+                      <label htmlFor="contactNumber" style={labelStyle}>Contact Number</label>
+                      <input
+                        type="text"
+                        id="contactNumber"
+                        placeholder="Enter contact number"
+                        value={contactNumber}
+                        onChange={(e) => setContactNumber(e.target.value)}
+                        style={inputFieldStyle}
+                      />
+                    </div>
+                    <div style={inputGroupStyle}>
+                      <label htmlFor="gender" style={labelStyle}>Gender</label>
+                      <select
+                        id="gender"
+                        value={gender}
+                        onChange={(e) => setGender(e.target.value)}
+                        style={selectFieldStyle}
+                      >
+                        <option value="">Select gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div style={inputGroupStyle}>
+                      <label htmlFor="bloodGroup" style={labelStyle}>Blood Group</label>
+                      <select
+                        id="bloodGroup"
+                        value={bloodGroup}
+                        onChange={(e) => setBloodGroup(e.target.value)}
+                        style={selectFieldStyle}
+                      >
+                        <option value="">Select blood group</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                      </select>
+                    </div>
+                  </div>
 
-        <div style={medicationsSectionStyle}>
-          <h3 style={h3Style}>Medications</h3>
-          <button
-            type="button"
-            style={getAddBtnStyle()}
-            onClick={handleAddMedicine}
-            onMouseEnter={() => setAddBtnHover(true)}
-            onMouseLeave={() => setAddBtnHover(false)}
-          >
-            + Add Medicine
-          </button>
-          <div style={medicationListStyle}>
-            {medications.map((med) => (
-              <div key={med.id} style={medicationRowStyle}>
-                <input
-                  type="text"
-                  placeholder="Medicine name"
-                  value={med.name}
-                  onChange={(e) => handleMedicineChange(med.id, 'name', e.target.value)}
-                  style={medicationInputStyle}
-                />
-                <input
-                  type="text"
-                  placeholder="Dosage"
-                  value={med.dosage}
-                  onChange={(e) => handleMedicineChange(med.id, 'dosage', e.target.value)}
-                  style={medicationInputStyle}
-                />
-                <select
-                  value={med.frequency}
-                  onChange={(e) => handleMedicineChange(med.id, 'frequency', e.target.value)}
-                  style={medicationInputStyle} // Reusing basic input style for simplicity
-                >
-                  <option value="">Frequency</option>
-                  <option value="Once Daily">Once Daily</option>
-                  <option value="Twice Daily">Twice Daily</option>
-                  <option value="Thrice Daily">Thrice Daily</option>
-                  <option value="As Needed">As Needed</option>
-                </select>
-                <input
-                  type="text"
-                  placeholder="Duration"
-                  value={med.duration}
-                  onChange={(e) => handleMedicineChange(med.id, 'duration', e.target.value)}
-                  style={medicationInputStyle}
-                />
-                <button
-                  type="button"
-                  style={getDeleteBtnStyle(med.id)}
-                  onClick={() => handleRemoveMedicine(med.id)}
-                  onMouseEnter={() => setDeleteBtnHovers(prev => ({ ...prev, [med.id]: true }))}
-                  onMouseLeave={() => setDeleteBtnHovers(prev => ({ ...prev, [med.id]: false }))}
-                >
-                  🗑️
-                </button>
+                  <div style={sectionFullWidthStyle}>
+                    <label htmlFor="diagnosis" style={labelStyle}>Diagnosis</label>
+                    <textarea
+                      id="diagnosis"
+                      placeholder="Enter diagnosis details"
+                      value={diagnosis}
+                      onChange={(e) => setDiagnosis(e.target.value)}
+                      rows="4"
+                      style={textareaStyle}
+                    ></textarea>
+                  </div>
+
+                  <div style={medicationsSectionStyle}>
+                    <h3 style={h3Style}>Medications</h3>
+                    <button
+                      type="button"
+                      style={getAddBtnStyle()}
+                      onClick={handleAddMedicine}
+                      onMouseEnter={() => setAddBtnHover(true)}
+                      onMouseLeave={() => setAddBtnHover(false)}
+                    >
+                      + Add Medicine
+                    </button>
+                    <div style={medicationListStyle}>
+                      {medications.map((med) => (
+                        <div key={med.id} style={medicationRowStyle}>
+                          <input
+                            type="text"
+                            placeholder="Medicine name"
+                            value={med.name}
+                            onChange={(e) => handleMedicineChange(med.id, 'name', e.target.value)}
+                            style={medicationInputStyle}
+                          />
+                          <input
+                            type="text"
+                            placeholder="Dosage"
+                            value={med.dosage}
+                            onChange={(e) => handleMedicineChange(med.id, 'dosage', e.target.value)}
+                            style={medicationInputStyle}
+                          />
+                          <select
+                            value={med.frequency}
+                            onChange={(e) => handleMedicineChange(med.id, 'frequency', e.target.value)}
+                            style={medicationInputStyle} // Reusing basic input style for simplicity
+                          >
+                            <option value="">Frequency</option>
+                            <option value="Once Daily">Once Daily</option>
+                            <option value="Twice Daily">Twice Daily</option>
+                            <option value="Thrice Daily">Thrice Daily</option>
+                            <option value="As Needed">As Needed</option>
+                          </select>
+                          <input
+                            type="text"
+                            placeholder="Duration"
+                            value={med.duration}
+                            onChange={(e) => handleMedicineChange(med.id, 'duration', e.target.value)}
+                            style={medicationInputStyle}
+                          />
+                          <button
+                            type="button"
+                            style={getDeleteBtnStyle(med.id)}
+                            onClick={() => handleRemoveMedicine(med.id)}
+                            onMouseEnter={() => setDeleteBtnHovers(prev => ({ ...prev, [med.id]: true }))}
+                            onMouseLeave={() => setDeleteBtnHovers(prev => ({ ...prev, [med.id]: false }))}
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={sectionFullWidthStyle}>
+                    <label htmlFor="additionalNotes" style={labelStyle}>Additional Notes</label>
+                    <textarea
+                      id="additionalNotes"
+                      placeholder="Enter additional notes or instructions"
+                      value={additionalNotes}
+                      onChange={(e) => setAdditionalNotes(e.target.value)}
+                      rows="4"
+                      style={textareaStyle}
+                    ></textarea>
+                  </div>
+
+                  <div style={formActionsStyle}>
+                    <button
+                      type="button"
+                      style={getCancelBtnStyle()}
+                      onClick={handleCancel}
+                      onMouseEnter={() => setCancelBtnHover(true)}
+                      onMouseLeave={() => setCancelBtnHover(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      style={getSaveBtnStyle()}
+                      onMouseEnter={() => setSaveBtnHover(true)}
+                      onMouseLeave={() => setSaveBtnHover(false)}
+                    >
+                      Save Prescription
+                    </button>
+                  </div>
+                </form>
               </div>
-            ))}
-          </div>
-        </div>
 
-        <div style={sectionFullWidthStyle}>
-          <label htmlFor="additionalNotes" style={labelStyle}>Additional Notes</label>
-          <textarea
-            id="additionalNotes"
-            placeholder="Enter additional notes or instructions"
-            value={additionalNotes}
-            onChange={(e) => setAdditionalNotes(e.target.value)}
-            rows="4"
-            style={textareaStyle}
-          ></textarea>
-        </div>
+              {/* Footer */}
+                    <footer style={footerStyle}>
+                      <div style={containerStyle}>
+                        <div style={sectionStyle}>
+                          <h3 style={headingStyle}>Shop Matcha</h3>
+                          <ul style={listStyle}>
+                            <li style={listItemStyle}>Starter Kits</li>
+                            <li style={listItemStyle}>Lattes & Sweetened</li>
+                            <li style={listItemStyle}>Just the Matcha</li>
+                            <li style={listItemStyle}>Matchaware</li>
+                            <li style={listItemStyle}>Shop All</li>
+                          </ul>
+                        </div>
+              
+                        <div style={sectionStyle}>
+                          <h3 style={headingStyle}>Learn</h3>
+                          <ul style={listStyle}>
+                            <li style={listItemStyle}>Our Story</li>
+                            <li style={listItemStyle}>Matcha Recipes</li>
+                            <li style={listItemStyle}>Caffeine Content</li>
+                            <li style={listItemStyle}>Health Benefits</li>
+                            <li style={listItemStyle}>FAQ's</li>
+                          </ul>
+                        </div>
+              
+                        <div style={sectionStyle}>
+                          <h3 style={headingStyle}>More from Tenzo</h3>
+                          <ul style={listStyle}>
+                            <li style={listItemStyle}>Sign In</li>
+                            <li style={listItemStyle}>Wholesale Opportunities</li>
+                            <li style={listItemStyle}>Affiliate</li>
+                            <li style={listItemStyle}>Contact Us</li>
+                          </ul>
+                        </div>
+              
+                        <div style={followUsStyle}>
+                          <h3 style={headingStyle}>Follow us</h3>
+                          <div style={socialIconStyle}>
+                            <a href="#" style={iconLinkStyle}><FaPinterest style={{ fontSize: '1.5em' }} /></a>
+                            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" style={iconLinkStyle}><FaFacebookF style={{ fontSize: '1.5em' }} /></a>
+                            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={iconLinkStyle}><FaInstagram style={{ fontSize: '1.5em' }} /></a>
+                            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" style={iconLinkStyle}><FaTwitter style={{ fontSize: '1.5em' }} /></a>
+                            <a href="https://whatsapp.com" target="_blank" rel="noopener noreferrer" style={iconLinkStyle}><FaWhatsapp style={{ fontSize: '1.5em' }} /></a>
+                          </div>
+                        </div>
+                      </div>
+                      <div style={bottomBarStyle}>
+                        <p style={copyrightStyle}>© 2025 tenzotea.co</p>
+                        <div style={linksStyle}>
+                          <a href="#" style={bottomLinkStyle}>Terms of Service</a>
+                          <span style={separatorStyle}>|</span>
+                          <a href="#" style={bottomLinkStyle}>Privacy Policy</a>
+                          <span style={separatorStyle}>|</span>
+                          <a href="#" style={bottomLinkStyle}>Refund Policy</a>
+                          <span style={separatorStyle}>|</span>
+                          <a href="#" style={bottomLinkStyle}>Accessibility Policy</a>
+                        </div>
+                      </div>
+                    </footer>
+                    <div style={{ backgroundColor: '#111', color: '#ddd', textAlign: 'center', padding: '10px' }}>
+                      <p>© 2025 MediPrescribe. All rights reserved.</p>
+                    </div>
+              </div>
+            );
+          };
 
-        <div style={formActionsStyle}>
-          <button
-            type="button"
-            style={getCancelBtnStyle()}
-            onClick={handleCancel}
-            onMouseEnter={() => setCancelBtnHover(true)}
-            onMouseLeave={() => setCancelBtnHover(false)}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            style={getSaveBtnStyle()}
-            onMouseEnter={() => setSaveBtnHover(true)}
-            onMouseLeave={() => setSaveBtnHover(false)}
-          >
-            Save Prescription
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-};
-
-export default NewPrescriptionForm;
+          export default NewPrescriptionForm;
