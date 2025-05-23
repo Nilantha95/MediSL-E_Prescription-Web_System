@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
@@ -9,6 +10,7 @@ import DoctorDashboard from './pages/Doctor_UIs/dashboard';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Contact from './pages/Main_Interface_UI/contactus';
 import NewPrescriptionForm from './pages/Doctor_UIs/add_prescription';
+import PrescriptionHistory from './pages/Doctor_UIs/prescription_history';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -23,6 +25,8 @@ root.render(
         <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/newprescription" element={<NewPrescriptionForm />}/>
+        <Route path="/prescriptionhistory" element={<PrescriptionHistory/>}/>
+        
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

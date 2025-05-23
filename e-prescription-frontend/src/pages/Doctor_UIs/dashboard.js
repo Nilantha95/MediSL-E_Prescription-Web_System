@@ -375,7 +375,7 @@ return (
         <aside style={sidebarStyle}>
           <Link to="/dashboard" style={{ ...sidebarLinkStyle, ...sidebarLinkActiveStyle }}>Dashboard</Link>
           <Link to="/newprescription" style={sidebarLinkStyle}>Add New Prescription</Link>
-          <Link to="/prescriptions" style={sidebarLinkStyle}>Prescriptions</Link>
+          <Link to="/prescriptionhistory" style={sidebarLinkStyle}>Prescriptions</Link>
           <Link to="/appointments" style={sidebarLinkStyle}>Appointments</Link>
           <Link to="/settings" style={sidebarLinkStyle}>Settings</Link>
 
