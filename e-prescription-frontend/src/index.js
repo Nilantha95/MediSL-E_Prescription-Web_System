@@ -11,6 +11,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Contact from './pages/Main_Interface_UI/contactus';
 import NewPrescriptionForm from './pages/Doctor_UIs/add_prescription';
 import PrescriptionHistory from './pages/Doctor_UIs/prescription_history';
+import Phardashboard from './pages/Pharmacy_UIs/dashboard';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -26,6 +27,7 @@ root.render(
         <Route path="/contact" element={<Contact />} />
         <Route path="/newprescription" element={<NewPrescriptionForm />}/>
         <Route path="/prescriptionhistory" element={<PrescriptionHistory/>}/>
+        <Route path="/pharmacy/dashboard" element={<Phardashboard/>} />
         
       </Routes>
     </BrowserRouter>

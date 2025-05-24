@@ -47,8 +47,8 @@ const SignInForm = () => {
       return;
     } else if (userType === 'pharmacist' && email === 'pharmacist@example.com' && password === 'pharmacisttest') {
       console.log('Pharmacist signed in successfully!');
-      alert('Pharmacist Sign In Successful (for demonstration)');
-      // In a real app, you'd navigate to the pharmacist dashboard here
+      // **Changed this line to navigate to '/pharmacist/dashboard'**
+      navigate('/pharmacy/dashboard');
       return;
     } else {
       setError('Invalid credentials.');
@@ -194,9 +194,9 @@ const SignInForm = () => {
             </button>
           </form>
 
-                <p style={signInStyles.registerLink}>
-                    Don't have an account? <Link to="/register" style={signInStyles.link}>Register here</Link>
-                </p>
+            <p style={signInStyles.registerLink}>
+              Don't have an account? <Link to="/register" style={signInStyles.link}>Register here</Link>
+            </p>
         </div>
       </div>
 
