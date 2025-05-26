@@ -7,12 +7,9 @@ import { FaPhoneAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
 // Import your local images for the background slider
-import healthSlide1 from './images/Newslide01 (1).jpg'; // Adjust path and filename
+import healthSlide1 from './images/Newslide02.jpg'; // Adjust path and filename
 import healthSlide2 from './images/Newslide02.jpg'; // Adjust path and filename
 import healthSlide3 from './images/Newslide03.jpg'; // Adjust path and filename
-// If you have more, import them similarly
-import healthSlide4 from './images/Newslide01 (1).jpg';
-
 
 function App() {
   // State to manage the current slide index for the background image slider
@@ -23,8 +20,7 @@ function App() {
   const backgroundImages = [
     healthSlide1,
     healthSlide2,
-    healthSlide3,
-    healthSlide4, // Add more if you imported them
+    healthSlide3, // Add more if you imported them
   ];
 
   // Effect to automatically change the background slide
