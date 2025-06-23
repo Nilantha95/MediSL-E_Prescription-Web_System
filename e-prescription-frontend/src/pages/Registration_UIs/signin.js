@@ -42,12 +42,10 @@ const SignInForm = () => {
       return;
     } else if (userType === 'patient' && email === 'patient@example.com' && password === 'patienttest') {
       console.log('Patient signed in successfully!');
-      alert('Patient Sign In Successful (for demonstration)');
-      // In a real app, you'd navigate to the patient dashboard here
+      navigate('/patient/dashboard');
       return;
     } else if (userType === 'pharmacist' && email === 'pharmacist@example.com' && password === 'pharmacisttest') {
       console.log('Pharmacist signed in successfully!');
-      // **Changed this line to navigate to '/pharmacist/dashboard'**
       navigate('/pharmacy/dashboard');
       return;
     } else {

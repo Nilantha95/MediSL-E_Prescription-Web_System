@@ -13,6 +13,7 @@ import NewPrescriptionForm from './pages/Doctor_UIs/add_prescription';
 import PrescriptionHistory from './pages/Doctor_UIs/prescription_history';
 import Phardashboard from './pages/Pharmacy_UIs/dashboard';
 import Featurespage from './pages/Main_Interface_UI/featurespage';
+import PatientDashboard from './pages/Patient_UIs/dashboard';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -30,6 +31,7 @@ root.render(
         <Route path="/prescriptionhistory" element={<PrescriptionHistory/>}/>
         <Route path="/pharmacy/dashboard" element={<Phardashboard/>} />
         <Route path="/featurepage" element={<Featurespage/>} />
+        <Route path="/patient/dashboard" element={<PatientDashboard/>}/>
         
       </Routes>
     </BrowserRouter>
