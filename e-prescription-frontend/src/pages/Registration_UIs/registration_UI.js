@@ -5,6 +5,9 @@ import { FaPhoneAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { FaFacebookF, FaTwitter, FaInstagram, FaPinterest, FaWhatsapp} from 'react-icons/fa';
 import backgroundImage from '../Main_Interface_UI/images/background.jpg'; // Import your image
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase'; // adjust path if needed
 
 const RegistrationForm = () => {
   const [userType, setUserType] = useState('');
@@ -20,39 +23,47 @@ const RegistrationForm = () => {
     setUserType(type);
   };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
+const handleSubmit = async (event) => {
+  event.preventDefault();
+  setError('');
 
-    if (!userType) {
-      setError('Please select a user type.');
-      return;
-    }
+  if (!userType) {
+    setError('Please select a user type.');
+    return;
+  }
 
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      setError('Please fill in all required fields.');
-      return;
-    }
+  if (!firstName || !lastName || !email || !password || !confirmPassword) {
+    setError('Please fill in all required fields.');
+    return;
+  }
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.');
-      return;
-    }
+  if (password !== confirmPassword) {
+    setError('Passwords do not match.');
+    return;
+  }
 
-    if (!agreeTerms) {
-      setError('Please agree to the Terms of Service and Privacy Policy.');
-      return;
-    }
+  if (!agreeTerms) {
+    setError('Please agree to the Terms of Service and Privacy Policy.');
+    return;
+  }
 
-    // In a real application, you would send this data to your backend for registration
-    const registrationData = {
-      userType,
+  try {
+    // Step 1: Create user with Firebase Auth
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const uid = userCredential.user.uid;
+
+    // Step 2: Store user role and profile info in Firestore
+    await setDoc(doc(db, 'users', uid), {
+      uid,
+      email,
       firstName,
       lastName,
-      email,
-      password,
-    };
-    console.log('Registration Data:', registrationData);
-    // Reset the form and clear errors upon successful submission (for demonstration)
+      userType,
+      createdAt: new Date()
+    });
+
+    alert('Account created successfully!');
+    // Reset form
     setUserType('');
     setFirstName('');
     setLastName('');
@@ -61,8 +72,12 @@ const RegistrationForm = () => {
     setConfirmPassword('');
     setAgreeTerms(false);
     setError('');
-    alert('Account created successfully!'); // Replace with actual success handling
-  };
+  } catch (error) {
+    console.error('Error creating account:', error);
+    setError(error.message);
+  }
+};
+
 
   return (
     <div style={{ fontFamily: 'sans-serif' }}>
