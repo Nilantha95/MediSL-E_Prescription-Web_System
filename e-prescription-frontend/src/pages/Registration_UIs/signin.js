@@ -5,6 +5,9 @@ import { FaPhoneAlt } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaFacebookF, FaTwitter, FaInstagram, FaPinterest, FaWhatsapp} from 'react-icons/fa';
 import backgroundImage from '../Main_Interface_UI/images/background.jpg';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase'; // Adjust path as needed
 
 const SignInForm = () => {
   const [userType, setUserType] = useState('patient'); // Default to patient
@@ -18,46 +21,44 @@ const SignInForm = () => {
     setUserType(type);
   };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
+  const handleSubmit = async (event) => {
+  event.preventDefault();
+  setError('');
 
-    if (!email || !password) {
-      setError('Please enter your email and password.');
-      return;
-    }
+  if (!email || !password) {
+    setError('Please enter email and password.');
+    return;
+  }
 
-    // **Replace this with your actual backend authentication logic**
-    const loginData = {
-      userType,
-      email,
-      password,
-      rememberMe,
-    };
-    console.log('Sign In Data:', loginData);
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-    // **Simulate successful login and conditional navigation**
-    if (userType === 'doctor' && email === 'doctor@example.com' && password === 'doctortest') {
-      console.log('Doctor signed in successfully!');
-      navigate('/doctor/dashboard');
-      return;
-    } else if (userType === 'patient' && email === 'patient@example.com' && password === 'patienttest') {
-      console.log('Patient signed in successfully!');
-      navigate('/patient/dashboard');
-      return;
-    } else if (userType === 'pharmacist' && email === 'pharmacist@example.com' && password === 'pharmacisttest') {
-      console.log('Pharmacist signed in successfully!');
-      navigate('/pharmacy/dashboard');
-      return;
+    // Fetch user role from Firestore
+    const docRef = doc(db, "users", user.uid);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const userData = docSnap.data();
+
+      if (userData.userType !== userType) {
+        setError('Incorrect user type selected.');
+        return;
+      }
+
+      // Role-based navigation
+      if (userType === 'doctor') navigate('/doctor/dashboard');
+      else if (userType === 'patient') navigate('/patient/dashboard');
+      else if (userType === 'pharmacist') navigate('/pharmacy/dashboard');
+
     } else {
-      setError('Invalid credentials.');
+      setError('User role not found.');
     }
 
-    // The alert below is for general demonstration purposes for unsuccessful attempts
-    // or if the specific doctor credentials weren't met.
-    if (userType !== 'doctor' || email !== 'doctor@example.com' || password !== 'doctortest') {
-      console.log(`Sign In Attempt as ${userType} failed or was not the specific doctor.`);
-    }
-  };
+  } catch (error) {
+    setError(error.message);
+  }
+};
 
   return (
     <div style={{ fontFamily: 'sans-serif' }}>
