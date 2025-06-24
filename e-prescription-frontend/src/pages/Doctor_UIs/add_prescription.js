@@ -535,11 +535,11 @@ const NewPrescriptionForm = () => {
                 />
               </div>
               <div style={inputGroupStyle}>
-                <label htmlFor="patientID" style={labelStyle}>Patient ID</label>
+                <label htmlFor="patientEmail" style={labelStyle}>Patient Email</label>
                 <input
                   type="text"
-                  id="patientID"
-                  placeholder="Enter Patient ID"
+                  id="patientEmail"
+                  placeholder="Enter Patient Email"
                   value={patientID}
                   onChange={(e) => setPatientID(e.target.value)}
                   style={inputFieldStyle}

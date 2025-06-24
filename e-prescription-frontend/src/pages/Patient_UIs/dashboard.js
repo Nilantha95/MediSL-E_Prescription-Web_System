@@ -338,16 +338,10 @@ const PatientDashboard = () => {
         {/* Sidebar */}
         <aside style={sidebarStyle}>
           <Link to="/dashboard" style={{ ...sidebarLinkStyle, ...sidebarLinkActiveStyle }}>
-            Dashboard
+            Patient Dashboard
           </Link>
           <Link to="/newprescription" style={sidebarLinkStyle}>
-            Add New Prescription
-          </Link>
-          <Link to="/prescriptionhistory" style={sidebarLinkStyle}>
-            Prescriptions
-          </Link>
-          <Link to="/appointments" style={sidebarLinkStyle}>
-            Appointments
+            Resent Prescription
           </Link>
           <Link to="/settings" style={sidebarLinkStyle}>
             Settings
@@ -361,14 +355,14 @@ const PatientDashboard = () => {
                 style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
               />
             </div>
-            <p style={doctorNameStyle}>Dr. John Smith</p>
+            <p style={doctorNameStyle}>Smith Samual</p>
           </div>
         </aside>
 
         {/* Main Content */}
         <main style={contentStyle}>
           <div style={recentPrescriptionsStyle}>
-            <h2>Recent Prescriptions</h2>
+            <h2>Active Prescriptions</h2>
             <table style={recentPrescriptionsTableStyle}>
               <thead>
                 <tr>
@@ -404,49 +398,50 @@ const PatientDashboard = () => {
               </tbody>
             </table>
           </div>
-
-          <div style={recentPatientsStyle}>
-            <h2>Recent Patients</h2>
-            <ul style={recentPatientsListStyle}>
-              <li style={recentPatientCardStyle}>
-                <div style={{ ...patientAvatarStyle, backgroundColor: '#6f42c1' }}>RJ</div>
-                <p style={patientNameStyle}>Robert Johnson</p>
-                <p style={patientVisitStyle}>Last visit: Apr 25, 2025</p>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '5px' }}>
-                  <button style={viewHistoryButtonStyle}>View History</button>
-                  <button style={newPrescriptionButtonStyle}>New Prescription</button>
-                </div>
-              </li>
-              <li style={recentPatientCardStyle}>
-                <div style={{ ...patientAvatarStyle, backgroundColor: '#dc3545' }}>MW</div>
-                <p style={patientNameStyle}>Mary Williams</p>
-                <p style={patientVisitStyle}>Last visit: Apr 24, 2025</p>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '5px' }}>
-                  <button style={viewHistoryButtonStyle}>View History</button>
-                  <button style={newPrescriptionButtonStyle}>New Prescription</button>
-                </div>
-              </li>
-              <li style={recentPatientCardStyle}>
-                <div style={{ ...patientAvatarStyle, backgroundColor: '#198754' }}>DB</div>
-                <p style={patientNameStyle}>David Brown</p>
-                <p style={patientVisitStyle}>Last visit: Apr 23, 2025</p>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '5px' }}>
-                  <button style={viewHistoryButtonStyle}>View History</button>
-                  <button style={newPrescriptionButtonStyle}>New Prescription</button>
-                </div>
-              </li>
-            </ul>
+          <div style={recentPrescriptionsStyle}>
+            <h2>Past Prescriptions</h2>
+            <table style={recentPrescriptionsTableStyle}>
+              <thead>
+                <tr>
+                  <th style={recentPrescriptionsTableHeaderStyle}>Patient</th>
+                  <th style={recentPrescriptionsTableHeaderStyle}>Date</th>
+                  <th style={recentPrescriptionsTableHeaderStyle}>Status</th>
+                  <th style={recentPrescriptionsTableHeaderStyle}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style={recentPrescriptionsTableRowStyle}>
+                  <td style={recentPrescriptionsTableCellStyle}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
+                      <div style={patientAvatarStyle}>JD</div>
+                      <span style={{ marginLeft: '10px' }}>John Doe</span>
+                    </div>
+                  </td>
+                  <td style={recentPrescriptionsTableCellStyle}>Apr 27, 2025</td>
+                  <td style={recentPrescriptionsTableCellStyle}>Filled</td>
+                  <td style={recentPrescriptionsTableCellStyle}>...</td>
+                </tr>
+                <tr style={recentPrescriptionsTableRowStyle}>
+                  <td style={recentPrescriptionsTableCellStyle}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
+                      <div style={{ ...patientAvatarStyle, backgroundColor: '#fd7e14' }}>JS</div>
+                      <span style={{ marginLeft: '10px' }}>Jane Smith</span>
+                    </div>
+                  </td>
+                  <td style={recentPrescriptionsTableCellStyle}>Apr 26, 2025</td>
+                  <td style={recentPrescriptionsTableCellStyle}>Pending</td>
+                  <td style={recentPrescriptionsTableCellStyle}>...</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </main>
       </div>
 
       <div>
-      <h2>Welcome to Patient Portal</h2>
-      {/* Other portal UI here */}
-      
       {/* Chatbot with icon */}
       <ChatBotToggle />
-    </div>
+      </div>
 
       {/* Footer */}
       <footer style={footerStyle}>
