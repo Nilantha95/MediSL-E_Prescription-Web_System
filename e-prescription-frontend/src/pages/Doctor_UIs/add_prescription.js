@@ -5,10 +5,19 @@ import { FaPhoneAlt } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
 import { Link } from 'react-router-dom';
 import { FaFacebookF, FaTwitter, FaInstagram, FaPinterest, FaWhatsapp} from 'react-icons/fa';
+import { db } from '../firebase';
+import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import {  getDocs, query, where } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+import Autocomplete from '@mui/material/Autocomplete';
+import TextField from '@mui/material/TextField';
+
+
+
 
 const NewPrescriptionForm = () => {
   const [patientName, setPatientName] = useState('');
-  const [patientID, setPatientID] = useState('');
+  const [patientmail, setPatientMail] = useState('');
   const [age, setAge] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [gender, setGender] = useState('');
@@ -39,6 +48,29 @@ const NewPrescriptionForm = () => {
 
     return () => clearInterval(intervalId);
   }, []);
+
+  const [patients, setPatients] = useState([]);
+          useEffect(() => {
+            const fetchPatients = async () => {
+              try {
+                const usersRef = collection(db, 'users');
+                const q = query(usersRef, where('userType', '==', 'patient'));
+                const querySnapshot = await getDocs(q);
+                const patientsList = querySnapshot.docs.map(doc => ({
+                  id: doc.id,
+                  email: doc.data().email || '',
+                  //name: doc.data().name || 'Unnamed',
+
+                }));
+                setPatients(patientsList);
+              } catch (error) {
+                console.error('Error fetching patients:', error);
+              }
+            };
+            fetchPatients();
+}, []);
+
+
 
   const handleAddMedicine = () => {
     setMedications([
@@ -248,26 +280,45 @@ const NewPrescriptionForm = () => {
     );
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log({
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (!user) {
+      alert("You must be logged in to add a prescription.");
+      return;
+    }
+
+    await addDoc(collection(db, 'prescriptions'), {
+      doctorId: user.uid,
       patientName,
-      patientID,
+      patientmail,
       age,
       contactNumber,
       gender,
       bloodGroup,
       diagnosis,
-      medications,
       additionalNotes,
+      medications,
+      createdAt: Timestamp.now(),
     });
-    alert('Prescription saved! Check console for data.');
-  };
+
+    alert("Prescription saved successfully!");
+    // Optionally reset form here
+  } catch (error) {
+    console.error("Error saving prescription:", error);
+    alert("Failed to save prescription.");
+  }
+};
+
 
   const handleCancel = () => {
     console.log('Form cancelled');
     setPatientName('');
-    setPatientID('');
+    setPatientMail('');
     setAge('');
     setContactNumber('');
     setGender('');
@@ -535,16 +586,29 @@ const NewPrescriptionForm = () => {
                 />
               </div>
               <div style={inputGroupStyle}>
-                <label htmlFor="patientEmail" style={labelStyle}>Patient Email</label>
-                <input
-                  type="text"
-                  id="patientEmail"
-                  placeholder="Enter Patient Email"
-                  value={patientID}
-                  onChange={(e) => setPatientID(e.target.value)}
-                  style={inputFieldStyle}
-                />
-              </div>
+              <label htmlFor="patientID" style={labelStyle}>Select Patient</label>
+              <Autocomplete
+                options={patients}
+                getOptionLabel={(option) => option.email}
+
+                renderInput={(params) => (
+                  <TextField {...params} label="Patient Email" variant="outlined" />
+                )}
+                onChange={(event, newValue) => {
+                  if (newValue) {
+                    setPatientMail(newValue.email);
+                    
+                  } else {
+                    setPatientMail('');
+                    
+                  }
+                }}
+                fullWidth
+              />
+
+
+            </div>
+
               <div style={inputGroupStyle}>
                 <label htmlFor="age" style={labelStyle}>Age</label>
                 <input
