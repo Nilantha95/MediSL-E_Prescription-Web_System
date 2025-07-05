@@ -12,10 +12,10 @@ import slide3 from './images/slide03.png';
 import user1 from './images/aboutdoc.png';
 import user2 from './images/phar.png';
 import background from './images/interfacescrolling.jpg';
-import { FaFacebookF, FaTwitter, FaInstagram, FaPinterest, FaWhatsapp} from 'react-icons/fa';
-import { IoIosArrowForward, IoIosArrowDown } from 'react-icons/io';
 import { FaPhoneAlt } from 'react-icons/fa';
+import { IoIosArrowForward, IoIosArrowDown } from 'react-icons/io';
 import { Link } from 'react-router-dom';
+import Footer from './Footer'; // Assuming Footer.js is in the same directory, adjust path if needed
 
 function App() {
   return (
@@ -59,12 +59,12 @@ function App() {
 
       {/* Navigation Bar */}
       <nav style={{ backgroundColor: '#fff', borderBottom: '1px solid #eee', padding: '15px 50px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-         <ul style={{ listStyle: 'none', display: 'flex', gap: '30px', margin: 0, padding: 0 }}>
-            <li><Link to="/" style={{ textDecoration: 'none', color: '#333', fontSize: '14px', fontWeight: 'bold' }}>HOME</Link></li>
-            <li><Link to="/featurepage" style={{ textDecoration: 'none', color: '#333', fontSize: '14px', fontWeight: 'bold' }}>FEATURES</Link></li>
-            <li><Link to="/doctors" style={{ textDecoration: 'none', color: '#333', fontSize: '14px', fontWeight: 'bold' }}>DOCTORS</Link></li>
-            <li><Link to="/patients" style={{ textDecoration: 'none', color: '#333', fontSize: '14px', fontWeight: 'bold' }}>PATIENTS</Link></li>
-            <li style={{ position: 'relative' }}>
+        <ul style={{ listStyle: 'none', display: 'flex', gap: '30px', margin: 0, padding: 0 }}>
+          <li><Link to="/" style={{ textDecoration: 'none', color: '#333', fontSize: '14px', fontWeight: 'bold' }}>HOME</Link></li>
+          <li><Link to="/featurepage" style={{ textDecoration: 'none', color: '#333', fontSize: '14px', fontWeight: 'bold' }}>FEATURES</Link></li>
+          <li><Link to="/doctors" style={{ textDecoration: 'none', color: '#333', fontSize: '14px', fontWeight: 'bold' }}>DOCTORS</Link></li>
+          <li><Link to="/patients" style={{ textDecoration: 'none', color: '#333', fontSize: '14px', fontWeight: 'bold' }}>PATIENTS</Link></li>
+          <li style={{ position: 'relative' }}>
             <Link to="/pages" style={{ textDecoration: 'none', color: '#333', fontSize: '14px', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
               PAGES <IoIosArrowDown style={{ marginLeft: '5px' }} />
             </Link>
@@ -73,11 +73,7 @@ function App() {
           <li><Link to="/blog" style={{ textDecoration: 'none', color: '#333', fontSize: '14px', fontWeight: 'bold' }}>BLOG</Link></li>
           <li><Link to="/contact" style={{ textDecoration: 'none', color: '#333', fontSize: '14px', fontWeight: 'bold' }}>CONTACT</Link></li>
         </ul>
-          <div style={{ display: 'flex', gap: '15px', color: '#ccc' }}>
-            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" style={{ color: '#007bff' }}><FaFacebookF /></a>
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" style={{ color: '#1da1f2' }}><FaTwitter /></a>
-            {/* Add other social media icons as needed */}
-          </div>
+        {/* Removed social media icons from here as they are in the new footer */}
       </nav>
 
       {/* Hero Section */}
@@ -127,8 +123,7 @@ function App() {
                 height: '100px',
                 marginBottom: '10px',
                 borderRadius: '100%'
-              }}
-            /> {/* Replace with your actual icon path */}
+              }} /> {/* Replace with your actual icon path */}
             <h3 style={{ fontSize: '1.2em', fontWeight: 'bold', color: '#333', marginBottom: '10px' }}>For Doctors</h3>
             <p style={{ fontSize: '0.9em', color: '#555', lineHeight: '1.4' }}>Easily create and manage digital prescriptions, access patient history, and ensure accurate medication details.</p>
           </div>
@@ -159,7 +154,7 @@ function App() {
         </div>
       </section>
 
-     {/* Parallax Section */}
+      {/* Parallax Section */}
       <section style={{
         backgroundAttachment: 'fixed',
         backgroundSize: 'cover',
@@ -229,159 +224,9 @@ function App() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer style={footerStyle}>
-      <div style={containerStyle}>
-        <div style={sectionStyle}>
-          <h3 style={headingStyle}>Shop Matcha</h3>
-          <ul style={listStyle}>
-            <li style={listItemStyle}>Starter Kits</li>
-            <li style={listItemStyle}>Lattes & Sweetened</li>
-            <li style={listItemStyle}>Just the Matcha</li>
-            <li style={listItemStyle}>Matchaware</li>
-            <li style={listItemStyle}>Shop All</li>
-          </ul>
-        </div>
-
-        <div style={sectionStyle}>
-          <h3 style={headingStyle}>Learn</h3>
-          <ul style={listStyle}>
-            <li style={listItemStyle}>Our Story</li>
-            <li style={listItemStyle}>Matcha Recipes</li>
-            <li style={listItemStyle}>Caffeine Content</li>
-            <li style={listItemStyle}>Health Benefits</li>
-            <li style={listItemStyle}>FAQ's</li>
-          </ul>
-        </div>
-
-        <div style={sectionStyle}>
-          <h3 style={headingStyle}>More from Tenzo</h3>
-          <ul style={listStyle}>
-            <li style={listItemStyle}>Sign In</li>
-            <li style={listItemStyle}>Wholesale Opportunities</li>
-            <li style={listItemStyle}>Affiliate</li>
-            <li style={listItemStyle}>Contact Us</li>
-          </ul>
-        </div>
-
-        <div style={followUsStyle}>
-            <h3 style={headingStyle}>Follow us</h3>
-            <div style={socialIconStyle}>
-              <a href="#" style={iconLinkStyle}><FaPinterest style={socialIconStyle} /></a>
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" style={iconLinkStyle}><FaFacebookF style={socialIconStyle} /></a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={iconLinkStyle}><FaInstagram style={socialIconStyle} /></a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" style={iconLinkStyle}><FaTwitter style={socialIconStyle} /></a>
-              <a href="https://whatsapp.com" target="_blank" rel="noopener noreferrer" style={iconLinkStyle}><FaWhatsapp style={socialIconStyle} /></a>
-            </div>
-          </div>
-      </div>
-      <div style={bottomBarStyle}>
-        <p style={copyrightStyle}>© 2025 tenzotea.co</p>
-        <div style={linksStyle}>
-          <a href="#" style={bottomLinkStyle}>Terms of Service</a>
-          <span style={separatorStyle}>|</span>
-          <a href="#" style={bottomLinkStyle}>Privacy Policy</a>
-          <span style={separatorStyle}>|</span>
-          <a href="#" style={bottomLinkStyle}>Refund Policy</a>
-          <span style={separatorStyle}>|</span>
-          <a href="#" style={bottomLinkStyle}>Accessibility Policy</a>
-        </div>
-      </div>
-    </footer>
-      <div style={{ backgroundColor: '#111', color: '#ddd', textAlign: 'center', padding: '10px' }}>
-        <p>© 2025 E-Prescribe. All rights reserved.</p>
-      </div>
+      {/* New Footer Component */}
+      <Footer />
     </div>
   );
 }
-
-const footerStyle = {
-  backgroundColor: '#d7f3d2', // Light green background
-  padding: '20px',
-};
-
-const containerStyle = {
-  display: 'flex',
-  justifyContent: 'space-around',
-  paddingBottom: '20px',
-};
-
-const sectionStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-};
-
-const headingStyle = {
-  fontSize: '1.2em',
-  marginBottom: '10px',
-  color: '#333',
-};
-
-const listStyle = {
-  listStyle: 'none',
-  padding: 0,
-  margin: 0,
-};
-
-const listItemStyle = {
-  marginBottom: '10px',
-  color: '#555',
-};
-
-const followUsStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-};
-
-const socialIconStyle = {
-  display: 'flex',
-};
-
-const iconLinkStyle = {
-  marginRight: '10px',
-  textDecoration: 'none',
-  color: '#333', // Placeholder for icon color
-};
-
-const socialIcon = {
-  backgroundColor: '#333', // Placeholder for icon background
-  borderRadius: '50%',
-  width: '30px',
-  height: '30px',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  fontSize: '1em',
-};
-
-const bottomBarStyle = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  paddingTop: '10px',
-  borderTop: '1px solid #ccc',
-};
-
-const copyrightStyle = {
-  fontSize: '0.8em',
-  color: '#777',
-};
-
-const linksStyle = {
-  display: 'flex',
-};
-
-const bottomLinkStyle = {
-  color: '#555',
-  textDecoration: 'none',
-  fontSize: '0.8em',
-  marginRight: '10px',
-};
-
-const separatorStyle = {
-  color: '#ccc',
-  marginRight: '10px',
-};
-
 export default App;
