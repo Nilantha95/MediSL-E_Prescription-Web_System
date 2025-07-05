@@ -10,7 +10,7 @@ const Footer = () => {
     backgroundColor: '#d7f3d2', // Black background
     color: 'black', // White text
     padding: '40px 20px', // Reverted to original padding for overall footer height
-    fontFamily: 'Arial, sans-serif', // Example font
+    fontFamily: 'Roboto, sans-serif', // Default font for the footer content
   };
 
   const footerContentStyle = {
@@ -31,13 +31,15 @@ const Footer = () => {
     fontSize: '1.2em', // Reverted to original heading size
     marginBottom: '20px', // Reverted to original margin below heading
     color: 'black',
-    // Removed textAlign: 'center' from here as it's only needed for "Follow us"
+    fontFamily: 'Montserrat, sans-serif', // Montserrat for headings
+    fontWeight: '700', // Make headings bold
   };
 
   const paragraphStyle = {
     fontSize: '0.9em', // Reverted to original paragraph text size
     lineHeight: '1.6', // Reverted to original line height
     color: 'black',
+    fontFamily: 'Roboto, sans-serif', // Roboto for paragraphs
   };
 
   const listStyle = {
@@ -51,6 +53,7 @@ const Footer = () => {
     fontSize: '0.9em', // Reverted to original list item text size
     display: 'flex',
     alignItems: 'center',
+    fontFamily: 'Roboto, sans-serif', // Roboto for list items
   };
 
   // Function to get link style based on hover state
@@ -58,12 +61,13 @@ const Footer = () => {
     color: hoveredLink === linkName ? 'black' : 'black', // White on hover, else grey
     textDecoration: 'none',
     transition: 'color 0.3s ease',
+    fontFamily: 'Roboto, sans-serif', // Ensure links also use Roboto
   });
 
   const iconStyle = {
     marginRight: '10px', // Reverted to original icon margin
     fontSize: '1.1em', // Reverted to original icon size
-    color: '#fff',
+    color: 'black', // Set to black for consistency
   };
 
   // Styles for Follow Us section
@@ -71,9 +75,9 @@ const Footer = () => {
     flex: '1',
     minWidth: '200px', // Reverted to original min-width for consistency
     margin: '0 15px 30px 15px', // Consistent margins with other sections
-    display: 'flex',          // Enable flexbox
-    flexDirection: 'column',  // Arrange items in a column
-    alignItems: 'center',     // Center items horizontally in the column
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
   };
 
   const followUsHeadingStyle = { // Specific style for Follow Us heading
@@ -81,13 +85,11 @@ const Footer = () => {
     textAlign: 'center', // Override to center just this heading
   };
 
-
   const socialIconStyle = {
     display: 'flex',
     gap: '15px', // Reverted to original space between icons
     fontSize: '1.5em', // Reverted to original size of social media icons
     color: 'black', // Color of social media icons
-    // Removed marginTop as flexbox alignment handles it
   };
 
   const iconLinkStyle = {
