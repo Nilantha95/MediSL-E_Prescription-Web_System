@@ -15,7 +15,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 # --- GOOGLE TRANSLATE API IMPORTS ---
 from google.cloud import translate_v3 as translate
 # Set GOOGLE_APPLICATION_CREDENTIALS environment variable or provide path here
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./medisl-ed07f-b0b46af4e5bc.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./API_keys/medisl-ed07f-b0b46af4e5bc.json"
 
 # Ensure NLTK data is available
 try:
@@ -34,7 +34,7 @@ except Exception as e: # <--- ADDED A MORE GENERIC CATCH FOR OTHER ERRORS
 
 
 # --- Configuration ---
-SERVICE_ACCOUNT_KEY_PATH = './medisl-ed07f-firebase-adminsdk-fbsvc-04097b5b1d.json'
+SERVICE_ACCOUNT_KEY_PATH = './API_keys/medisl-ed07f-firebase-adminsdk-fbsvc-04097b5b1d.json'
 # Using English-specific collections as we will translate input/output
 SYMPTOMS_DISEASES_COLLECTION = 'diseases_symptoms'
 DISEASES_MEDICINES_COLLECTION = 'diseases_medicines'
