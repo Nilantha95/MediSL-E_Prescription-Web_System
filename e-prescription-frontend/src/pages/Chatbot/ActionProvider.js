@@ -1,8 +1,12 @@
+import i18n from './i18n';
+
 class ActionProvider {
-  constructor(createChatBotMessage, setStateFunc, createClientMessage) {
+  // Update the constructor to accept the 'state' as the fourth argument
+  constructor(createChatBotMessage, setStateFunc, createClientMessage, state) { // <-- ADDED 'state' HERE
     this.createChatBotMessage = createChatBotMessage;
     this.setState = setStateFunc;
     this.createClientMessage = createClientMessage;
+    this.state = state; // <-- Store the state received from the Chatbot component
   }
 
   // Helper function to update the chatbot state with a new message
@@ -21,24 +25,45 @@ class ActionProvider {
     }));
   };
 
-  // --- Initial Choice Handlers ---
-  handleMedicineDetailsStart = () => {
-    const message = this.createChatBotMessage("Great! Please type the full name of the medicine you want to know about (e.g., 'Avastin 400mg Injection').");
-    this.addMessageToState(message);
-    this.setChatbotMode('medicine_details');
+  // Helper to update the chatbot's language state
+  setChatbotLanguage = (lang) => {
+    this.setState((prevState) => ({
+      ...prevState,
+      language: lang,
+    }));
   };
 
-  handleSymptomsDiagnosisStart = () => {
-    const message = this.createChatBotMessage("Okay, please describe your symptoms. You can list multiple symptoms separated by commas or just describe them in a sentence.");
+  // --- Handlers for Language Selection ---
+  handleLanguageSelected = (lang) => {
+    this.setChatbotLanguage(lang);
+    const message = this.createChatBotMessage(i18n.t('welcomeMessage'), {
+      widget: 'optionChooser', // Re-display options after language selection
+    });
+    this.addMessageToState(message);
+  };
+
+  // --- Initial Choice Handlers ---
+  handleMedicineDetailsStart = (lang) => {
+    const message = this.createChatBotMessage(i18n.t('medicineDetailsMode'));
+    this.addMessageToState(message);
+    this.setChatbotMode('medicine_details');
+    this.setChatbotLanguage(lang);
+  };
+
+  handleSymptomsDiagnosisStart = (lang) => {
+    const message = this.createChatBotMessage(i18n.t('symptomsDiagnosisMode'));
     this.addMessageToState(message);
     this.setChatbotMode('symptoms_diagnosis');
+    this.setChatbotLanguage(lang);
   };
 
   // --- Backend API Call for Medicine Details ---
   async processMedicineName(medicineName) {
-    const backendUrl = 'http://127.0.0.1:5000/get_medicine_details'; // Your new backend endpoint
+    const backendUrl = 'http://127.0.0.1:5000/get_medicine_details';
+    // Now this.state will be defined
+    const currentLanguage = this.state.language || 'en'; 
 
-    this.addMessageToState(this.createChatBotMessage(`Searching for details on "${medicineName}"...`));
+    this.addMessageToState(this.createChatBotMessage(i18n.t('loadingMessage')));
 
     try {
       const response = await fetch(backendUrl, {
@@ -46,14 +71,17 @@ class ActionProvider {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ medicineName: medicineName })
+        body: JSON.stringify({
+          medicineName: medicineName,
+          language: currentLanguage,
+        }),
       });
 
       const data = await response.json();
       console.log('Medicine details response:', data);
 
       if (!response.ok) {
-        const errorMessage = data.message || `Error fetching medicine details. Status: ${response.status}`;
+        const errorMessage = data.message || i18n.t('genericError');
         throw new Error(errorMessage);
       }
 
@@ -63,17 +91,19 @@ class ActionProvider {
     } catch (error) {
       console.error('Error in processMedicineName:', error);
       this.addMessageToState(
-        this.createChatBotMessage(`Sorry, I couldn't get details for "${medicineName}". ${error.message}. Please try again or check the spelling.`)
+        this.createChatBotMessage(i18n.t('noMedicineFound', { medicineName: medicineName }))
       );
-      this.addMessageToState(this.createChatBotMessage("You can type 'restart' to go back to the main menu."));
+      this.addMessageToState(this.createChatBotMessage(i18n.t('goBack')));
     }
   }
 
-  // --- Backend API Call for Symptoms Diagnosis (Existing Logic) ---
+  // --- Backend API Call for Symptoms Diagnosis ---
   async processSymptoms(symptomsParagraph) {
-    const backendUrl = 'http://127.0.0.1:5000/chat'; // Your existing backend endpoint
+    const backendUrl = 'http://127.0.0.1:5000/chat';
+    // Now this.state will be defined
+    const currentLanguage = this.state.language || 'en'; 
 
-    this.addMessageToState(this.createChatBotMessage("Analyzing your symptoms, please wait..."));
+    this.addMessageToState(this.createChatBotMessage(i18n.t('loadingMessage')));
 
     try {
       const response = await fetch(backendUrl, {
@@ -81,14 +111,17 @@ class ActionProvider {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ symptoms: symptomsParagraph })
+        body: JSON.stringify({
+          symptoms: symptomsParagraph,
+          language: currentLanguage,
+        }),
       });
 
       const data = await response.json();
       console.log('Symptoms diagnosis response:', data);
 
       if (!response.ok) {
-        const errorMessage = data.message || `Error diagnosing symptoms. Status: ${response.status}`;
+        const errorMessage = data.message || i18n.t('genericError');
         throw new Error(errorMessage);
       }
 
@@ -98,9 +131,9 @@ class ActionProvider {
     } catch (error) {
       console.error('Error in processSymptoms:', error);
       this.addMessageToState(
-        this.createChatBotMessage("Sorry, I'm having trouble diagnosing your symptoms right now. Please try again later.")
+        this.createChatBotMessage(i18n.t('noDiseaseFound'))
       );
-      this.addMessageToState(this.createChatBotMessage("You can type 'restart' to go back to the main menu."));
+      this.addMessageToState(this.createChatBotMessage(i18n.t('goBack')));
     }
   }
 
@@ -109,7 +142,7 @@ class ActionProvider {
     this.setState((prevState) => ({
       ...prevState,
       messages: [
-        this.createChatBotMessage("Hello! I'm your MediSL Chatbot. How can I help you today?", {
+        this.createChatBotMessage(i18n.t('welcomeMessage'), {
           widget: 'optionChooser',
         }),
       ],
@@ -120,19 +153,24 @@ class ActionProvider {
   // --- Handle Unknown Input ---
   handleUnknownInput = () => {
     const currentState = this.state.chatbotMode;
-    let messageText = "I didn't understand that. ";
+    let messageKey = "unknownInput";
 
     if (currentState === 'initial_choice') {
-      messageText += "Please choose an option from the buttons above.";
+      messageKey = "initialChoicePrompt";
     } else if (currentState === 'medicine_details') {
-      messageText += "Please type the full medicine name you are looking for, or type 'restart' to go back to the main menu.";
+      messageKey = "provideMedicineName";
     } else if (currentState === 'symptoms_diagnosis') {
-      messageText += "Please describe your symptoms, or type 'restart' to go back to the main menu.";
+      messageKey = "provideSymptoms";
     } else {
-      messageText += "Please type 'restart' to begin again.";
+      messageKey = "initialChoicePrompt";
     }
 
-    this.addMessageToState(this.createChatBotMessage(messageText));
+    let detailedMessage = "";
+    if (currentState === 'medicine_details' || currentState === 'symptoms_diagnosis') {
+        detailedMessage = i18n.t('goBack');
+    }
+
+    this.addMessageToState(this.createChatBotMessage(i18n.t(messageKey) + " " + detailedMessage));
   };
 }
 
