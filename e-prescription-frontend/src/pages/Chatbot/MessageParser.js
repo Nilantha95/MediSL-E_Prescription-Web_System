@@ -1,15 +1,19 @@
 class MessageParser {
-  constructor(actionProvider) {
+  constructor(actionProvider, state) {
     this.actionProvider = actionProvider;
+    this.state = state;
   }
 
   parse(message) {
-    const lowercase = message.toLowerCase();
+    console.log("User message received:", message);
+    const lowerCaseMessage = message.toLowerCase();
 
-    if (lowercase.includes("hello")) {
-      this.actionProvider.greet();
-    }
-    // Add more conditions here
+    // For a symptom checker, we'll typically send the entire user message
+    // as symptoms to the backend. You can add more sophisticated parsing
+    // here if you want to recognize specific commands later (e.g., "hello", "help").
+
+    // Call the actionProvider to handle the symptoms
+    this.actionProvider.handleUserSymptoms(message);
   }
 }
 

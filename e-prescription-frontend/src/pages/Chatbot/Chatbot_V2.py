@@ -1,11 +1,15 @@
+# ingest_data_to_firestore.py
 import firebase_admin
 from firebase_admin import credentials, firestore
 import pandas as pd
 import os
+import re # Import regex module for cleaning strings
 
 # --- Configuration ---
 # Path to your Firebase service account key JSON file
-SERVICE_ACCOUNT_KEY_PATH = './medisl-ed07f-firebase-adminsdk-fbsvc-b68db987a3.json'
+# !!! UPDATE THIS PATH TO YOUR NEWLY GENERATED KEY FILE !!!
+SERVICE_ACCOUNT_KEY_PATH = './medisl-ed07f-firebase-adminsdk-fbsvc-baf423578c.json' # Example: Update with your actual new file name
+
 # Collection names in Firestore
 SYMPTOMS_DISEASES_COLLECTION = 'diseases_symptoms'
 DISEASES_MEDICINES_COLLECTION = 'diseases_medicines'
@@ -18,8 +22,25 @@ try:
     print("Firebase Admin SDK initialized successfully.")
 except Exception as e:
     print(f"Error initializing Firebase: {e}")
-    print("Please ensure 'serviceAccountKey.json' is in the correct path and is valid.")
+    print("Please ensure your SERVICE_ACCOUNT_KEY_PATH is correct and the JSON file is valid and accessible.")
     exit()
+
+# --- Helper function to sanitize string for Firestore Document ID ---
+def sanitize_for_firestore_id(text):
+    """
+    Cleans a string to be suitable for a Firestore Document ID.
+    Firestore document IDs cannot contain any of the following characters:
+    '/', '\', '#', '[', ']', '*', '`'
+    """
+    # Replace problematic characters with an underscore
+    text = re.sub(r'[\\/#\[\]*`]', '_', text)
+    # Replace multiple spaces/underscores with a single underscore
+    text = re.sub(r'[\s_]+', '_', text)
+    # Remove leading/trailing underscores
+    text = text.strip('_')
+    # Convert to lowercase for consistency
+    return text.lower()
+
 
 # --- Function to upload symptoms_diseases data ---
 def upload_symptoms_diseases(csv_file_path):
@@ -29,32 +50,40 @@ def upload_symptoms_diseases(csv_file_path):
         # Fill NaN values with an empty string for easier processing
         df = df.fillna('')
 
-        # Group by 'disease' and collect all symptoms into a list for each disease
-        # We'll iterate through all 'symptoms' columns (symptoms, symptoms.1, etc.)
         diseases_symptoms_map = {}
         for index, row in df.iterrows():
-            disease = row['disease'].strip().lower() # Normalize disease name
+            original_disease_name = str(row['disease']).strip() # Ensure it's a string
+            # Sanitize the disease name for use as Firestore document ID
+            disease_firestore_id = sanitize_for_firestore_id(original_disease_name)
+
+            # --- NEW CHECK: Ensure the sanitized ID is not empty ---
+            if not disease_firestore_id:
+                print(f"Skipping row {index+1} in {csv_file_path}: Disease name '{original_disease_name}' resulted in an empty Firestore ID after sanitization.")
+                continue # Skip this row
+
             symptoms_list = []
             # Iterate through all columns that start with 'symptoms'
             for col in df.columns:
-                if col.startswith('symptoms') and row[col].strip() != '':
-                    symptoms_list.append(row[col].strip().lower().replace('_', ' ')) # Normalize symptoms
+                if col.startswith('symptoms') and str(row[col]).strip() != '': # Ensure symptom is a string
+                    # Normalize symptom text: lowercase, replace underscores with spaces
+                    symptoms_list.append(str(row[col]).strip().lower().replace('_', ' '))
 
-            if disease not in diseases_symptoms_map:
-                diseases_symptoms_map[disease] = set() # Use a set to avoid duplicate symptoms
-            diseases_symptoms_map[disease].update(symptoms_list)
-
-        # Convert sets back to lists for Firestore
-        for disease, symptoms_set in diseases_symptoms_map.items():
-            diseases_symptoms_map[disease] = sorted(list(symptoms_set)) # Sort for consistency
+            if disease_firestore_id not in diseases_symptoms_map:
+                # Store original name for display, and a set for unique symptoms
+                diseases_symptoms_map[disease_firestore_id] = {
+                    'diseaseNameDisplay': original_disease_name,
+                    'symptoms': set()
+                }
+            diseases_symptoms_map[disease_firestore_id]['symptoms'].update(symptoms_list)
 
         batch = db.batch()
         count = 0
-        for disease, symptoms in diseases_symptoms_map.items():
-            doc_ref = db.collection(SYMPTOMS_DISEASES_COLLECTION).document(disease) # Use disease name as document ID
+        for disease_id, data in diseases_symptoms_map.items():
+            doc_ref = db.collection(SYMPTOMS_DISEASES_COLLECTION).document(disease_id)
             batch.set(doc_ref, {
-                'diseaseName': disease,
-                'symptoms': symptoms
+                'diseaseNameDisplay': data['diseaseNameDisplay'],
+                'diseaseNameId': disease_id, # Store the sanitized ID name as a field
+                'symptoms': sorted(list(data['symptoms'])) # Convert set to sorted list
             })
             count += 1
             if count % 500 == 0: # Commit batch every 500 operations
@@ -77,28 +106,36 @@ def upload_diseases_medicines(csv_file_path):
         df = pd.read_csv(csv_file_path)
         df = df.fillna('')
 
-        # Group by 'disease' and collect all medicines into a list for each disease
         diseases_medicines_map = {}
         for index, row in df.iterrows():
-            disease = row['disease'].strip().lower() # Normalize disease name
-            medicine = row['medicines'].strip().lower() # Normalize medicine name
+            original_disease_name = str(row['disease']).strip() # Ensure it's a string
+            # Sanitize the disease name for use as Firestore document ID
+            disease_firestore_id = sanitize_for_firestore_id(original_disease_name)
+            
+            # --- NEW CHECK: Ensure the sanitized ID is not empty ---
+            if not disease_firestore_id:
+                print(f"Skipping row {index+1} in {csv_file_path}: Disease name '{original_disease_name}' resulted in an empty Firestore ID after sanitization.")
+                continue # Skip this row
 
-            if disease not in diseases_medicines_map:
-                diseases_medicines_map[disease] = set() # Use a set to avoid duplicate medicines
+            medicine = str(row['medicines']).strip().lower() # Ensure medicine is a string
+
+            if disease_firestore_id not in diseases_medicines_map:
+                # Store original name for display, and a set for unique medicines
+                diseases_medicines_map[disease_firestore_id] = {
+                    'diseaseNameDisplay': original_disease_name,
+                    'medicines': set()
+                }
             if medicine: # Only add if not empty
-                diseases_medicines_map[disease].add(medicine)
-
-        # Convert sets back to lists for Firestore
-        for disease, medicines_set in diseases_medicines_map.items():
-            diseases_medicines_map[disease] = sorted(list(medicines_set)) # Sort for consistency
+                diseases_medicines_map[disease_firestore_id]['medicines'].add(medicine)
 
         batch = db.batch()
         count = 0
-        for disease, medicines in diseases_medicines_map.items():
-            doc_ref = db.collection(DISEASES_MEDICINES_COLLECTION).document(disease) # Use disease name as document ID
+        for disease_id, data in diseases_medicines_map.items():
+            doc_ref = db.collection(DISEASES_MEDICINES_COLLECTION).document(disease_id)
             batch.set(doc_ref, {
-                'diseaseName': disease,
-                'medicines': medicines
+                'diseaseNameDisplay': data['diseaseNameDisplay'],
+                'diseaseNameId': disease_id, # Store the sanitized ID name as a field
+                'medicines': sorted(list(data['medicines'])) # Convert set to sorted list
             })
             count += 1
             if count % 500 == 0: # Commit batch every 500 operations
@@ -118,10 +155,10 @@ def upload_diseases_medicines(csv_file_path):
 if __name__ == "__main__":
     # Ensure CSV files exist
     if not os.path.exists('./Dataset/symptoms_diseases.csv'):
-        print("Error: 'symptoms_diseases.csv' not found. Please upload it.")
+        print("Error: 'symptoms_diseases.csv' not found. Please ensure it's in the same directory or update path.")
         exit()
     if not os.path.exists('./Dataset/diseases_medicines.csv'):
-        print("Error: 'diseases_medicines.csv' not found. Please upload it.")
+        print("Error: 'diseases_medicines.csv' not found. Please ensure it's in the same directory or update path.")
         exit()
 
     upload_symptoms_diseases('./Dataset/symptoms_diseases.csv')
