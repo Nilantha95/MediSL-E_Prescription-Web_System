@@ -4,7 +4,8 @@ import "react-chatbot-kit/build/main.css";
 import ChatbotConfig from './ChatbotConfig';
 import MessageParser from './MessageParser';
 import ActionProvider from './ActionProvider';
-import { FaComments } from "react-icons/fa";
+// Import both chat and close icons
+import { FaComments, FaTimes } from "react-icons/fa"; 
 
 const ChatBotToggle = () => {
   const [showChat, setShowChat] = useState(false);
@@ -15,13 +16,14 @@ const ChatBotToggle = () => {
 
   return (
     <div>
-      {/* Floating Icon */}
+      {/* Floating Icon at bottom right */}
       <div
         style={{
           position: "fixed",
           bottom: "30px",
           right: "30px",
-          backgroundColor: "#007bff",
+          // Conditionally set background color: red if chat is open, blue if chat is closed
+          backgroundColor: showChat ? "#dc3545" : "#007bff", // Red for close, Blue for chat
           borderRadius: "50%",
           width: "60px",
           height: "60px",
@@ -35,10 +37,11 @@ const ChatBotToggle = () => {
         }}
         onClick={toggleChat}
       >
-        <FaComments size={28} />
+        {/* Conditionally render the icon: FaTimes (red cross) if chat is open, FaComments (chat icon) if chat is closed */}
+        {showChat ? <FaTimes size={28} /> : <FaComments size={28} />}
       </div>
 
-      {/* Chatbot Panel */}
+      {/* Chatbot Panel, shown when showChat is true */}
       {showChat && (
         <div
           style={{

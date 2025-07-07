@@ -1,4 +1,3 @@
-# chatbot_backend.py
 import firebase_admin
 from firebase_admin import credentials, firestore
 from flask import Flask, request, jsonify
@@ -14,9 +13,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # --- Configuration ---
-SERVICE_ACCOUNT_KEY_PATH = './medisl-ed07f-firebase-adminsdk-fbsvc-baf423578c.json'
+SERVICE_ACCOUNT_KEY_PATH = './medisl-ed07f-firebase-adminsdk-fbsvc-9f6b111944.json'
 SYMPTOMS_DISEASES_COLLECTION = 'diseases_symptoms'
 DISEASES_MEDICINES_COLLECTION = 'diseases_medicines'
+MEDICINE_DETAILS_COLLECTION = 'medicine_details'
 
 # --- Initialize Flask App ---
 app = Flask(__name__)
@@ -42,7 +42,7 @@ tfidf_vectorizer = None # This will hold our fitted TF-IDF vectorizer
 # This list will store dictionaries, each containing a disease ID, its display name, and its TF-IDF vector
 disease_symptom_vectors = []
 
-# --- NLP Preprocessing Function ---
+# --- NLP Preprocessing Function for Symptoms ---
 def preprocess_text(text):
     """
     Cleans and normalizes text for NLP processing.
@@ -61,7 +61,20 @@ def preprocess_text(text):
     ]
     return filtered_tokens
 
-# --- NEW FUNCTION: Load and Vectorize Symptoms Data from Firestore ---
+# --- NEW HELPER FUNCTION: Preprocess Medicine Names for Lookup ---
+def preprocess_medicine_name(name):
+    """
+    Cleans and standardizes a medicine name for use as a Firestore document ID.
+    - Lowercases
+    - Replaces spaces and non-alphanumeric characters with underscores
+    - Removes leading/trailing underscores
+    """
+    name = name.lower()
+    name = re.sub(r'[^a-z0-9]+', '_', name) # Replace non-alphanumeric with underscore
+    name = name.strip('_') # Remove leading/trailing underscores
+    return name
+
+# --- Function to load and vectorize symptoms from Firestore ---
 def load_and_vectorize_symptoms_data():
     global tfidf_vectorizer, disease_symptom_vectors
     print("\n--- Loading and Vectorizing Symptoms Data for Chatbot ---")
@@ -112,14 +125,15 @@ def load_and_vectorize_symptoms_data():
     except Exception as e:
         print(f"Error loading or vectorizing symptom data: {e}")
         # If this fails, the chatbot can't function correctly for matching
-        exit() # Consider more robust error handling for production
+        # exit() # Consider more robust error handling for production
+        pass # Allow app to start even if this fails, but chatbot symptom matching will be broken
 
 # --- Call this function once when the Flask app starts ---
 # This ensures data is loaded and vectorizer is ready before any requests come in.
 load_and_vectorize_symptoms_data()
 
 
-# --- Chatbot Endpoint ---
+# --- Chatbot Endpoint for Disease Diagnosis ---
 @app.route('/chat', methods=['POST'])
 def chat():
     """
@@ -182,6 +196,7 @@ def chat():
         # Iterate through pre-vectorized diseases and calculate similarity
         for disease_data_entry in disease_symptom_vectors:
             disease_id = disease_data_entry['disease_id']
+            # --- CORRECTED LINE BELOW ---
             disease_display = disease_data_entry['disease_display']
             disease_vector = disease_data_entry['vector']
 
@@ -229,6 +244,76 @@ def chat():
         'message': response_message,
         'disclaimer': 'This chatbot provides general information and is not a substitute for professional medical advice. Always consult a qualified healthcare professional for diagnosis and treatment.'
     })
+
+
+# --- NEW ENDPOINT: Get Medicine Details ---
+@app.route('/get_medicine_details', methods=['POST'])
+def get_medicine_details():
+    """
+    Fetches detailed information for a specific medicine.
+    """
+    data = request.get_json()
+    medicine_name_input = data.get('medicineName', '').strip()
+
+    if not medicine_name_input:
+        return jsonify({
+            'medicineName': 'N/A',
+            'composition': 'N/A',
+            'uses': 'N/A',
+            'sideEffects': 'N/A',
+            'manufacturer': 'N/A',
+            'message': 'Please provide a medicine name to get details.',
+            'disclaimer': 'This chatbot provides general information and is not a substitute for professional medical advice. Always consult a qualified healthcare professional for diagnosis and treatment.'
+        }), 400
+
+    # Preprocess the input medicine name to match Firestore document IDs
+    medicine_id_for_lookup = preprocess_medicine_name(medicine_name_input)
+    print(f"Looking up medicine with ID: '{medicine_id_for_lookup}' from input: '{medicine_name_input}'")
+
+    try:
+        medicine_doc_ref = db.collection(MEDICINE_DETAILS_COLLECTION).document(medicine_id_for_lookup)
+        medicine_doc = medicine_doc_ref.get()
+
+        if medicine_doc.exists:
+            medicine_data = medicine_doc.to_dict()
+            response_message = f"Here are the details for **{medicine_data.get('medicineNameRaw', 'N/A').title()}**:"
+            response_message += f"\n\n**Composition:** {medicine_data.get('composition', 'N/A')}"
+            response_message += f"\n**Uses:** {medicine_data.get('uses', 'N/A')}"
+            response_message += f"\n**Side Effects:** {medicine_data.get('sideEffects', 'N/A')}"
+            response_message += f"\n**Manufacturer:** {medicine_data.get('manufacturer', 'N/A')}"
+
+            return jsonify({
+                'medicineName': medicine_data.get('medicineNameRaw', 'N/A').title(),
+                'composition': medicine_data.get('composition', 'N/A'),
+                'uses': medicine_data.get('uses', 'N/A'),
+                'sideEffects': medicine_data.get('sideEffects', 'N/A'),
+                'manufacturer': medicine_data.get('manufacturer', 'N/A'),
+                'message': response_message,
+                'disclaimer': 'This chatbot provides general information and is not a substitute for professional medical advice. Always consult a qualified healthcare professional for diagnosis and treatment.'
+            })
+        else:
+            print(f"Medicine '{medicine_name_input}' (ID: '{medicine_id_for_lookup}') not found in database.")
+            return jsonify({
+                'medicineName': 'N/A',
+                'composition': 'N/A',
+                'uses': 'N/A',
+                'sideEffects': 'N/A',
+                'manufacturer': 'N/A',
+                'message': f"Sorry, I could not find details for '{medicine_name_input}'. Please check the spelling or try another medicine.",
+                'disclaimer': 'This chatbot provides general information and is not a substitute for professional medical advice. Always consult a qualified healthcare professional for diagnosis and treatment.'
+            }), 404 # Not Found
+
+    except Exception as e:
+        print(f"An error occurred while fetching medicine details: {e}")
+        return jsonify({
+            'medicineName': 'N/A',
+            'composition': 'N/A',
+            'uses': 'N/A',
+            'sideEffects': 'N/A',
+            'manufacturer': 'N/A',
+            'message': 'An error occurred while processing your request for medicine details. Please try again later.',
+            'disclaimer': 'This chatbot provides general information and is not a substitute for professional medical advice. Always consult a qualified healthcare professional for diagnosis and treatment.'
+        }), 500
 
 # --- Run the Flask app ---
 if __name__ == '__main__':
