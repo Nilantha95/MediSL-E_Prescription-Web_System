@@ -2,10 +2,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import MainInterface from './pages/Main_Interface_UI/Main_interface'; // Adjust path if necessary
+import MainInterface from './pages/Main_Interface_UI/Main_interface';
 import reportWebVitals from './reportWebVitals';
-import RegistrationUI from './pages/Registration_UIs/registration_UI'; // Assuming registration_UI.js is now in a 'pages' subfolder
-import SignIn from './pages/Registration_UIs/signin'; // Import your SignIn component (adjust path if needed)
+import RegistrationUI from './pages/Registration_UIs/registration_UI';
+import SignIn from './pages/Registration_UIs/signin';
 import DoctorDashboard from './pages/Doctor_UIs/dashboard';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Contact from './pages/Main_Interface_UI/contactus';
@@ -15,26 +15,32 @@ import Phardashboard from './pages/Pharmacy_UIs/dashboard';
 import Featurespage from './pages/Main_Interface_UI/featurespage';
 import PatientDashboard from './pages/Patient_UIs/dashboard';
 
+// --- NEW IMPORTS FOR I18NEXT ---
+import './pages/Chatbot/i18n'; // Make sure this line is present to initialize i18next
+import { I18nextProvider } from 'react-i18next';
+import i18n from './pages/Chatbot/i18n'; // Import the i18n instance
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<MainInterface />} /> {/* Your main App component */}
-        <Route path="/register" element={<RegistrationUI />} /> {/* Define the route for registration */}
-        <Route path="/home2" element={<MainInterface />} /> {}
-        <Route path="/signin" element={<SignIn />} /> {/* This route is crucial */}
-        <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/newprescription" element={<NewPrescriptionForm />}/>
-        <Route path="/prescriptionhistory" element={<PrescriptionHistory/>}/>
-        <Route path="/pharmacy/dashboard" element={<Phardashboard/>} />
-        <Route path="/featurepage" element={<Featurespage/>} />
-        <Route path="/patient/dashboard" element={<PatientDashboard/>}/>
-        
-      </Routes>
-    </BrowserRouter>
+    {/* Wrap your entire application (BrowserRouter and Routes) with I18nextProvider */}
+    <I18nextProvider i18n={i18n}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<MainInterface />} />
+          <Route path="/register" element={<RegistrationUI />} />
+          <Route path="/home2" element={<MainInterface />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/newprescription" element={<NewPrescriptionForm />} />
+          <Route path="/prescriptionhistory" element={<PrescriptionHistory />} />
+          <Route path="/pharmacy/dashboard" element={<Phardashboard />} />
+          <Route path="/featurepage" element={<Featurespage />} />
+          <Route path="/patient/dashboard" element={<PatientDashboard />} />
+        </Routes>
+      </BrowserRouter>
+    </I18nextProvider>
   </React.StrictMode>
 );
 

@@ -1,3 +1,6 @@
+// No changes needed here for the language feature itself.
+// The ActionProvider will now handle message translations.
+
 class MessageParser {
   constructor(actionProvider, state) {
     this.actionProvider = actionProvider;

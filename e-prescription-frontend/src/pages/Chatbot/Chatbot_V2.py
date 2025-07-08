@@ -8,7 +8,7 @@ import re # Import regex module for cleaning strings
 # --- Configuration ---
 # Path to your Firebase service account key JSON file
 # !!! UPDATE THIS PATH TO YOUR NEWLY GENERATED KEY FILE !!!
-SERVICE_ACCOUNT_KEY_PATH = './medisl-ed07f-firebase-adminsdk-fbsvc-baf423578c.json' # Example: Update with your actual new file name
+SERVICE_ACCOUNT_KEY_PATH = './API_keys/medisl-ed07f-firebase-adminsdk-fbsvc-04097b5b1d.json' # Example: Update with your actual new file name
 
 # Collection names in Firestore
 SYMPTOMS_DISEASES_COLLECTION = 'diseases_symptoms'
