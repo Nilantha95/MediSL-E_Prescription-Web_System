@@ -1,15 +1,13 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next'; // Import useTranslation hook
-import './OptionChooser.css'; // Ensure this CSS file exists for styling
+import { useTranslation } from 'react-i18next';
+import './OptionChooser.css';
 
 const OptionChooser = (props) => {
   const { actionProvider } = props;
-  const { t, i18n } = useTranslation(); // Initialize useTranslation
+  const { t, i18n } = useTranslation();
 
-  // Handler for language selection
   const handleLanguageChange = (lang) => {
-    i18n.changeLanguage(lang); // Change the i18n language
-    // You might want to send a message to the chatbot to confirm the language change
+    i18n.changeLanguage(lang);
     actionProvider.handleLanguageSelected(lang); 
   };
 
@@ -38,18 +36,25 @@ const OptionChooser = (props) => {
       </div>
 
       {/* Main Options for Chatbot */}
-      <p className="initial-prompt">{t('initialChoicePrompt')}</p> {/* Translated prompt */}
+      <p className="initial-prompt">{t('initialChoicePrompt')}</p>
       <button
         className="option-button"
-        onClick={() => actionProvider.handleMedicineDetailsStart(i18n.language)} // Pass current language
+        onClick={() => actionProvider.handleMedicineDetailsStart(i18n.language)}
       >
-        {t('getMedicineDetails')} {/* Translated button text */}
+        {t('getMedicineDetails')}
       </button>
       <button
         className="option-button"
-        onClick={() => actionProvider.handleSymptomsDiagnosisStart(i18n.language)} // Pass current language
+        onClick={() => actionProvider.handleSymptomsDiagnosisStart(i18n.language)}
       >
-        {t('diagnoseDisease')} {/* Translated button text */}
+        {t('diagnoseDisease')}
+      </button>
+      {/* NEW: Health Tips Button */}
+      <button
+        className="option-button"
+        onClick={() => actionProvider.handleHealthTipsStart(i18n.language)}
+      >
+        {t('getHealthTip')}
       </button>
     </div>
   );

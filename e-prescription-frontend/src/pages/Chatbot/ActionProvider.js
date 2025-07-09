@@ -1,12 +1,12 @@
-import i18n from './i18n';
+import i18n from '../Chatbot/i18n';
 
 class ActionProvider {
-  // Update the constructor to accept the 'state' as the fourth argument
-  constructor(createChatBotMessage, setStateFunc, createClientMessage, state) { // <-- ADDED 'state' HERE
+  // Constructor now correctly receives the 'state' object
+  constructor(createChatBotMessage, setStateFunc, createClientMessage, state) {
     this.createChatBotMessage = createChatBotMessage;
     this.setState = setStateFunc;
     this.createClientMessage = createClientMessage;
-    this.state = state; // <-- Store the state received from the Chatbot component
+    this.state = state; // Store the state received from the Chatbot component
   }
 
   // Helper function to update the chatbot state with a new message
@@ -57,11 +57,51 @@ class ActionProvider {
     this.setChatbotLanguage(lang);
   };
 
+  // --- NEW: Health Tips Handler ---
+  async handleHealthTipsStart(lang) { // Receive language
+    const backendUrl = 'http://127.0.0.1:5000/get_health_tip'; // New backend endpoint
+    this.addMessageToState(this.createChatBotMessage(i18n.t('loadingMessage'))); // Translated loading message
+    this.setChatbotMode('health_tips'); // Set mode temporarily, though no input is expected
+
+    try {
+      const response = await fetch(backendUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          language: lang, // Pass current language to backend
+        }),
+      });
+
+      const data = await response.json();
+      console.log('Health tip response:', data);
+
+      if (!response.ok) {
+        const errorMessage = data.message || i18n.t('genericError');
+        throw new Error(errorMessage);
+      }
+
+      this.addMessageToState(this.createChatBotMessage(data.message)); // Display the tip
+      this.addMessageToState(this.createChatBotMessage(data.disclaimer)); // Display disclaimer
+
+    } catch (error) {
+      console.error('Error in handleHealthTipsStart:', error);
+      this.addMessageToState(
+        this.createChatBotMessage(i18n.t('noHealthTipsFound')) // Translated error message
+      );
+    } finally {
+      // Always revert to initial choice mode after providing the tip
+      this.setChatbotMode('initial_choice');
+      this.addMessageToState(this.createChatBotMessage(i18n.t('goBack'))); // Offer to restart
+    }
+  };
+
+
   // --- Backend API Call for Medicine Details ---
   async processMedicineName(medicineName) {
     const backendUrl = 'http://127.0.0.1:5000/get_medicine_details';
-    // Now this.state will be defined
-    const currentLanguage = this.state.language || 'en'; 
+    const currentLanguage = this.state.language || 'en';
 
     this.addMessageToState(this.createChatBotMessage(i18n.t('loadingMessage')));
 
@@ -100,8 +140,7 @@ class ActionProvider {
   // --- Backend API Call for Symptoms Diagnosis ---
   async processSymptoms(symptomsParagraph) {
     const backendUrl = 'http://127.0.0.1:5000/chat';
-    // Now this.state will be defined
-    const currentLanguage = this.state.language || 'en'; 
+    const currentLanguage = this.state.language || 'en';
 
     this.addMessageToState(this.createChatBotMessage(i18n.t('loadingMessage')));
 
@@ -162,6 +201,7 @@ class ActionProvider {
     } else if (currentState === 'symptoms_diagnosis') {
       messageKey = "provideSymptoms";
     } else {
+      // For 'health_tips' mode or unexpected, default to initial prompt
       messageKey = "initialChoicePrompt";
     }
 
