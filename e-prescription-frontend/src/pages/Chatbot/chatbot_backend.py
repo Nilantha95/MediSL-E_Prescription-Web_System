@@ -7,6 +7,7 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import re
 import os
+import random # <--- NEW: for selecting random health tips
 
 # --- NEW IMPORTS FOR SCIKIT-LEARN ---
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -15,7 +16,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 # --- GOOGLE TRANSLATE API IMPORTS ---
 from google.cloud import translate_v3 as translate
 # Set GOOGLE_APPLICATION_CREDENTIALS environment variable or provide path here
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./API_keys/medisl-ed07f-b0b46af4e5bc.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./API_keys/medisl-ed07f-1db0f9811f77.json"
 
 # Ensure NLTK data is available
 try:
@@ -34,11 +35,12 @@ except Exception as e: # <--- ADDED A MORE GENERIC CATCH FOR OTHER ERRORS
 
 
 # --- Configuration ---
-SERVICE_ACCOUNT_KEY_PATH = './API_keys/medisl-ed07f-firebase-adminsdk-fbsvc-04097b5b1d.json'
+SERVICE_ACCOUNT_KEY_PATH = './API_keys/medisl-ed07f-firebase-adminsdk-fbsvc-b70dc11484.json'
 # Using English-specific collections as we will translate input/output
 SYMPTOMS_DISEASES_COLLECTION = 'diseases_symptoms'
 DISEASES_MEDICINES_COLLECTION = 'diseases_medicines'
 MEDICINE_DETAILS_COLLECTION = 'medicine_details'
+HEALTH_TIPS_COLLECTION = 'health_tips' # <--- NEW: Define health tips collection name
 
 # --- Initialize Flask App ---
 app = Flask(__name__)
@@ -47,7 +49,8 @@ CORS(app) # Enable CORS for frontend communication
 # --- Initialize Firebase Admin SDK ---
 try:
     cred = credentials.Certificate(SERVICE_ACCOUNT_KEY_PATH)
-    firebase_admin.initialize_app(cred)
+    if not firebase_admin._apps: # Prevent re-initialization if already initialized
+        firebase_admin.initialize_app(cred)
     db = firestore.client()
     print("Firebase Admin SDK initialized successfully.")
 except Exception as e:
@@ -116,7 +119,7 @@ def translate_text(text, target_language_code, source_language_code=None):
     if source_language_code and target_language_code == source_language_code:
         return text
     
-    # Handle common variants of English language codes
+    # Handle common variants of English language codes (Google Translate uses 'en')
     if target_language_code in ['en', 'eng'] and source_language_code in ['en', 'eng']:
         return text
 
@@ -361,10 +364,10 @@ def get_medicine_details():
         input_for_lookup_en = translate_text(medicine_name_input, 'en', user_selected_lang)
         if not input_for_lookup_en:
              return jsonify({
-                'medicineName': 'N/A', 'composition': 'N/A', 'uses': 'N/A', 'sideEffects': 'N/A', 'manufacturer': 'N/A',
-                'message': translate_text('Could not translate medicine name. Please try again.', user_selected_lang, 'en'),
-                'disclaimer': translate_text(disclaimer_message_en, user_selected_lang, 'en')
-            }), 500
+                 'medicineName': 'N/A', 'composition': 'N/A', 'uses': 'N/A', 'sideEffects': 'N/A', 'manufacturer': 'N/A',
+                 'message': translate_text('Could not translate medicine name. Please try again.', user_selected_lang, 'en'),
+                 'disclaimer': translate_text(disclaimer_message_en, user_selected_lang, 'en')
+             }), 500
 
     medicine_id_for_lookup = preprocess_medicine_name(input_for_lookup_en) # ID is lang-independent, from English text
     print(f"Original medicine input ({user_selected_lang}): '{medicine_name_input}'")
@@ -415,6 +418,68 @@ def get_medicine_details():
         'message': final_response_message,
         'disclaimer': final_disclaimer
     })
+
+# --- NEW ENDPOINT: Get Health Tip ---
+@app.route('/get_health_tip', methods=['POST'])
+def get_health_tip():
+    data = request.get_json()
+    user_selected_lang = data.get('language', 'en')
+
+    # Re-use the existing disclaimer message
+    disclaimer_message_en = 'This chatbot provides general information and is not a substitute for professional medical advice. Always consult a qualified healthcare professional for diagnosis and treatment.'
+
+    try:
+        health_tips_ref = db.collection(HEALTH_TIPS_COLLECTION)
+        all_tips_docs = health_tips_ref.stream()
+        
+        tips = []
+        for doc in all_tips_docs:
+            tips.append(doc.to_dict())
+        
+        if not tips:
+            # If no tips are found in the database
+            return jsonify({
+                'tip_message': translate_text('No health tips available at the moment.', user_selected_lang, 'en'),
+                'message': translate_text('No health tips available at the moment.', user_selected_lang, 'en'), # Consistent key
+                'disclaimer': translate_text(disclaimer_message_en, user_selected_lang, 'en')
+            }), 404
+
+        # Select a random tip
+        selected_tip = random.choice(tips)
+        
+        # Get the tip based on the selected language, fallback to English if not found
+        # Assume tip_en, tip_si, tip_ta fields exist in Firestore documents
+        # If your CSV only had 'tip_en', then 'tip_si'/'tip_ta' will be empty or missing.
+        # The translate_text function will handle translating 'tip_en' if other languages are requested.
+        tip_message_key = f'tip_{user_selected_lang}'
+        
+        # Check if the specific language field for the tip exists in the document
+        tip_content_en = selected_tip.get('tip_en', 'No tip content available in English.')
+        
+        # Prioritize existing translated field, otherwise use English and translate
+        tip_content_translated = selected_tip.get(tip_message_key)
+        if not tip_content_translated: # If the specific language field is not present or is empty
+            tip_content_translated = translate_text(tip_content_en, user_selected_lang, 'en')
+        
+        # Fallback if translation also fails or English content is missing
+        if not tip_content_translated:
+            tip_content_translated = "Error: Could not retrieve health tip."
+
+
+        return jsonify({
+            'tip_message': tip_content_translated, # Specific key for tip content
+            'message': tip_content_translated,    # General key for chatbot message display
+            'disclaimer': translate_text(disclaimer_message_en, user_selected_lang, 'en')
+        })
+
+    except Exception as e:
+        print(f"Error fetching health tip: {e}")
+        return jsonify({
+            'tip_message': translate_text('An error occurred while fetching health tips.', user_selected_lang, 'en'),
+            'message': translate_text('An error occurred while fetching health tips.', user_selected_lang, 'en'),
+            'disclaimer': translate_text(disclaimer_message_en, user_selected_lang, 'en')
+        }), 500
+
 
 # --- Run the Flask app ---
 if __name__ == '__main__':

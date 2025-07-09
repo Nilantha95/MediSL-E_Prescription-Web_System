@@ -8,7 +8,7 @@ import re # Import regex module for cleaning strings
 # --- Configuration ---
 # Path to your Firebase service account key JSON file
 # !!! UPDATE THIS PATH TO YOUR NEWLY GENERATED KEY FILE !!!
-SERVICE_ACCOUNT_KEY_PATH = './API_keys/medisl-ed07f-firebase-adminsdk-fbsvc-04097b5b1d.json' # Example: Update with your actual new file name
+SERVICE_ACCOUNT_KEY_PATH = '../API_keys/medisl-ed07f-firebase-adminsdk-fbsvc-b70dc11484.json' # Example: Update with your actual new file name
 
 # Collection names in Firestore
 SYMPTOMS_DISEASES_COLLECTION = 'diseases_symptoms'
@@ -154,13 +154,13 @@ def upload_diseases_medicines(csv_file_path):
 # --- Main execution ---
 if __name__ == "__main__":
     # Ensure CSV files exist
-    if not os.path.exists('./Dataset/symptoms_diseases.csv'):
+    if not os.path.exists('../Dataset/symptoms_diseases.csv'):
         print("Error: 'symptoms_diseases.csv' not found. Please ensure it's in the same directory or update path.")
         exit()
-    if not os.path.exists('./Dataset/diseases_medicines.csv'):
+    if not os.path.exists('../Dataset/diseases_medicines.csv'):
         print("Error: 'diseases_medicines.csv' not found. Please ensure it's in the same directory or update path.")
         exit()
 
-    upload_symptoms_diseases('./Dataset/symptoms_diseases.csv')
-    upload_diseases_medicines('./Dataset/diseases_medicines.csv')
+    upload_symptoms_diseases('../Dataset/symptoms_diseases.csv')
+    upload_diseases_medicines('../Dataset/diseases_medicines.csv')
     print("\nData ingestion process complete.")
