@@ -1,13 +1,14 @@
 import firebase_admin
 from firebase_admin import credentials, firestore
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import re
 import os
-import random # <--- NEW: for selecting random health tips
+import random
+import io
 
 # --- NEW IMPORTS FOR SCIKIT-LEARN ---
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -15,147 +16,145 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 # --- GOOGLE TRANSLATE API IMPORTS ---
 from google.cloud import translate_v3 as translate
+# --- NEW GOOGLE CLOUD TEXT-TO-SPEECH IMPORT ---
+from google.cloud import texttospeech
+
 # Set GOOGLE_APPLICATION_CREDENTIALS environment variable or provide path here
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./API_keys/medisl-ed07f-1db0f9811f77.json"
+# Ensure this path points to your Google Cloud Service Account key for Translation and TTS
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./API_keys/Speech_API_Key/medisl-ed07f-909d96d62920.json"
 
 # Ensure NLTK data is available
 try:
     nltk.data.find('corpora/stopwords')
     nltk.data.find('corpora/wordnet')
     nltk.data.find('tokenizers/punkt')
-except LookupError: # <--- CHANGED TO LookupError
+except LookupError:
     print("NLTK data not found (LookupError). Attempting to download necessary NLTK data...")
     nltk.download('punkt')
     nltk.download('stopwords')
     nltk.download('wordnet')
-    nltk.download('omw-1.4') # Open Multilingual Wordnet (for lemmatization context)
-except Exception as e: # <--- ADDED A MORE GENERIC CATCH FOR OTHER ERRORS
+    nltk.download('omw-1.4') # Required for some WordNet functionalities
+except Exception as e:
     print(f"An unexpected error occurred during NLTK data check: {e}")
     print("Please try running 'python -c \"import nltk; nltk.download(\'all\')\"' in your terminal.")
 
 
 # --- Configuration ---
-SERVICE_ACCOUNT_KEY_PATH = './API_keys/medisl-ed07f-firebase-adminsdk-fbsvc-b70dc11484.json'
-# Using English-specific collections as we will translate input/output
+SERVICE_ACCOUNT_KEY_PATH = './API_keys/medisl-ed07f-firebase-adminsdk-fbsvc-2fe43ec477.json'
 SYMPTOMS_DISEASES_COLLECTION = 'diseases_symptoms'
 DISEASES_MEDICINES_COLLECTION = 'diseases_medicines'
 MEDICINE_DETAILS_COLLECTION = 'medicine_details'
-HEALTH_TIPS_COLLECTION = 'health_tips' # <--- NEW: Define health tips collection name
+HEALTH_TIPS_COLLECTION = 'health_tips'
 
 # --- Initialize Flask App ---
 app = Flask(__name__)
-CORS(app) # Enable CORS for frontend communication
+CORS(app)
 
 # --- Initialize Firebase Admin SDK ---
 try:
     cred = credentials.Certificate(SERVICE_ACCOUNT_KEY_PATH)
-    if not firebase_admin._apps: # Prevent re-initialization if already initialized
+    if not firebase_admin._apps: # Prevent re-initialization in dev environments
         firebase_admin.initialize_app(cred)
     db = firestore.client()
     print("Firebase Admin SDK initialized successfully.")
 except Exception as e:
     print(f"Error initializing Firebase: {e}")
     print("Please ensure 'serviceAccountKey.json' is in the correct path and is valid.")
-    exit()
+    exit() # Exit if Firebase initialization fails
 
 # --- Initialize Google Translate Client ---
-# Your Google Cloud Project ID (Replace with your actual Project ID)
 PROJECT_ID = "medisl-ed07f" 
 translate_client = translate.TranslationServiceClient()
-parent = f"projects/{PROJECT_ID}/locations/global"
-
+parent = f"projects/{PROJECT_ID}/locations/global" # Parent resource for translation
 print(f"Google Translate Client initialized for Project ID: {PROJECT_ID}")
+
+# --- NEW: Initialize Google Cloud Text-to-Speech Client ---
+tts_client = texttospeech.TextToSpeechClient()
+print("Google Cloud Text-to-Speech Client initialized successfully.")
 
 # --- Initialize NLP tools (English only, as we'll translate to English) ---
 lemmatizer = WordNetLemmatizer()
 stop_words = set(stopwords.words('english'))
 
 # --- GLOBAL VARIABLES FOR TF-IDF (English only) ---
-tfidf_vectorizer = None # This will hold our fitted TF-IDF vectorizer
-disease_symptom_vectors = [] # This list will store dictionaries for English data
+tfidf_vectorizer = None
+disease_symptom_vectors = []
+
+# --- NEW GLOBAL: TTS Language Configuration ---
+# Map general language codes (from frontend) to Google Cloud TTS specific BCP-47 codes and preferred voices
+TTS_LANG_CONFIG = {
+    'en': {'language_code': 'en-US', 'voice_name': 'en-US-Standard-C'}, # Example English voice
+    'si': {'language_code': 'si-LK', 'voice_name': 'si-LK-Standard-A'}, # Sinhala (Sri Lanka) Standard voice
+    'ta': {'language_code': 'ta-IN', 'voice_name': 'ta-IN-Standard-A'}, # Tamil (India) Standard voice
+    # Add a 'default' entry for robust lookup if an unsupported language code comes in
+    'default': {'language_code': 'en-US', 'voice_name': 'en-US-Standard-C'},
+    # For higher quality, consider Wavenet voices if available and enabled for your project:
+    # Check available voices: https://cloud.google.com/text-to-speech/docs/voices
+    # 'si': {'language_code': 'si-LK', 'voice_name': 'si-LK-Wavenet-A'},
+    # 'ta': {'language_code': 'ta-IN', 'voice_name': 'ta-IN-Wavenet-A'},
+}
+
 
 # --- NLP Preprocessing Function for Symptoms (now exclusively English) ---
 def preprocess_text(text):
-    """
-    Cleans and normalizes text for NLP processing (English only).
-    """
     text = text.lower()
-    text = re.sub(r'[^a-z\s]', '', text) # Remove non-alphabetic characters
+    # Keep only lowercase letters and spaces
+    text = re.sub(r'[^a-z\s]', '', text)
     tokens = nltk.word_tokenize(text)
     filtered_tokens = [
         lemmatizer.lemmatize(word) for word in tokens
-        if word not in stop_words and len(word) > 1 # Remove single character tokens
+        if word not in stop_words and len(word) > 1 # Remove stop words and single-character tokens
     ]
     return filtered_tokens
 
 # --- Helper Function: Preprocess Medicine Names for Lookup (IDs should be English/standardized) ---
 def preprocess_medicine_name(name):
-    """
-    Cleans and standardizes a medicine name for use as a Firestore document ID.
-    IDs should remain in a consistent, typically English-based, format.
-    """
     name = name.lower()
-    name = re.sub(r'[^a-z0-9]+', '_', name) # Replace non-alphanumeric with underscore
+    # Replace non-alphanumeric characters with underscores
+    name = re.sub(r'[^a-z0-9]+', '_', name)
     name = name.strip('_') # Remove leading/trailing underscores
     return name
 
 # --- Google Translate Helper Function ---
 def translate_text(text, target_language_code, source_language_code=None):
-    """Translates text into the target language.
-
-    Args:
-        text (str): The text to translate.
-        target_language_code (str): The language code to translate to (e.g., "en", "si", "ta").
-        source_language_code (str, optional): The language code of the input text. If not
-                                               specified, Google will auto-detect.
-
-    Returns:
-        str: The translated text, or the original text if translation fails.
-    """
     if not text:
         return ""
     
-    # If source and target are the same, no translation needed
+    # Avoid unnecessary API calls if source and target are the same, or if already English and targeting English
     if source_language_code and target_language_code == source_language_code:
         return text
     
-    # Handle common variants of English language codes (Google Translate uses 'en')
     if target_language_code in ['en', 'eng'] and source_language_code in ['en', 'eng']:
         return text
 
     try:
-        if source_language_code:
-            response = translate_client.translate_text(
-                request={
-                    "parent": parent,
-                    "contents": [text],
-                    "target_language_code": target_language_code,
-                    "source_language_code": source_language_code,
-                }
-            )
-        else:
-            response = translate_client.translate_text(
-                request={
-                    "parent": parent,
-                    "contents": [text],
-                    "target_language_code": target_language_code,
-                }
-            )
+        request_params = {
+            "parent": parent,
+            "contents": [text],
+            "mime_type": "text/plain", # Crucial: specify input type
+            "target_language_code": target_language_code,
+        }
+        if source_language_code: # Only add source_language_code if provided
+            request_params["source_language_code"] = source_language_code
+
+        response = translate_client.translate_text(
+            request=request_params
+        )
         
         if response.translations:
-            print(f"Translated '{text[:30]}...' from {response.translations[0].detected_language_code or 'auto'} to {target_language_code}: '{response.translations[0].translated_text[:30]}...'")
+            detected_lang = response.translations[0].detected_language_code or 'auto'
+            print(f"Translated '{text[:30]}...' from {detected_lang} to {target_language_code}: '{response.translations[0].translated_text[:30]}...'")
             return response.translations[0].translated_text
-        return text # Return original if no translation
+        return text # Return original if no translation occurs (e.g., empty response)
     except Exception as e:
-        print(f"Translation Error: {e}")
-        return text # Return original text on error
+        print(f"Translation Error for text '{text[:50]}...': {e}")
+        return text # Return original text on error to avoid breaking the flow
 
 # --- Function to load and vectorize symptoms from Firestore (English only) ---
 def load_and_vectorize_symptoms_data():
     global tfidf_vectorizer, disease_symptom_vectors
     print("\n--- Loading and Vectorizing English Symptoms Data for Chatbot ---")
     try:
-        # 1. Fetch all disease data from Firestore (English collection)
         diseases_ref = db.collection(SYMPTOMS_DISEASES_COLLECTION)
         all_diseases_docs = diseases_ref.stream()
 
@@ -166,11 +165,11 @@ def load_and_vectorize_symptoms_data():
             disease_data = doc.to_dict()
             disease_id = disease_data.get('diseaseNameId')
             disease_display = disease_data.get('diseaseNameDisplay')
-            db_symptoms = disease_data.get('symptoms', []) # Symptoms are expected to be in English
+            db_symptoms = disease_data.get('symptoms', [])
 
             symptoms_string = " ".join(db_symptoms)
             
-            if symptoms_string.strip():
+            if symptoms_string.strip(): # Only add if symptoms string is not empty
                 corpus.append(symptoms_string)
                 disease_data_for_vectorization.append({
                     'disease_id': disease_id,
@@ -181,27 +180,25 @@ def load_and_vectorize_symptoms_data():
             print(f"Warning: No symptom data found in Firestore collection '{SYMPTOMS_DISEASES_COLLECTION}'. Chatbot matching will not work.")
             return
 
-        # 2. Initialize and fit TF-IDF Vectorizer on the English corpus
+        # Fit TF-IDF Vectorizer on the corpus of all symptoms
         tfidf_vectorizer = TfidfVectorizer()
         tfidf_matrix = tfidf_vectorizer.fit_transform(corpus)
 
-        # 3. Store vectorized symptoms along with their IDs and display names
         disease_symptom_vectors = []
         for i, data_entry in enumerate(disease_data_for_vectorization):
             disease_symptom_vectors.append({
                 'disease_id': data_entry['disease_id'],
                 'disease_display': data_entry['disease_display'],
-                'vector': tfidf_matrix[i]
+                'vector': tfidf_matrix[i] # Store the TF-IDF vector for each disease
             })
         print(f"Successfully vectorized {len(disease_symptom_vectors)} unique diseases in English.")
 
     except Exception as e:
         print(f"Error loading or vectorizing English symptom data: {e}")
-        # Consider logging this error and returning, rather than exiting, in production
-        pass # Allow the app to start even if data loading fails, though chatbot won't work
+        # Continue running the app even if data loading fails, but matching won't work
+        pass
 
-
-# --- Call this function once when the Flask app starts ---
+# Call this function once when the app starts
 load_and_vectorize_symptoms_data()
 
 
@@ -210,14 +207,11 @@ load_and_vectorize_symptoms_data()
 def chat():
     data = request.get_json()
     patient_symptoms_paragraph = data.get('symptoms', '').strip()
-    # Get the language the patient selected on the frontend
     user_selected_lang = data.get('language', 'en') 
 
-    # Ensure disclaimer is translated by frontend or comes from a translated source
     disclaimer_message_en = 'This chatbot provides general information and is not a substitute for professional medical advice. Always consult a qualified healthcare professional for diagnosis and treatment.'
 
     if not patient_symptoms_paragraph:
-        # Response messages for these cases should ideally be handled by frontend i18n
         return jsonify({
             'disease': 'N/A',
             'medicines': [],
@@ -225,12 +219,11 @@ def chat():
             'disclaimer': translate_text(disclaimer_message_en, user_selected_lang, 'en')
         }), 400
 
-    # Translate input to English if not already English
     input_text_for_nlp = patient_symptoms_paragraph
-    # Check for both 'en' and 'eng' as common English language codes
+    # Translate user input to English for NLP processing if not already English
     if user_selected_lang not in ['en', 'eng']:
         input_text_for_nlp = translate_text(patient_symptoms_paragraph, 'en', user_selected_lang)
-        if not input_text_for_nlp: # Handle case where translation fails
+        if not input_text_for_nlp: # If translation fails, respond accordingly
             return jsonify({
                 'disease': 'N/A',
                 'medicines': [],
@@ -238,19 +231,19 @@ def chat():
                 'disclaimer': translate_text(disclaimer_message_en, user_selected_lang, 'en')
             }), 500
 
-    # Perform NLP preprocessing on the English text
     processed_patient_symptoms_list = preprocess_text(input_text_for_nlp)
     processed_patient_symptoms_string = " ".join(processed_patient_symptoms_list)
     print(f"Original input ({user_selected_lang}): '{patient_symptoms_paragraph}'")
     print(f"Translated/Processed English for NLP: '{processed_patient_symptoms_string}'")
 
     identified_disease_id = 'Unknown'
-    identified_disease_display_en = 'Unknown' # Keep English display name for internal use
+    identified_disease_display_en = 'Unknown'
     suggested_medicines_en = []
     response_message_en = "I couldn't identify a specific disease based on your symptoms. Please try rephrasing or provide more details, or consult a doctor."
 
     try:
         if tfidf_vectorizer is None or not disease_symptom_vectors:
+            # This means symptom data failed to load at startup
             return jsonify({
                 'disease': 'N/A',
                 'medicines': [],
@@ -259,6 +252,7 @@ def chat():
             }), 500
 
         if not processed_patient_symptoms_string:
+            # After preprocessing, if the string is empty, it means no meaningful symptoms were extracted
             return jsonify({
                 'disease': 'N/A',
                 'medicines': [],
@@ -266,14 +260,16 @@ def chat():
                 'disclaimer': translate_text(disclaimer_message_en, user_selected_lang, 'en')
             }), 400
 
+        # Transform patient symptoms into a TF-IDF vector
         patient_symptoms_vector = tfidf_vectorizer.transform([processed_patient_symptoms_string])
 
         best_match_disease_id = None
         best_match_disease_display_en = None
         max_similarity_score = -1.0
         
-        SIMILARITY_THRESHOLD = 0.2
+        SIMILARITY_THRESHOLD = 0.2 # Threshold to consider a match valid
 
+        # Calculate cosine similarity with all known disease symptom vectors
         for disease_data_entry in disease_symptom_vectors:
             disease_id = disease_data_entry['disease_id']
             disease_display_en = disease_data_entry['disease_display']
@@ -292,6 +288,7 @@ def chat():
             identified_disease_display_en = best_match_disease_display_en
             response_message_en = f"Based on your symptoms, you might have: **{identified_disease_display_en.title()}** (Confidence: {max_similarity_score:.2f})."
 
+            # Fetch suggested medicines for the identified disease
             medicines_doc_ref = db.collection(DISEASES_MEDICINES_COLLECTION).document(identified_disease_id)
             medicines_doc = medicines_doc_ref.get()
 
@@ -318,10 +315,9 @@ def chat():
     final_response_message = translate_text(response_message_en, user_selected_lang, 'en')
     final_disclaimer = translate_text(disclaimer_message_en, user_selected_lang, 'en')
     
-    # Translate identified disease display name back
+    # Translate disease name and medicines for display in UI
     identified_disease_display_translated = translate_text(identified_disease_display_en, user_selected_lang, 'en')
     
-    # Translate suggested medicine names back (if any)
     suggested_medicines_translated = [
         translate_text(med_name_en, user_selected_lang, 'en')
         for med_name_en in suggested_medicines_en
@@ -338,9 +334,6 @@ def chat():
 # --- ENDPOINT: Get Medicine Details ---
 @app.route('/get_medicine_details', methods=['POST'])
 def get_medicine_details():
-    """
-    Fetches detailed information for a specific medicine, handling multilingual input/output.
-    """
     data = request.get_json()
     medicine_name_input = data.get('medicineName', '').strip()
     user_selected_lang = data.get('language', 'en')
@@ -358,8 +351,8 @@ def get_medicine_details():
             'disclaimer': translate_text(disclaimer_message_en, user_selected_lang, 'en')
         }), 400
 
-    # Translate input to English if not already English for ID lookup (IDs should ideally be English/standardized)
     input_for_lookup_en = medicine_name_input
+    # Translate medicine name to English for database lookup if not already English
     if user_selected_lang not in ['en', 'eng']:
         input_for_lookup_en = translate_text(medicine_name_input, 'en', user_selected_lang)
         if not input_for_lookup_en:
@@ -367,9 +360,10 @@ def get_medicine_details():
                  'medicineName': 'N/A', 'composition': 'N/A', 'uses': 'N/A', 'sideEffects': 'N/A', 'manufacturer': 'N/A',
                  'message': translate_text('Could not translate medicine name. Please try again.', user_selected_lang, 'en'),
                  'disclaimer': translate_text(disclaimer_message_en, user_selected_lang, 'en')
-             }), 500
+                }), 500
 
-    medicine_id_for_lookup = preprocess_medicine_name(input_for_lookup_en) # ID is lang-independent, from English text
+    # Preprocess the English medicine name to match Firestore document IDs (e.g., "paracetamol" -> "paracetamol")
+    medicine_id_for_lookup = preprocess_medicine_name(input_for_lookup_en)
     print(f"Original medicine input ({user_selected_lang}): '{medicine_name_input}'")
     print(f"Processed English ID for lookup: '{medicine_id_for_lookup}'")
 
@@ -383,7 +377,6 @@ def get_medicine_details():
         if medicine_doc.exists:
             medicine_details_en = medicine_doc.to_dict()
             
-            # Construct English response message using English data
             response_message_en = f"Here are the details for **{medicine_details_en.get('medicineNameRaw', 'N/A').title()}**:"
             response_message_en += f"\n\n**Composition:** {medicine_details_en.get('composition', 'N/A')}"
             response_message_en += f"\n**Uses:** {medicine_details_en.get('uses', 'N/A')}"
@@ -397,17 +390,15 @@ def get_medicine_details():
         print(f"An error occurred while fetching medicine details: {e}")
         response_message_en = "An error occurred while processing your request for medicine details. Please try again later."
 
-    # Translate the final response elements back to the user's selected language
+    # Translate all fetched details and the final message back to the user's selected language
     final_response_message = translate_text(response_message_en, user_selected_lang, 'en')
     final_disclaimer = translate_text(disclaimer_message_en, user_selected_lang, 'en')
 
-    # Translate individual fields for the JSON response
     translated_medicine_name = translate_text(medicine_details_en.get('medicineNameRaw', 'N/A'), user_selected_lang, 'en')
     translated_composition = translate_text(medicine_details_en.get('composition', 'N/A'), user_selected_lang, 'en')
     translated_uses = translate_text(medicine_details_en.get('uses', 'N/A'), user_selected_lang, 'en')
     translated_side_effects = translate_text(medicine_details_en.get('sideEffects', 'N/A'), user_selected_lang, 'en')
     translated_manufacturer = translate_text(medicine_details_en.get('manufacturer', 'N/A'), user_selected_lang, 'en')
-
 
     return jsonify({
         'medicineName': translated_medicine_name.title(),
@@ -425,7 +416,6 @@ def get_health_tip():
     data = request.get_json()
     user_selected_lang = data.get('language', 'en')
 
-    # Re-use the existing disclaimer message
     disclaimer_message_en = 'This chatbot provides general information and is not a substitute for professional medical advice. Always consult a qualified healthcare professional for diagnosis and treatment.'
 
     try:
@@ -437,38 +427,30 @@ def get_health_tip():
             tips.append(doc.to_dict())
         
         if not tips:
-            # If no tips are found in the database
             return jsonify({
                 'tip_message': translate_text('No health tips available at the moment.', user_selected_lang, 'en'),
-                'message': translate_text('No health tips available at the moment.', user_selected_lang, 'en'), # Consistent key
+                'message': translate_text('No health tips available at the moment.', user_selected_lang, 'en'),
                 'disclaimer': translate_text(disclaimer_message_en, user_selected_lang, 'en')
             }), 404
 
-        # Select a random tip
         selected_tip = random.choice(tips)
         
-        # Get the tip based on the selected language, fallback to English if not found
-        # Assume tip_en, tip_si, tip_ta fields exist in Firestore documents
-        # If your CSV only had 'tip_en', then 'tip_si'/'tip_ta' will be empty or missing.
-        # The translate_text function will handle translating 'tip_en' if other languages are requested.
+        # Prioritize fetching translated content directly from Firestore if available (e.g., 'tip_si')
         tip_message_key = f'tip_{user_selected_lang}'
         
-        # Check if the specific language field for the tip exists in the document
         tip_content_en = selected_tip.get('tip_en', 'No tip content available in English.')
         
-        # Prioritize existing translated field, otherwise use English and translate
         tip_content_translated = selected_tip.get(tip_message_key)
-        if not tip_content_translated: # If the specific language field is not present or is empty
+        # If the specific language field is not found in Firestore, then use Google Translate
+        if not tip_content_translated:
             tip_content_translated = translate_text(tip_content_en, user_selected_lang, 'en')
         
-        # Fallback if translation also fails or English content is missing
-        if not tip_content_translated:
+        if not tip_content_translated: # Fallback if translation also fails
             tip_content_translated = "Error: Could not retrieve health tip."
 
-
         return jsonify({
-            'tip_message': tip_content_translated, # Specific key for tip content
-            'message': tip_content_translated,    # General key for chatbot message display
+            'tip_message': tip_content_translated,
+            'message': tip_content_translated, # Send the same message for speech synthesis
             'disclaimer': translate_text(disclaimer_message_en, user_selected_lang, 'en')
         })
 
@@ -480,6 +462,69 @@ def get_health_tip():
             'disclaimer': translate_text(disclaimer_message_en, user_selected_lang, 'en')
         }), 500
 
+# --- NEW: Google Cloud TTS Endpoint ---
+@app.route('/synthesize_speech', methods=['POST'])
+def synthesize_speech():
+    data = request.get_json()
+    text = data.get('text')
+    language_code = data.get('lang', 'en') # Get language from frontend
+
+    print(f"\n--- TTS Request ---") # Debugging print
+    print(f"Received text for TTS: '{text[:100]}...'") # Debugging print (truncated for long texts)
+    print(f"Received language code from frontend: '{language_code}'") # Debugging print
+
+    if not text:
+        print("Error: No text provided for speech synthesis.")
+        return jsonify({"error": "No text provided for speech synthesis."}), 400
+
+    # Get TTS configuration based on the language code
+    # Default to English if the specific language config is not found
+    tts_config = TTS_LANG_CONFIG.get(language_code, TTS_LANG_CONFIG['default']) 
+    
+    tts_language_code = tts_config['language_code']
+    voice_name = tts_config.get('voice_name') # Get voice name, can be None
+    
+    print(f"Mapped TTS language code: '{tts_language_code}'") # Debugging print
+    print(f"Selected voice name for TTS: '{voice_name or 'Default (Google-chosen)'}'") # Debugging print
+
+    # Set the text input to be synthesized
+    synthesis_input = texttospeech.SynthesisInput(text=text)
+
+    # Build the voice request
+    voice = texttospeech.VoiceSelectionParams(
+        language_code=tts_language_code,
+        name=voice_name, # This can be None, letting Google Cloud pick a default
+        ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL # Or MALE/FEMALE
+    )
+
+    # Select the type of audio file you want returned
+    audio_config = texttospeech.AudioConfig(
+        audio_encoding=texttospeech.AudioEncoding.MP3
+    )
+
+    try:
+        # Perform the text-to-speech request on the text input with the selected voice parameters and audio file type
+        response = tts_client.synthesize_speech(
+            input=synthesis_input, voice=voice, audio_config=audio_config
+        )
+        print("TTS synthesis successful. Sending audio.") # Debugging print
+
+        # Return the audio content as a response
+        return send_file(
+            io.BytesIO(response.audio_content),
+            mimetype='audio/mpeg',
+            as_attachment=False
+        )
+
+    except Exception as e:
+        app.logger.error(f"Google Cloud TTS error: {e}")
+        print(f"Error during speech synthesis: {e}") # Debugging print
+        # Provide a more detailed error to the frontend if debug is true
+        error_message = f"Failed to synthesize speech: {str(e)}"
+        if app.debug: # Only send detailed error in debug mode
+            return jsonify({"error": error_message}), 500
+        else:
+            return jsonify({"error": "Failed to synthesize speech. Please try again later."}), 500
 
 # --- Run the Flask app ---
 if __name__ == '__main__':

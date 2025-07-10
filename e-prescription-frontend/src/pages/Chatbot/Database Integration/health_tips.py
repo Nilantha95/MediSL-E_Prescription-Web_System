@@ -7,7 +7,7 @@ import os # For getting the current directory
 # --- Configuration ---
 # IMPORTANT: Update this path to your Firebase Service Account Key JSON file.
 # It should be the same one you use for chatbot_backend.py
-SERVICE_ACCOUNT_KEY_PATH = '../API_keys/medisl-ed07f-firebase-adminsdk-fbsvc-b70dc11484.json'
+SERVICE_ACCOUNT_KEY_PATH = '../API_keys/medisl-ed07f-firebase-adminsdk-fbsvc-2fe43ec477.json'
 
 # IMPORTANT: Update this path to your health_tips.csv file.
 # Assuming health_tips.csv is in the same directory as this script for now
