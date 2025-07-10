@@ -28,9 +28,9 @@ import pic from '../Main_Interface_UI/images/Doctor.png';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
 import { Link } from 'react-router-dom';
-import { FaFacebookF, FaTwitter, FaInstagram, FaPinterest, FaWhatsapp} from 'react-icons/fa';
+import { FaFacebookF, FaTwitter, FaInstagram, FaPinterest, FaWhatsapp } from 'react-icons/fa';
 
-// Sample Data
+// Sample Data (Updated to include more diverse statuses for demonstration)
 const initialPrescriptions = [
   {
     date: '2025-04-27',
@@ -48,19 +48,81 @@ const initialPrescriptions = [
     status: 'Completed',
     pharmacy: 'MedPlus',
   },
-  // Add more sample data here
+  {
+    date: '2025-05-01',
+    patient: { name: 'Michael Johnson', avatar: '/path/to/michael-avatar.png' },
+    prescriptionId: '#RX25790',
+    medication: 'Metformin 850mg',
+    status: 'Active',
+    pharmacy: 'City Drug Store',
+  },
+  {
+    date: '2025-05-02',
+    patient: { name: 'Sarah Davis', avatar: '/path/to/sarah-avatar.png' },
+    prescriptionId: '#RX25791',
+    medication: 'Ventolin Inhaler',
+    status: 'Pending',
+    pharmacy: 'QuickMed Pharmacy',
+  },
+  {
+    date: '2025-05-05',
+    patient: { name: 'David Lee', avatar: '/path/to/david-avatar.png' },
+    prescriptionId: '#RX25792',
+    medication: 'Atorvastatin 20mg',
+    status: 'Active',
+    pharmacy: 'LifeCare Pharmacy',
+  },
+  {
+    date: '2025-05-06',
+    patient: { name: 'Jessica White', avatar: '/path/to/jessica-avatar.png' },
+    prescriptionId: '#RX25793',
+    medication: 'Gabapentin 300mg',
+    status: 'Completed',
+    pharmacy: 'MedPlus',
+  },
 ];
 
 const PrescriptionHistory = () => {
+  // State for Prescription History Table (the second table)
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [dateFilter, setDateFilter] = useState('');
   const [pharmacyFilter, setPharmacyFilter] = useState('All Pharmacies');
-  const [page, setPage] = useState(1);
-  const [rowsPerPage] = useState(10); // Assuming 10 rows per page as per the design
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyRowsPerPage] = useState(10);
 
-  // Simulate filtering data (you'd typically do this on the backend)
-  const filteredPrescriptions = initialPrescriptions.filter((prescription) => {
+  // State for Active Prescriptions Table (the first table)
+  const [activeSearchTerm, setActiveSearchTerm] = useState(''); // New state
+  const [activeDateFilter, setActiveDateFilter] = useState(''); // New state
+  const [activePage, setActivePage] = useState(1);
+  const [activeRowsPerPage] = useState(5);
+
+  // Data for Active Prescriptions table (filtered directly by status AND new filters)
+  const filteredActivePrescriptions = initialPrescriptions.filter(
+    (prescription) => {
+      const matchesActiveStatus = prescription.status === 'Active';
+      const matchesActiveSearchTerm =
+        prescription.patient.name.toLowerCase().includes(activeSearchTerm.toLowerCase()) ||
+        prescription.prescriptionId.toLowerCase().includes(activeSearchTerm.toLowerCase()) ||
+        prescription.medication.toLowerCase().includes(activeSearchTerm.toLowerCase()); // You might want to remove medication if not relevant for active search
+      const matchesActiveDate = !activeDateFilter || prescription.date === activeDateFilter;
+
+      return matchesActiveStatus && matchesActiveSearchTerm && matchesActiveDate;
+    }
+  );
+
+  // Pagination logic for Active Prescriptions Table
+  const activeStartIndex = (activePage - 1) * activeRowsPerPage;
+  const activeEndIndex = activeStartIndex + activeRowsPerPage;
+  const paginatedActivePrescriptions = filteredActivePrescriptions.slice(activeStartIndex, activeEndIndex);
+  const totalActivePages = Math.ceil(filteredActivePrescriptions.length / activeRowsPerPage);
+
+  const handleActivePageChange = (event, value) => {
+    setActivePage(value);
+  };
+
+  // Filtering logic for Prescription History Table
+  const filteredHistoryPrescriptions = initialPrescriptions.filter((prescription) => {
     const matchesSearchTerm =
       prescription.patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       prescription.prescriptionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -77,14 +139,14 @@ const PrescriptionHistory = () => {
     return matchesSearchTerm && matchesStatus && matchesDate && matchesPharmacy;
   });
 
-  // Pagination logic
-  const startIndex = (page - 1) * rowsPerPage;
-  const endIndex = startIndex + rowsPerPage;
-  const paginatedPrescriptions = filteredPrescriptions.slice(startIndex, endIndex);
-  const totalPages = Math.ceil(filteredPrescriptions.length / rowsPerPage);
+  // Pagination logic for Prescription History Table
+  const historyStartIndex = (historyPage - 1) * historyRowsPerPage;
+  const historyEndIndex = historyStartIndex + historyRowsPerPage;
+  const paginatedHistoryPrescriptions = filteredHistoryPrescriptions.slice(historyStartIndex, historyEndIndex);
+  const totalHistoryPages = Math.ceil(filteredHistoryPrescriptions.length / historyRowsPerPage);
 
-  const handlePageChange = (event, value) => {
-    setPage(value);
+  const handleHistoryPageChange = (event, value) => {
+    setHistoryPage(value);
   };
 
   const navBarStyle = {
@@ -324,7 +386,7 @@ const PrescriptionHistory = () => {
         </aside>
 
         {/* Main Content Area */}
-         <Box
+        <Box
           sx={{
             p: 3,
             flexGrow: 1,
@@ -337,14 +399,149 @@ const PrescriptionHistory = () => {
           {/* Header */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="h5" component="h1">
-              Prescription History
+              Prescription Overview
             </Typography>
             <Button variant="contained" startIcon={<AddIcon />} sx={{ bgcolor: 'black', '&:hover': { bgcolor: '#333' } }}>
               New Prescription
             </Button>
           </Box>
 
-          {/* Filters */}
+          {/* --- Active Prescriptions Table (Now at the top) --- */}
+          <Box sx={{ mb: 5 }}> {/* Added margin-bottom for spacing */}
+            <Typography variant="h5" component="h2" sx={{ mb: 2 }}>
+              Active Prescriptions
+            </Typography>
+
+            {/* Filters for Active Prescriptions */}
+            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+              <TextField
+                label="Search patient name..."
+                variant="outlined"
+                size="small"
+                value={activeSearchTerm}
+                onChange={(e) => setActiveSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ minWidth: 200 }}
+              />
+              <TextField
+                type="date"
+                label="mm/dd/yyyy"
+                variant="outlined"
+                size="small"
+                value={activeDateFilter}
+                onChange={(e) => setActiveDateFilter(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <CalendarTodayIcon />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ minWidth: 180 }}
+              />
+              {/* No status or pharmacy filter for active, as it's already filtered to "Active" */}
+            </Box>
+
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                    <TableCell>Issued Date</TableCell>
+                    <TableCell>Patient</TableCell>
+                    <TableCell>Prescription ID</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {paginatedActivePrescriptions.length > 0 ? (
+                    paginatedActivePrescriptions.map((row, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{row.date}</TableCell>
+                        <TableCell sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Avatar src={row.patient.avatar} alt={row.patient.name} />
+                          {row.patient.name}
+                        </TableCell>
+                        <TableCell>{row.prescriptionId}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={row.status}
+                            size="small"
+                            color="success" // Always green for active
+                            sx={{
+                              bgcolor: '#e8f5e9',
+                              color: '#2e7d32',
+                              fontWeight: 'bold',
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <IconButton size="small">
+                            <VisibilityIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton size="small">
+                            <MoreVertIcon fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} align="center">
+                        No active prescriptions found matching your criteria.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {/* Pagination for Active Prescriptions table */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                Showing {activeStartIndex + 1}-
+                {Math.min(activeEndIndex, filteredActivePrescriptions.length)} of{' '}
+                {filteredActivePrescriptions.length} results
+              </Typography>
+              <Pagination
+                count={totalActivePages}
+                page={activePage}
+                onChange={handleActivePageChange}
+                color="primary"
+                showFirstButton
+                showLastButton
+                sx={{
+                  '& .MuiPaginationItem-root': {
+                    borderRadius: '4px',
+                    border: '1px solid #ddd',
+                    '&.Mui-selected': {
+                      bgcolor: 'black',
+                      color: 'white',
+                      border: '1px solid black',
+                      '&:hover': {
+                        bgcolor: '#333',
+                      },
+                    },
+                  },
+                }}
+              />
+            </Box>
+          </Box>
+          {/* --- End Active Prescriptions Table --- */}
+
+          {/* --- Prescription History Table (Now below Active Prescriptions) --- */}
+          <Typography variant="h5" component="h2" sx={{ mb: 2 }}>
+            Prescription History
+          </Typography>
+
+          {/* Filters for Prescription History */}
           <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
             <TextField
               label="Search patient name..."
@@ -407,7 +604,7 @@ const PrescriptionHistory = () => {
             </TextField>
           </Box>
 
-          {/* Table */}
+          {/* Main Prescription History Table */}
           <TableContainer component={Paper}>
             <Table>
               <TableHead>
@@ -422,7 +619,7 @@ const PrescriptionHistory = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {paginatedPrescriptions.map((row, index) => (
+                {paginatedHistoryPrescriptions.map((row, index) => (
                   <TableRow key={index}>
                     <TableCell>{row.date}</TableCell>
                     <TableCell sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -458,15 +655,17 @@ const PrescriptionHistory = () => {
             </Table>
           </TableContainer>
 
-          {/* Pagination */}
+          {/* Pagination for Prescription History table */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
             <Typography variant="body2" color="text.secondary">
-              Showing {startIndex + 1}-{Math.min(endIndex, filteredPrescriptions.length)} of {filteredPrescriptions.length} results
+              Showing {historyStartIndex + 1}-
+              {Math.min(historyEndIndex, filteredHistoryPrescriptions.length)} of{' '}
+              {filteredHistoryPrescriptions.length} results
             </Typography>
             <Pagination
-              count={totalPages}
-              page={page}
-              onChange={handlePageChange}
+              count={totalHistoryPages}
+              page={historyPage}
+              onChange={handleHistoryPageChange}
               color="primary"
               showFirstButton
               showLastButton
@@ -486,6 +685,7 @@ const PrescriptionHistory = () => {
               }}
             />
           </Box>
+          {/* --- End Prescription History Table --- */}
         </Box>
       </div>
 
