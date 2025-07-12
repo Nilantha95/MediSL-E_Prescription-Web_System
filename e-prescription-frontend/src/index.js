@@ -17,6 +17,11 @@ import PatientDashboard from './pages/Patient_UIs/dashboard';
 // --- NEW IMPORT FOR VIEW PRESCRIPTION ---
 import ViewPrescription from './pages/Doctor_UIs/View_prescription'; // Assuming this path
 
+// --- Pharmacy --- //
+import PrescriptionIssue from './pages/Pharmacy_UIs/PrescriptionIssue';
+import QrScanner from './pages/Pharmacy_UIs/QrScanner';
+import PrescriptionView from './pages/Pharmacy_UIs/PrescriptionView';
+
 // --- NEW IMPORTS FOR I18NEXT ---
 import './pages/Chatbot/i18n'; // Make sure this line is present to initialize i18next
 import { I18nextProvider } from 'react-i18next';
@@ -42,6 +47,9 @@ root.render(
           <Route path="/pharmacy/dashboard" element={<Phardashboard />} />
           <Route path="/featurepage" element={<Featurespage />} />
           <Route path="/patient/dashboard" element={<PatientDashboard />} />
+          <Route path="/pharmacy/issue/:prescriptionId" element={<PrescriptionIssue />} />
+          <Route path="/pharmacy/qr-scan" element={<QrScanner />} />
+          <Route path="/pharmacy/view/:prescriptionId" element={<PrescriptionView />} />
         </Routes>
       </BrowserRouter>
     </I18nextProvider>
