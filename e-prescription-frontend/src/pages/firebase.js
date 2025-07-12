@@ -1,9 +1,11 @@
-// firebase.js
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+// firebase.js (example)
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+import { getStorage } from 'firebase/storage'; // Import getStorage
 
 const firebaseConfig = {
+  // Your Firebase config
   apiKey: "AIzaSyCSyFccixHchCiYKu5WwWjpXt9p6gpfoZU",
   authDomain: "medisl-ed07f.firebaseapp.com",
   projectId: "medisl-ed07f",
@@ -13,6 +15,8 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+const storage = getStorage(app); // Get storage instance
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+export { db, auth, storage }; // Export storage

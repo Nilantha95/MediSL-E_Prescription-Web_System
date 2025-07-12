@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
@@ -12,8 +11,11 @@ import Contact from './pages/Main_Interface_UI/contactus';
 import NewPrescriptionForm from './pages/Doctor_UIs/add_prescription';
 import PrescriptionHistory from './pages/Doctor_UIs/prescription_history';
 import Phardashboard from './pages/Pharmacy_UIs/dashboard';
+import Doctorprofile from './pages/Doctor_UIs/doc_profile';
 import Featurespage from './pages/Main_Interface_UI/featurespage';
 import PatientDashboard from './pages/Patient_UIs/dashboard';
+// --- NEW IMPORT FOR VIEW PRESCRIPTION ---
+import ViewPrescription from './pages/Doctor_UIs/View_prescription'; // Assuming this path
 
 // --- NEW IMPORTS FOR I18NEXT ---
 import './pages/Chatbot/i18n'; // Make sure this line is present to initialize i18next
@@ -35,6 +37,8 @@ root.render(
           <Route path="/contact" element={<Contact />} />
           <Route path="/newprescription" element={<NewPrescriptionForm />} />
           <Route path="/prescriptionhistory" element={<PrescriptionHistory />} />
+          <Route path="/prescription/:prescriptionId" element={<ViewPrescription />} />
+          <Route path="/docprofile" element={<Doctorprofile />} />
           <Route path="/pharmacy/dashboard" element={<Phardashboard />} />
           <Route path="/featurepage" element={<Featurespage />} />
           <Route path="/patient/dashboard" element={<PatientDashboard />} />
