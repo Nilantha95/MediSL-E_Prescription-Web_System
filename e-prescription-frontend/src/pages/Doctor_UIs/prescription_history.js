@@ -102,7 +102,7 @@ const PrescriptionHistory = () => {
 
     // Navigation to the detailed prescription view
     const handleViewDetails = (prescriptionId) => {
-        navigate(`/prescription-display/${prescriptionId}`);
+        navigate(`/prescription/${prescriptionId}`);
     };
 
     const navBarStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 50px', backgroundColor: '#d7f3d2' };
@@ -291,9 +291,12 @@ const PrescriptionHistory = () => {
                                                 />
                                             </TableCell>
                                             <TableCell>
-                                                <IconButton size="small" onClick={() => handleViewDetails(row.id)}>
-                                                    <VisibilityIcon fontSize="small" />
-                                                </IconButton>
+                                                {/* Updated Action button to navigate */}
+                                                <Link to={`/prescription/${row.id}`}>
+                                                    <IconButton size="small">
+                                                        <VisibilityIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Link>
                                                 <IconButton size="small">
                                                     <MoreVertIcon fontSize="small" />
                                                 </IconButton>

@@ -11,6 +11,7 @@ import Contact from './pages/Main_Interface_UI/contactus';
 import NewPrescriptionForm from './pages/Doctor_UIs/add_prescription';
 import PrescriptionHistory from './pages/Doctor_UIs/prescription_history';
 import Phardashboard from './pages/Pharmacy_UIs/dashboard';
+import Doctorprofile from './pages/Doctor_UIs/doc_profile';
 import Featurespage from './pages/Main_Interface_UI/featurespage';
 import PatientDashboard from './pages/Patient_UIs/dashboard';
 // --- NEW IMPORT FOR VIEW PRESCRIPTION ---
@@ -36,11 +37,11 @@ root.render(
           <Route path="/contact" element={<Contact />} />
           <Route path="/newprescription" element={<NewPrescriptionForm />} />
           <Route path="/prescriptionhistory" element={<PrescriptionHistory />} />
+          <Route path="/prescription/:prescriptionId" element={<ViewPrescription />} />
+          <Route path="/docprofile" element={<Doctorprofile />} />
           <Route path="/pharmacy/dashboard" element={<Phardashboard />} />
           <Route path="/featurepage" element={<Featurespage />} />
           <Route path="/patient/dashboard" element={<PatientDashboard />} />
-          {/* --- NEW ROUTE FOR VIEWING PRESCRIPTION --- */}
-          <Route path="/view-prescription/:id" element={<ViewPrescription />} />
         </Routes>
       </BrowserRouter>
     </I18nextProvider>

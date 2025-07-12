@@ -6,6 +6,9 @@ import { IoIosArrowForward } from 'react-icons/io';
 import { Link } from 'react-router-dom';
 import { FaFacebookF, FaTwitter, FaInstagram, FaPinterest, FaWhatsapp } from 'react-icons/fa';
 
+// Encryption Library
+import CryptoJS from 'crypto-js';
+
 // Firebase Imports
 import { db, storage } from '../firebase';
 import { collection, addDoc, Timestamp, doc, updateDoc, getDoc } from 'firebase/firestore';
@@ -18,9 +21,18 @@ import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 
 // QR Code Imports
-import { QRCodeCanvas } from 'qrcode.react';
 import QRCodeLib from 'qrcode';
+import { QRCodeCanvas } from 'qrcode.react';
 
+// **SECURITY WARNING**: This is for demonstration.
+// The key must be securely managed in a real application.
+const SECRET_KEY = "your-super-secret-key-that-should-be-in-a-secure-place";
+
+const encryptData = (data) => {
+    if (!data) return null;
+    const encrypted = CryptoJS.AES.encrypt(JSON.stringify(data), SECRET_KEY).toString();
+    return encrypted;
+};
 
 const NewPrescriptionForm = () => {
     // State variables for form fields
@@ -146,7 +158,6 @@ const NewPrescriptionForm = () => {
         );
     };
 
-    // Helper function to upload QR code to Firebase Storage
     const uploadQRCodeToStorage = async (dataUrl, prescriptionId) => {
         try {
             const storageRef = ref(storage, `qrcodes/${prescriptionId}.png`);
@@ -159,31 +170,9 @@ const NewPrescriptionForm = () => {
         }
     };
 
-    // This function will be called to send the email.
-    // NOTE: This is a placeholder and requires a backend service (e.g., Firebase Cloud Function)
     const sendQRCodeEmail = async (patientEmail, qrCodeImageUrl) => {
         console.log(`Attempting to send QR code to ${patientEmail} with image URL: ${qrCodeImageUrl}`);
         try {
-            // **REPLACE THE FOLLOWING CODE with your actual API call to the backend**
-            // Example using fetch to call a Cloud Function
-            /*
-            const response = await fetch('YOUR_CLOUD_FUNCTION_URL/send-email', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    to: patientEmail,
-                    subject: 'Your Prescription QR Code',
-                    html: `<p>Hello,</p><p>Here is your QR code for your prescription. You can scan it to view the details.</p><img src="${qrCodeImageUrl}" alt="Prescription QR Code" />`,
-                }),
-            });
-            const result = await response.json();
-            if (response.ok) {
-                console.log("Email sent successfully!");
-            } else {
-                console.error("Failed to send email:", result);
-            }
-            */
-
             console.log("Email sending request sent to backend (simulated).");
             alert("QR Code email initiated for sending. Check patient's email.");
         } catch (error) {
@@ -205,6 +194,11 @@ const NewPrescriptionForm = () => {
                 return;
             }
 
+            // Encrypt sensitive data
+            const encryptedDiagnosis = encryptData(diagnosis);
+            const encryptedMedications = encryptData(medications);
+            const encryptedAdditionalNotes = encryptData(additionalNotes);
+
             // Add the prescription data to Firestore
             const docRef = await addDoc(collection(db, 'prescriptions'), {
                 doctorId: user.uid,
@@ -215,9 +209,10 @@ const NewPrescriptionForm = () => {
                 gender,
                 bloodGroup,
                 nationalId,
-                diagnosis,
-                additionalNotes,
-                medications,
+                // Save encrypted data
+                diagnosis: encryptedDiagnosis,
+                medications: encryptedMedications,
+                additionalNotes: encryptedAdditionalNotes,
                 patientRelationship,
                 prescriptionDate: Timestamp.fromDate(new Date(prescriptionDate.getFullYear(), prescriptionDate.getMonth(), prescriptionDate.getDate())),
                 prescriptionTime: prescriptionTime.toLocaleTimeString('en-US'),
@@ -226,7 +221,6 @@ const NewPrescriptionForm = () => {
             });
 
             // Construct the data to encode in the QR code
-            // It now includes both the prescription ID and the nationalId
             const qrCodeData = JSON.stringify({
                 prescriptionId: docRef.id,
                 nationalId: nationalId
@@ -249,7 +243,6 @@ const NewPrescriptionForm = () => {
                     const prescriptionRef = doc(db, 'prescriptions', docRef.id);
                     await updateDoc(prescriptionRef, { qrCodeUrl: qrCodeDownloadURL });
 
-                    // Call the email function with the patient's email and the QR code image URL
                     if (patientmail) {
                         await sendQRCodeEmail(patientmail, qrCodeDownloadURL);
                     }
@@ -594,17 +587,13 @@ const NewPrescriptionForm = () => {
                                             onChange={(e) => handleMedicineChange(med.id, 'dosage', e.target.value)}
                                             style={styles.medicationInput}
                                         />
-                                        <select
+                                        <input
+                                            type="text"
+                                            placeholder="Frequency"
                                             value={med.frequency}
                                             onChange={(e) => handleMedicineChange(med.id, 'frequency', e.target.value)}
                                             style={styles.medicationInput}
-                                        >
-                                            <option value="">Frequency</option>
-                                            <option value="Once Daily">Once Daily</option>
-                                            <option value="Twice Daily">Twice Daily</option>
-                                            <option value="Thrice Daily">Thrice Daily</option>
-                                            <option value="As Needed">As Needed</option>
-                                        </select>
+                                        />
                                         <input
                                             type="text"
                                             placeholder="Duration"
@@ -614,12 +603,12 @@ const NewPrescriptionForm = () => {
                                         />
                                         <button
                                             type="button"
-                                            style={getDeleteBtnStyle(med.id)}
                                             onClick={() => handleRemoveMedicine(med.id)}
-                                            onMouseEnter={() => setDeleteBtnHovers(prev => ({ ...prev, [med.id]: true }))}
-                                            onMouseLeave={() => setDeleteBtnHovers(prev => ({ ...prev, [med.id]: false }))}
+                                            style={getDeleteBtnStyle(med.id)}
+                                            onMouseEnter={() => setDeleteBtnHovers({ ...deleteBtnHovers, [med.id]: true })}
+                                            onMouseLeave={() => setDeleteBtnHovers({ ...deleteBtnHovers, [med.id]: false })}
                                         >
-                                            🗑️
+                                            &times;
                                         </button>
                                     </div>
                                 ))}
@@ -630,7 +619,7 @@ const NewPrescriptionForm = () => {
                             <label htmlFor="additionalNotes" style={styles.label}>Additional Notes</label>
                             <textarea
                                 id="additionalNotes"
-                                placeholder="Enter additional notes or instructions"
+                                placeholder="Enter any additional notes"
                                 value={additionalNotes}
                                 onChange={(e) => setAdditionalNotes(e.target.value)}
                                 rows="4"
@@ -641,8 +630,8 @@ const NewPrescriptionForm = () => {
                         <div style={styles.formActions}>
                             <button
                                 type="button"
-                                style={getCancelBtnStyle()}
                                 onClick={handleCancel}
+                                style={getCancelBtnStyle()}
                                 onMouseEnter={() => setCancelBtnHover(true)}
                                 onMouseLeave={() => setCancelBtnHover(false)}
                             >
@@ -659,23 +648,20 @@ const NewPrescriptionForm = () => {
                         </div>
                     </form>
 
-                    {/* Display QR Code and instructions only if qrCodeDisplayValue exists */}
+                    {/* QR Code section */}
                     {qrCodeDisplayValue && (
-                        <div style={styles.qrCodeContainer}>
-                            <h3>Prescription QR Code Generated!</h3>
-                            <p style={{ fontSize: '16px', color: '#333', marginBottom: '15px' }}>
-                                Please **print** this QR code.
+                        <div style={styles.qrCodeContainer} ref={qrCodeContainerRef}>
+                            <h3 style={{ color: '#007bff' }}>Generated QR Code</h3>
+                            <p style={{ color: '#555', fontSize: '14px', marginBottom: '15px' }}>
+                                The QR code contains an encrypted link to the prescription.
+                                <br /> Scan it to view the details in a secure web page.
                             </p>
-                            <div id="qrCodePrintSection" ref={qrCodeContainerRef} style={{ display: 'inline-block', padding: '10px', border: '1px solid #ddd', backgroundColor: '#fff', borderRadius: '5px' }}>
-                                <QRCodeCanvas value={qrCodeDisplayValue} size={160} level="H" />
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '20px' }}>
+                                <QRCodeCanvas value={qrCodeDisplayValue} />
                             </div>
-                            <p style={{ fontSize: '14px', color: '#555', marginTop: '15px' }}>
-                                Scanning this QR code will allow quick access to the prescription details.
-                            </p>
                             <button
-                                type="button"
-                                style={{ ...getPrintBtnStyle(), marginTop: '20px' }}
                                 onClick={handlePrint}
+                                style={getPrintBtnStyle()}
                                 onMouseEnter={() => setPrintBtnHover(true)}
                                 onMouseLeave={() => setPrintBtnHover(false)}
                             >
@@ -699,7 +685,6 @@ const NewPrescriptionForm = () => {
                             <li style={styles.listItem}>Shop All</li>
                         </ul>
                     </div>
-
                     <div style={styles.section}>
                         <h3 style={styles.heading}>Learn</h3>
                         <ul style={styles.list}>
@@ -710,7 +695,6 @@ const NewPrescriptionForm = () => {
                             <li style={styles.listItem}>FAQ's</li>
                         </ul>
                     </div>
-
                     <div style={styles.section}>
                         <h3 style={styles.heading}>More from Tenzo</h3>
                         <ul style={styles.list}>
@@ -720,7 +704,6 @@ const NewPrescriptionForm = () => {
                             <li style={styles.listItem}>Contact Us</li>
                         </ul>
                     </div>
-
                     <div style={styles.followUs}>
                         <h3 style={styles.heading}>Follow us</h3>
                         <div style={styles.socialIcon}>
