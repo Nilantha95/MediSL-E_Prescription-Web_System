@@ -48,34 +48,53 @@ const PrescriptionIssue = () => {
     // State to hold the logged-in pharmacist's name
     const [pharmacistName, setPharmacistName] = useState(null);
 
+    // This effect handles authentication state and fetching pharmacist's name
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                // Fetch the pharmacist's name from Firestore using their UID
-                const pharmacistDocRef = doc(db, 'pharmacists', user.uid);
-                const pharmacistDocSnap = await getDoc(pharmacistDocRef);
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+            if (currentUser) {
+                // Point to the 'users' collection instead of 'pharmacists'
+                const userDocRef = doc(db, 'users', currentUser.uid);
+                const userDocSnap = await getDoc(userDocRef);
 
-                if (pharmacistDocSnap.exists()) {
-                    setPharmacistName(pharmacistDocSnap.data().name);
-                    // Now that we have the name, fetch the prescription
-                    await fetchPrescription();
+                if (userDocSnap.exists()) {
+                    const userData = userDocSnap.data();
+                    // Check if user is a pharmacist before setting the name
+                    if (userData.userType === 'pharmacist') {
+                        // Combine firstName and lastName
+                        const fullName = `${userData.firstName} ${userData.lastName}`;
+                        setPharmacistName(fullName);
+                    } else {
+                        setError("Unauthorized. Not a pharmacist account.");
+                        setLoading(false);
+                    }
                 } else {
-                    setError("Pharmacist profile not found.");
+                    setError("Pharmacist profile not found in 'users' collection.");
                     setLoading(false);
                 }
             } else {
+                setPharmacistName(null);
                 setError("You must be logged in to view this prescription.");
                 setLoading(false);
             }
         });
 
+        return () => unsubscribe();
+    }, [auth]);
+
+    // This effect handles fetching the prescription and runs only when
+    // both the prescriptionId and the pharmacistName are available.
+    useEffect(() => {
+        // Only proceed if both an ID and a pharmacist name are available
+        if (!prescriptionId || !pharmacistName) {
+            // We'll wait until the first useEffect has populated the pharmacistName.
+            return;
+        }
+
         const fetchPrescription = async () => {
-            if (!prescriptionId) {
-                setError("No prescription ID found in the URL.");
-                setLoading(false);
-                return;
-            }
+            setLoading(true); // Set loading to true before fetching
+            setError(null); // Clear previous errors
             const docRef = doc(db, 'prescriptions', prescriptionId);
+            
             try {
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
@@ -113,12 +132,13 @@ const PrescriptionIssue = () => {
                 console.error("Error fetching prescription:", err);
                 setError("Failed to fetch prescription. This may be due to an invalid QR code or a fulfilled prescription.");
             } finally {
-                setLoading(false);
+                setLoading(false); // Set loading to false when done, regardless of success or failure
             }
         };
-
-        return () => unsubscribe();
-    }, [prescriptionId, auth]);
+        
+        fetchPrescription();
+        
+    }, [prescriptionId, pharmacistName]); // Dependency array now includes pharmacistName
 
     const handleMedicineStatusChange = (index, newStatus) => {
         const updatedMedicines = [...medicines];
@@ -128,7 +148,6 @@ const PrescriptionIssue = () => {
 
     const handleFinalize = async () => {
         setIsSaving(true);
-        // Check if pharmacist name is available before saving
         if (!pharmacistName) {
             setError("Pharmacist data not loaded. Please try refreshing the page.");
             setIsSaving(false);
@@ -158,8 +177,7 @@ const PrescriptionIssue = () => {
         }
 
         const newIssueRecord = {
-            // Use the dynamically fetched pharmacistName
-            issuedBy: pharmacistName, 
+            issuedBy: pharmacistName,
             issuedAt: new Date(),
             medicinesIssued: medicines.filter(med => med.status === 'Issued').map(med => med.name)
         };
@@ -186,7 +204,6 @@ const PrescriptionIssue = () => {
 
     const handleReject = async () => {
         setIsSaving(true);
-        // Check if pharmacist name is available before saving
         if (!pharmacistName) {
             setError("Pharmacist data not loaded. Please try refreshing the page.");
             setIsSaving(false);
@@ -205,8 +222,7 @@ const PrescriptionIssue = () => {
             await updateDoc(docRef, {
                 status: 'Rejected',
                 rejectionReason: rejectReason,
-                // Use the dynamically fetched pharmacistName
-                rejectedBy: pharmacistName, 
+                rejectedBy: pharmacistName,
                 rejectedAt: new Date()
             });
             alert("Prescription rejected successfully!");
@@ -219,7 +235,7 @@ const PrescriptionIssue = () => {
         }
     };
 
-    if (loading || !pharmacistName) return <div style={{ textAlign: 'center', marginTop: '50px' }}>Loading...</div>;
+    if (loading) return <div style={{ textAlign: 'center', marginTop: '50px' }}>Loading...</div>;
     if (error) return <div style={{ color: 'red', textAlign: 'center', marginTop: '50px' }}>{error}</div>;
 
     return (

@@ -6,9 +6,9 @@ import { FaPhoneAlt, FaPinterest, FaFacebookF, FaInstagram, FaTwitter, FaWhatsap
 import { IoIosArrowForward } from 'react-icons/io';
 import logo from '../Main_Interface_UI/images/Logo01.png';
 import pic from './Images/phar01.jpg'; // Path for pharmacist profile picture
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { getAuth } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 
 // --- Mock Styles (move to a CSS file for production) ---
 const navBarStyle = {
@@ -74,7 +74,7 @@ const bottomLinkStyle = { textDecoration: 'none', color: '#555', marginLeft: '10
 const separatorStyle = { color: '#777' };
 const secondaryFooterStyle = { backgroundColor: '#111', color: '#ddd', textAlign: 'center', padding: '10px' };
 
-function AppNavbar() {
+function AppNavbar({ onLogout }) {
     return (
         <header style={navBarStyle}>
             <div style={logoContainerStyle}>
@@ -89,18 +89,16 @@ function AppNavbar() {
                     <FaPhoneAlt style={{ marginRight: '5px' }} />
                     <span>+94 (011) 519-51919</span>
                 </div>
-                <Link to="/signin" style={{ textDecoration: 'none' }}>
-                    <div style={homeButtonDivStyle}>
-                        <span>Logout</span>
-                        <IoIosArrowForward style={{ marginLeft: '5px' }} />
-                    </div>
-                </Link>
+                <div onClick={onLogout} style={homeButtonDivStyle}>
+                    <span>Logout</span>
+                    <IoIosArrowForward style={{ marginLeft: '5px' }} />
+                </div>
             </div>
         </header>
     );
 }
 
-function Sidebar() {
+function Sidebar({ pharmacistName }) {
     return (
         <aside style={sidebarStyle}>
             <Link to="/pharmacy/dashboard" style={{ ...sidebarLinkStyle, ...sidebarLinkActiveStyle }}>Dashboard</Link>
@@ -108,7 +106,7 @@ function Sidebar() {
             <Link to="/pharmacy/settings" style={sidebarLinkStyle}>Settings</Link>
             <div style={doctorInfoStyle}>
                 <img src={pic} alt="Pharmacist Avatar" style={doctorAvatarStyle} />
-                <p style={doctorNameStyle}>Saman Serasingha</p>
+                <p style={doctorNameStyle}>{pharmacistName || 'Loading...'}</p>
             </div>
         </aside>
     );
@@ -176,23 +174,61 @@ function PharmacyDashboard() {
     const [issuedPrescriptions, setIssuedPrescriptions] = useState([]);
     const [loadingPrescriptions, setLoadingPrescriptions] = useState(true);
     const [fetchError, setFetchError] = useState(null);
+    const [pharmacistName, setPharmacistName] = useState('Loading...');
 
-    // Placeholder for pharmacist name. In a real app, this would come from auth or a profile document.
-    const currentPharmacistName = "Saman Serasingha"; 
-
+    // Effect to get the pharmacist's name from Firestore
     useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const userDocRef = doc(db, 'users', user.uid);
+                    const userDocSnap = await getDoc(userDocRef);
+                    if (userDocSnap.exists()) {
+                        const userData = userDocSnap.data();
+                        if (userData.userType === 'pharmacist') {
+                            const fullName = `${userData.firstName} ${userData.lastName}`;
+                            setPharmacistName(fullName);
+                        } else {
+                            setFetchError("You are not authorized to view this page.");
+                            setPharmacistName("Unauthorized User");
+                            setLoadingPrescriptions(false);
+                        }
+                    } else {
+                        setFetchError("Pharmacist profile not found.");
+                        setPharmacistName("Unknown");
+                        setLoadingPrescriptions(false);
+                    }
+                } catch (err) {
+                    console.error("Error fetching pharmacist profile:", err);
+                    setFetchError("Failed to load user profile.");
+                    setPharmacistName("Error");
+                    setLoadingPrescriptions(false);
+                }
+            } else {
+                navigate('/signin');
+            }
+        });
+        return () => unsubscribe();
+    }, [auth, navigate]);
+
+    // Effect to fetch prescriptions after the pharmacist's name is available
+    useEffect(() => {
+        if (pharmacistName === 'Loading...' || pharmacistName === 'Unknown' || pharmacistName === 'Error' || pharmacistName === 'Unauthorized User') {
+            return;
+        }
+
         const fetchIssuedPrescriptions = async () => {
             setLoadingPrescriptions(true);
             setFetchError(null);
             
             try {
-                // Get a reference to the 'prescriptions' collection
                 const prescriptionsRef = collection(db, 'prescriptions');
                 
-                // Query for prescriptions that are either 'Issued' or 'partially_issued'
+                // Construct a compound query using `where` clauses for both status and the new array field
                 const q = query(
                     prescriptionsRef,
-                    where('status', 'in', ['Issued', 'partially_issued'])
+                    where('status', 'in', ['Issued', 'partially_issued']),
+                    where('issuedByPharmacists', 'array-contains', pharmacistName)
                 );
 
                 const querySnapshot = await getDocs(q);
@@ -200,14 +236,7 @@ function PharmacyDashboard() {
 
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    // Filter prescriptions based on the pharmacist name in the issueHistory array
-                    const issuedByThisPharmacist = data.issueHistory?.some(
-                        (history) => history.issuedBy === currentPharmacistName
-                    );
-
-                    if (issuedByThisPharmacist) {
-                        fetchedPrescriptions.push({ id: doc.id, ...data });
-                    }
+                    fetchedPrescriptions.push({ id: doc.id, ...data });
                 });
 
                 setIssuedPrescriptions(fetchedPrescriptions);
@@ -220,17 +249,28 @@ function PharmacyDashboard() {
         };
 
         fetchIssuedPrescriptions();
-    }, [currentPharmacistName]);
+        
+    }, [pharmacistName]);
 
     const handleScanClick = () => {
         navigate('/pharmacy/qr-scan');
     };
 
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+            navigate('/signin');
+        } catch (error) {
+            console.error("Error logging out:", error);
+            alert("Failed to log out. Please try again.");
+        }
+    };
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f0f2f5', fontFamily: 'sans-serif' }}>
-            <AppNavbar />
+            <AppNavbar onLogout={handleLogout} />
             <div style={dashboardContainerStyle}>
-                <Sidebar />
+                <Sidebar pharmacistName={pharmacistName} />
                 <div style={mainContentStyle}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                         <h1>Pharmacy Dashboard</h1>
@@ -244,7 +284,7 @@ function PharmacyDashboard() {
                         {loadingPrescriptions && <div style={noDataStyle}>Loading history...</div>}
                         {fetchError && <div style={{...noDataStyle, color: 'red'}}>{fetchError}</div>}
                         
-                        {!loadingPrescriptions && issuedPrescriptions.length === 0 && (
+                        {!loadingPrescriptions && issuedPrescriptions.length === 0 && !fetchError && (
                             <div style={noDataStyle}>You have not issued any prescriptions yet.</div>
                         )}
 
@@ -261,7 +301,8 @@ function PharmacyDashboard() {
                                 <tbody>
                                     {issuedPrescriptions.map((prescription) => (
                                         <tr key={prescription.id}>
-                                            <td style={tdStyle}>{prescription.issueHistory[0]?.issuedAt?.toDate().toLocaleDateString()}</td>
+                                            {/* We use the latest entry in issueHistory for the date */}
+                                            <td style={tdStyle}>{prescription.issueHistory?.slice(-1)[0]?.issuedAt?.toDate().toLocaleDateString() || 'N/A'}</td>
                                             <td style={tdStyle}>{prescription.patientName}</td>
                                             <td style={tdStyle}>
                                                 <span style={prescription.status === 'Issued' ? statusIssuedStyle : statusPartialStyle}>
@@ -269,7 +310,7 @@ function PharmacyDashboard() {
                                                 </span>
                                             </td>
                                             <td style={tdStyle}>
-                                                <Link to={`/pharmacy/view/${prescription.id}`} style={viewButtonStyle}>
+                                                <Link to={`/pharmacy/issue/${prescription.id}`} style={viewButtonStyle}>
                                                     View
                                                 </Link>
                                             </td>
