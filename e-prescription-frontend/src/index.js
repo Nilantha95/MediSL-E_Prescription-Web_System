@@ -16,6 +16,7 @@ import Featurespage from './pages/Main_Interface_UI/featurespage';
 import PatientDashboard from './pages/Patient_UIs/dashboard';
 // --- NEW IMPORT FOR VIEW PRESCRIPTION ---
 import ViewPrescription from './pages/Doctor_UIs/View_prescription'; // Assuming this path
+import AboutUs from './pages/Main_Interface_UI/aboutus';
 
 // --- Pharmacy --- //
 import PrescriptionIssue from './pages/Pharmacy_UIs/PrescriptionIssue';
@@ -50,6 +51,7 @@ root.render(
           <Route path="/pharmacy/issue/:prescriptionId" element={<PrescriptionIssue />} />
           <Route path="/pharmacy/qr-scan" element={<QrScanner />} />
           <Route path="/pharmacy/view/:prescriptionId" element={<PrescriptionView />} />
+          <Route path="/aboutus" element={<AboutUs/>} />
         </Routes>
       </BrowserRouter>
     </I18nextProvider>

@@ -4,16 +4,16 @@ import pic from '../Main_Interface_UI/images/Doctor.png';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
 import { Link } from 'react-router-dom';
-import { FaFacebookF, FaTwitter, FaInstagram, FaPinterest, FaWhatsapp } from 'react-icons/fa';
+import {FaUserMd, FaPrescriptionBottleAlt, FaHistory, FaHome } from 'react-icons/fa';
+import Footer from '../Main_Interface_UI/Footer';
 
 // Encryption Library
 import CryptoJS from 'crypto-js';
 
 // Firebase Imports
 import { db, storage } from '../firebase';
-import { collection, addDoc, Timestamp, doc, updateDoc, getDoc } from 'firebase/firestore';
-import { getDocs, query, where } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { collection, addDoc, Timestamp, doc, updateDoc, getDoc, getDocs, query, where } from 'firebase/firestore';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 
 // UI Components
@@ -22,7 +22,6 @@ import TextField from '@mui/material/TextField';
 
 // QR Code Imports
 import QRCodeLib from 'qrcode';
-import { QRCodeCanvas } from 'qrcode.react';
 
 // **SECURITY WARNING**: This is for demonstration.
 // The key must be securely managed in a real application.
@@ -55,7 +54,7 @@ const NewPrescriptionForm = () => {
     // State for date, time, and QR code
     const [prescriptionDate, setPrescriptionDate] = useState(new Date());
     const [prescriptionTime, setPrescriptionTime] = useState(new Date());
-    const [qrCodeDisplayValue, setQrCodeDisplayValue] = useState('');
+    const [qrCodeImageUrl, setQrCodeImageUrl] = useState('');
     const qrCodeContainerRef = useRef(null);
 
     // State for patient data fetched from Firestore for Autocomplete
@@ -68,6 +67,57 @@ const NewPrescriptionForm = () => {
     const [saveBtnHover, setSaveBtnHover] = useState(false);
     const [printBtnHover, setPrintBtnHover] = useState(false);
     const [deleteBtnHovers, setDeleteBtnHovers] = useState({});
+
+    // State for doctor's profile information (for sidebar)
+    const auth = getAuth();
+    const [doctorData, setDoctorData] = useState({
+        firstName: 'Loading...',
+        lastName: '',
+        email: '',
+        userType: '',
+        photoURL: null,
+    });
+    const [loadingDoctorInfo, setLoadingDoctorInfo] = useState(true);
+
+    // Fetch doctor's data from Firebase for the sidebar
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const docRef = doc(db, 'users', user.uid);
+                try {
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        setDoctorData({
+                            firstName: data.firstName || 'Dr. Unknown',
+                            lastName: data.lastName || '',
+                            email: user.email || '',
+                            userType: data.userType || 'Doctor',
+                            photoURL: user.photoURL || pic,
+                        });
+                    } else {
+                        console.log("No such document for the user!");
+                        setDoctorData(prev => ({ ...prev, firstName: "Dr. Not Found", photoURL: pic }));
+                    }
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                    setDoctorData(prev => ({ ...prev, firstName: "Error", photoURL: pic }));
+                }
+            } else {
+                setDoctorData({ firstName: "Please Log In", lastName: "", email: "", userType: "", photoURL: pic });
+            }
+            setLoadingDoctorInfo(false);
+        });
+
+        return () => unsubscribe();
+    }, [auth]);
+
+    // Function to get initials from a name (used if photoURL is not available)
+    const getInitials = (firstName, lastName) => {
+        const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
+        const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : '';
+        return `${firstInitial}${lastInitial}`;
+    };
 
     // Fetch patients from Firestore on component mount
     useEffect(() => {
@@ -181,7 +231,6 @@ const NewPrescriptionForm = () => {
         }
     };
 
-    // Function to handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -194,12 +243,10 @@ const NewPrescriptionForm = () => {
                 return;
             }
 
-            // Encrypt sensitive data
             const encryptedDiagnosis = encryptData(diagnosis);
             const encryptedMedications = encryptData(medications);
             const encryptedAdditionalNotes = encryptData(additionalNotes);
 
-            // Add the prescription data to Firestore
             const docRef = await addDoc(collection(db, 'prescriptions'), {
                 doctorId: user.uid,
                 patientName,
@@ -209,7 +256,6 @@ const NewPrescriptionForm = () => {
                 gender,
                 bloodGroup,
                 nationalId,
-                // Save encrypted data
                 diagnosis: encryptedDiagnosis,
                 medications: encryptedMedications,
                 additionalNotes: encryptedAdditionalNotes,
@@ -220,43 +266,39 @@ const NewPrescriptionForm = () => {
                 qrCodeUrl: '',
             });
 
-            // Construct the data to encode in the QR code
             const qrCodeData = JSON.stringify({
                 prescriptionId: docRef.id,
                 nationalId: nationalId
             });
-            setQrCodeDisplayValue(qrCodeData);
 
-            const tempCanvas = document.createElement('canvas');
-
-            QRCodeLib.toCanvas(tempCanvas, qrCodeData, { width: 300, margin: 1 }, async (error) => {
-                if (error) {
-                    console.error("Error drawing QR code to canvas:", error);
-                    alert("Failed to generate QR code image.");
-                    return;
-                }
-
-                const qrCodeDataUrl = tempCanvas.toDataURL('image/png');
-                const qrCodeDownloadURL = await uploadQRCodeToStorage(qrCodeDataUrl, docRef.id);
-
-                if (qrCodeDownloadURL) {
-                    const prescriptionRef = doc(db, 'prescriptions', docRef.id);
-                    await updateDoc(prescriptionRef, { qrCodeUrl: qrCodeDownloadURL });
-
-                    if (patientmail) {
-                        await sendQRCodeEmail(patientmail, qrCodeDownloadURL);
-                    }
-                }
+            const generatedQrCodeDataUrl = await new Promise((resolve, reject) => {
+                QRCodeLib.toDataURL(qrCodeData, { width: 300, margin: 1 }, (err, url) => {
+                    if (err) reject(err);
+                    resolve(url);
+                });
             });
 
+            setQrCodeImageUrl(generatedQrCodeDataUrl);
+
+            const qrCodeDownloadURL = await uploadQRCodeToStorage(generatedQrCodeDataUrl, docRef.id);
+
+            if (qrCodeDownloadURL) {
+                const prescriptionRef = doc(db, 'prescriptions', docRef.id);
+                await updateDoc(prescriptionRef, { qrCodeUrl: qrCodeDownloadURL });
+
+                if (patientmail) {
+                    await sendQRCodeEmail(patientmail, qrCodeDownloadURL);
+                }
+            }
+
             alert("Prescription saved successfully! QR Code generated. You can now print it.");
+
         } catch (error) {
             console.error("Error saving prescription:", error);
             alert("Failed to save prescription. Please check the console for more details.");
         }
     };
 
-    // Handle form reset
     const handleCancel = () => {
         console.log('Form cancelled');
         setPatientName('');
@@ -269,55 +311,43 @@ const NewPrescriptionForm = () => {
         setDiagnosis('');
         setMedications([{ id: 1, name: '', dosage: '', frequency: '', duration: '' }]);
         setAdditionalNotes('');
-        setQrCodeDisplayValue('');
+        setQrCodeImageUrl('');
         setPrescriptionDate(new Date());
         setPrescriptionTime(new Date());
         setPatientRelationship('');
     };
 
-    // Handle printing the QR code section
     const handlePrint = () => {
-        if (qrCodeContainerRef.current) {
-            const canvasElement = qrCodeContainerRef.current.querySelector('canvas');
-            if (!canvasElement) {
-                alert("QR Code canvas element not found within the print section.");
-                return;
-            }
+        if (qrCodeContainerRef.current && qrCodeImageUrl) {
+            const printContent = qrCodeContainerRef.current;
 
-            const qrCodeDataUrl = canvasElement.toDataURL('image/png');
             const printWindow = window.open('', '_blank', 'height=600,width=800');
-            printWindow.document.write('<html><head><title>Print QR Code</title>');
+            printWindow.document.write('<html><head><title>Prescription QR Code</title>');
             printWindow.document.write('<style>');
             printWindow.document.write(`
-                body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
-                h3 { color: #333; margin-bottom: 20px; }
-                p { font-size: 14px; color: #555; }
-                .qr-code-container { display: inline-block; padding: 15px; border: 1px solid #ddd; background-color: #fff; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-                img.qr-code-image { display: block; margin: 0 auto; max-width: 100%; height: auto; image-rendering: pixelated; }
-                @media print { body { -webkit-print-color-adjust: exact; } .qr-code-container { border: 1px solid #ddd; } }
+                body { font-family: sans-serif; text-align: center; padding: 20px; }
+                .qr-print-container { margin: 20px auto; border: 1px solid #ddd; padding: 20px; width: fit-content; }
+                .qr-print-container h3 { color: #333; margin-bottom: 15px; }
+                .qr-print-container p { font-size: 1.1em; color: #555; margin: 5px 0; }
+                .qr-print-container img { display: block; margin: 20px auto; border: 1px solid #eee; padding: 5px; max-width: 200px; height: auto;}
+                .qr-print-container .small-text { font-size: 0.9em; color: #666; margin-top: 10px; }
             `);
             printWindow.document.write('</style>');
             printWindow.document.write('</head><body>');
-            printWindow.document.write('<div class="qr-code-container">');
-            printWindow.document.write(`
-                <h3>Prescription QR Code</h3>
-                <p>National ID: <strong>${nationalId}</strong></p>
-                <p style="font-size: 16px; color: #333; margin-bottom: 15px;">
-                    This QR code provides quick access to the prescription details.
-                </p>
-                <img src="${qrCodeDataUrl}" class="qr-code-image" alt="QR Code for Prescription" />
-            `);
-            printWindow.document.write('</div>');
+
+            printWindow.document.write(printContent.outerHTML);
             printWindow.document.write('</body></html>');
             printWindow.document.close();
-            printWindow.focus();
-            printWindow.print();
+
+            printWindow.onload = () => {
+                printWindow.focus();
+                printWindow.print();
+            };
         } else {
-            alert("QR Code section not found for printing.");
+            alert("QR Code not ready for printing. Please save the prescription first to generate the QR code.");
         }
     };
 
-    // Refactored Styles (this part is unchanged from the last fix)
     const styles = {
         navBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 50px', backgroundColor: '#d7f3d2' },
         logoContainer: { display: 'flex', alignItems: 'center' },
@@ -327,60 +357,174 @@ const NewPrescriptionForm = () => {
         subtitle: { margin: 0, fontSize: '12px', color: '#777' },
         contactInfo: { display: 'flex', alignItems: 'center', marginRight: '20px', color: '#007bff' },
         homeButtonDiv: { padding: '10px 20px', border: '1px solid #ddd', borderRadius: '20px', backgroundColor: 'lightblue', color: '#007bff', cursor: 'pointer', display: 'flex', alignItems: 'center' },
-        sidebar: { width: '200px', backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '5px', marginRight: '20px' },
-        sidebarLink: { display: 'block', padding: '10px 0', color: '#333', textDecoration: 'none', borderBottom: '1px solid #eee' },
-        sidebarLinkActive: { color: '#007bff', fontWeight: 'bold' },
-        dashboardContainer: { display: 'flex', padding: '20px', fontFamily: 'sans-serif' },
-        doctorAvatar: { width: '60px', height: '60px', borderRadius: '50%', backgroundColor: '#00cba9', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5em', fontWeight: 'bold', marginBottom: '5px' },
-        doctorName: { fontSize: '1em', color: '#555', margin: 0 },
-        doctorInfo: { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '15px 0', borderTop: '1px solid #eee', backgroundColor: '#d7f3d2', padding: '10px', borderRadius: '5px', margin: '10px 0' },
-        footer: { backgroundColor: '#d7f3d2', padding: '20px', marginTop: '20px' },
-        container: { display: 'flex', justifyContent: 'space-around', paddingBottom: '20px' },
-        section: { display: 'flex', flexDirection: 'column' },
-        heading: { fontSize: '1.2em', marginBottom: '10px', color: '#333' },
+        footer: { backgroundColor: '#d7f3d2', padding: '20px' },
+        footerContainer: { display: 'flex', justifyContent: 'space-around', paddingBottom: '20px' },
+        footerSection: { display: 'flex', flexDirection: 'column' },
+        footerHeading: { fontSize: '1.2em', marginBottom: '10px', color: '#333' },
         list: { listStyle: 'none', padding: 0, margin: 0 },
         listItem: { marginBottom: '10px', color: '#555' },
         followUs: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
-        socialIcon: { display: 'flex' },
+        socialIconContainer: { display: 'flex' },
         iconLink: { marginRight: '10px', textDecoration: 'none', color: '#333' },
         bottomBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #ccc' },
         copyright: { fontSize: '0.8em', color: '#777' },
         links: { display: 'flex' },
         bottomLink: { color: '#555', textDecoration: 'none', fontSize: '0.8em', marginRight: '10px' },
         separator: { color: '#ccc', marginRight: '10px' },
-        formContainer: { fontFamily: 'Arial, sans-serif', maxWidth: '900px', margin: '40px auto', padding: '30px', border: '1px solid #e0e0e0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)', backgroundColor: '#fff', flexGrow: 1 },
-        header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', paddingBottom: '15px', borderBottom: '1px solid #eee' },
-        h2: { margin: '0', color: '#333', fontSize: '24px' },
-        dateTime: { color: '#777', fontSize: '14px', textAlign: 'left' },
-        sectionGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px 30px', marginBottom: '30px' },
-        inputGroup: { display: 'flex', flexDirection: 'column' },
-        label: { fontSize: '14px', color: '#555', marginBottom: '8px', fontWeight: '500' },
-        inputField: { padding: '12px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '15px', color: '#333', width: '100%', boxSizing: 'border-box' },
-        selectField: { padding: '12px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '15px', color: '#333', width: '100%', boxSizing: 'border-box', appearance: 'none' },
-        borderedSection: { padding: '20px', marginBottom: '30px', borderRadius: '8px', border: '1px solid #e0e0e0', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)' },
-        medicationsSectionColored: { backgroundColor: '#f6f9fc' },
-        additionalNotesSectionColored: { backgroundColor: '#f0fff0' },
-        textarea: { resize: 'vertical', minHeight: '80px' },
-        h3: { marginTop: '0', marginBottom: '15px', color: '#333', fontSize: '18px' },
-        addMedicineBtn: { backgroundColor: '#007bff', color: 'white', padding: '10px 18px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', marginBottom: '20px', transition: 'background-color 0.2s ease-in-out' },
-        medicationList: { display: 'flex', flexDirection: 'column', gap: '15px' },
-        medicationRow: { display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto', gap: '15px', alignItems: 'center', padding: '10px', border: '1px solid #f0f0f0', borderRadius: '6px', backgroundColor: '#fcfcfc' },
-        medicationInput: { padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '14px', color: '#333' },
-        deleteMedicineBtn: { background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', fontSize: '18px', padding: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 0.2s ease-in-out' },
-        formActions: { display: 'flex', justifyContent: 'flex-end', gap: '15px', marginTop: '30px' },
-        buttonBase: { padding: '12px 25px', border: 'none', borderRadius: '6px', fontSize: '16px', cursor: 'pointer', transition: 'all 0.2s ease-in-out' },
-        qrCodeContainer: { marginTop: '30px', textAlign: 'center', padding: '20px', border: '1px solid #ccc', borderRadius: '8px', backgroundColor: '#e6ffe6' },
+
+        dashboardContainer: {
+            display: 'flex',
+            padding: '20px',
+            fontFamily: 'sans-serif'
+        },
+        sidebar: {
+            width: '250px',
+            backgroundColor: '#f8f9fa',
+            padding: '20px',
+            borderRadius: '5px',
+            marginRight: '20px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+        },
+        sidebarLink: {
+            display: 'flex',
+            alignItems: 'center',
+            padding: '12px 15px',
+            color: '#333',
+            textDecoration: 'none',
+            borderBottom: '1px solid #eee',
+            width: '100%',
+            textAlign: 'left',
+            transition: 'background-color 0.2s, color 0.2s',
+            fontSize: '15px',
+            fontWeight: '500',
+            borderRadius: '5px',
+            marginBottom: '5px',
+        },
+        sidebarLinkActive: {
+            color: '#007bff',
+            backgroundColor: '#e6f2ff',
+            fontWeight: 'bold',
+        },
+        sidebarIcon: {
+            marginRight: '10px',
+            fontSize: '1.2em',
+        },
+        doctorAvatar: {
+            width: '80px',
+            height: '80px',
+            borderRadius: '50%',
+            backgroundColor: '#00cba9',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.5em',
+            fontWeight: 'bold',
+            marginBottom: '5px',
+            marginTop: '20px',
+            overflow: 'hidden'
+        },
+        doctorName: {
+            fontSize: '1.1em',
+            color: '#333',
+            margin: 0,
+            marginTop: '10px',
+            fontWeight: 'bold'
+        },
+        doctorType: {
+            fontSize: '0.9em',
+            color: '#6c757d',
+            margin: '5px 0 0 0'
+        },
+        doctorInfo: {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '15px 0',
+            borderBottom: '1px solid #eee',
+            backgroundColor: '#d7f3d2',
+            borderRadius: '5px',
+            marginBottom: '20px',
+            width: '100%'
+        },
+
+        content: { flexGrow: 1, padding: '20px', backgroundColor: '#fff', borderRadius: '5px', boxShadow: '0 0 10px rgba(0, 0, 0, 0.05)' },
+        formSection: { marginBottom: '20px', padding: '15px', border: '1px solid #eee', borderRadius: '8px', backgroundColor: '#fdfdfd' },
+        formGroup: { marginBottom: '15px' },
+        label: { display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#555' },
+        input: { width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box' },
+        select: { width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box' },
+        textArea: { width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', minHeight: '80px' },
+        medicationTable: { width: '100%', borderCollapse: 'collapse', marginBottom: '20px' },
+        tableHeader: { border: '1px solid #ddd', padding: '8px', textAlign: 'left', backgroundColor: '#f2f2f2' },
+        tableCell: { border: '1px solid #ddd', padding: '8px' },
+        addMedicineBtn: {
+            backgroundColor: addBtnHover ? '#218838' : '#28a745',
+            color: '#fff',
+            border: 'none',
+            padding: '10px 20px',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontSize: '1em',
+            transition: 'background-color 0.3s ease',
+        },
+        deleteMedicineBtn: (isHovered) => ({
+            backgroundColor: isHovered ? '#c82333' : '#dc3545',
+            color: '#fff',
+            border: 'none',
+            padding: '5px 10px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '0.8em',
+            transition: 'background-color 0.3s ease',
+        }),
+        buttonGroup: { display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' },
+        saveBtn: {
+            backgroundColor: saveBtnHover ? '#0056b3' : '#007bff',
+            color: '#fff',
+            border: 'none',
+            padding: '10px 20px',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontSize: '1em',
+            transition: 'background-color 0.3s ease',
+        },
+        cancelBtn: {
+            backgroundColor: cancelBtnHover ? '#5a6268' : '#6c757d',
+            color: '#fff',
+            border: 'none',
+            padding: '10px 20px',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontSize: '1em',
+            transition: 'background-color 0.3s ease',
+        },
+        printBtn: {
+            backgroundColor: printBtnHover ? '#138496' : '#17a2b8',
+            color: '#fff',
+            border: 'none',
+            padding: '10px 20px',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontSize: '1em',
+            transition: 'background-color 0.3s ease',
+            marginLeft: '10px',
+        },
+        qrCodeContainer: { marginTop: '30px', textAlign: 'center', border: '1px dashed #ccc', padding: '20px', borderRadius: '8px', backgroundColor: '#f9f9f9' },
+        printDetails: {
+            textAlign: 'left',
+            marginBottom: '10px',
+            fontSize: '1em',
+            color: '#333'
+        }
     };
 
-    // Helper functions for button styles based on hover state
-    const getCancelBtnStyle = () => ({ ...styles.buttonBase, backgroundColor: cancelBtnHover ? '#e0e0e0' : '#f0f0f0', color: '#555' });
-    const getSaveBtnStyle = () => ({ ...styles.buttonBase, backgroundColor: saveBtnHover ? '#218838' : '#28a745', color: 'white' });
-    const getPrintBtnStyle = () => ({ ...styles.buttonBase, backgroundColor: printBtnHover ? '#0056b3' : '#007bff', color: 'white' });
-    const getAddBtnStyle = () => ({ ...styles.addMedicineBtn, backgroundColor: addBtnHover ? '#0056b3' : '#007bff' });
-    const getDeleteBtnStyle = (id) => ({
-        ...styles.deleteMedicineBtn,
-        color: deleteBtnHovers[id] ? '#c82333' : '#dc3545'
-    });
+    if (loadingDoctorInfo) {
+        return <div style={{ textAlign: 'center', padding: '50px' }}>Loading doctor's profile...</div>;
+    }
 
     return (
         <div style={{ fontFamily: 'sans-serif' }}>
@@ -409,132 +553,124 @@ const NewPrescriptionForm = () => {
 
             {/* Dashboard Content */}
             <div style={styles.dashboardContainer}>
-                {/* Sidebar */}
+                {/* Sidebar - Updated to match ProfilePage's design */}
                 <aside style={styles.sidebar}>
-                    <Link to="/doctor/dashboard" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}>Dashboard</Link>
-                    <Link to="/newprescription" style={styles.sidebarLink}>Patients</Link>
-                    <Link to="/prescriptionhistory" style={styles.sidebarLink}>Prescriptions</Link>
-                    <Link to="/appointments" style={styles.sidebarLink}>Appointments</Link>
-                    <Link to="/settings" style={styles.sidebarLink}>Settings</Link>
-
                     <div style={styles.doctorInfo}>
                         <div style={styles.doctorAvatar}>
-                            <img src={pic} alt="Doctor Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                            {doctorData.photoURL ? (
+                                <img src={doctorData.photoURL} alt="Doctor Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                            ) : (
+                                <span>{getInitials(doctorData.firstName, doctorData.lastName)}</span>
+                            )}
                         </div>
-                        <p style={styles.doctorName}>Dr. John Smith</p>
+                        <p style={styles.doctorName}>{`${doctorData.firstName} ${doctorData.lastName}`}</p>
+                        <p style={styles.doctorType}>{doctorData.userType}</p>
                     </div>
+                    <Link to="/doctor/dashboard" style={styles.sidebarLink}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
+                    <Link to="/newprescription" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaPrescriptionBottleAlt style={styles.sidebarIcon} />Create New Prescription</Link>
+                    <Link to="/prescriptionhistory" style={styles.sidebarLink}><FaHistory style={styles.sidebarIcon} />Prescriptions</Link>
+                    <Link to="/docprofile" style={styles.sidebarLink}><FaUserMd style={styles.sidebarIcon} />Profile</Link>
                 </aside>
 
-                {/* New prescription form container */}
-                <div style={styles.formContainer}>
-                    <div style={styles.header}>
-                        <h2 style={styles.h2}>Create New Prescription</h2>
-                        <p style={styles.dateTime}>
-                            {`${prescriptionDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} ${prescriptionTime.toLocaleTimeString('en-US')}`}
-                        </p>
-                    </div>
+                {/* Main Content (Prescription Form) */}
+                <main style={styles.content}>
+                    <h2>Create New Prescription</h2>
                     <form onSubmit={handleSubmit}>
-                        <div style={styles.sectionGrid}>
-                            <div style={styles.inputGroup}>
-                                <label htmlFor="patientmail" style={styles.label}>Select Patient Email</label>
+                        {/* Patient Details */}
+                        <div style={styles.formSection}>
+                            <h3>Patient Details</h3>
+                            <div style={styles.formGroup}>
+                                <label style={styles.label} htmlFor="patientEmail">Patient Email:</label>
                                 <Autocomplete
+                                    id="patientEmail"
                                     options={patients}
                                     getOptionLabel={(option) => option.email}
                                     onChange={(event, newValue) => {
-                                        if (newValue) {
-                                            setPatientMail(newValue.email);
-                                            setSelectedPatientId(newValue.id);
-                                        } else {
-                                            setPatientMail('');
-                                            setSelectedPatientId('');
-                                        }
+                                        setPatientMail(newValue ? newValue.email : '');
+                                        setSelectedPatientId(newValue ? newValue.id : '');
                                     }}
                                     renderInput={(params) => (
-                                        <TextField {...params} label="Patient Email" variant="outlined" />
+                                        <TextField
+                                            {...params}
+                                            variant="outlined"
+                                            size="small"
+                                            inputProps={{
+                                                ...params.inputProps,
+                                                style: styles.input,
+                                            }}
+                                        />
                                     )}
-                                    fullWidth
+                                    value={patients.find(p => p.email === patientmail) || null}
                                 />
                             </div>
-                            <div style={styles.inputGroup}>
-                                <label htmlFor="patientRelationship" style={styles.label}>Relationship to Patient</label>
-                                <select
-                                    id="patientRelationship"
-                                    value={patientRelationship}
-                                    onChange={(e) => setPatientRelationship(e.target.value)}
-                                    style={styles.selectField}
-                                >
-                                    <option value="">Select relationship</option>
-                                    <option value="patient">Patient</option>
-                                    <option value="guardian">Guardian</option>
-                                </select>
-                            </div>
-                            <div style={styles.inputGroup}>
-                                <label htmlFor="patientName" style={styles.label}>Patient Name</label>
+                            <div style={styles.formGroup}>
+                                <label style={styles.label} htmlFor="patientName">Patient Name:</label>
                                 <input
                                     type="text"
                                     id="patientName"
-                                    placeholder="Enter patient name"
+                                    style={styles.input}
                                     value={patientName}
                                     onChange={(e) => setPatientName(e.target.value)}
-                                    style={styles.inputField}
+                                    required
                                 />
                             </div>
-                            <div style={styles.inputGroup}>
-                                <label htmlFor="nationalId" style={styles.label}>National ID</label>
+                            <div style={styles.formGroup}>
+                                <label style={styles.label} htmlFor="nationalId">National ID (NIC):</label>
                                 <input
                                     type="text"
                                     id="nationalId"
-                                    placeholder="Enter National ID"
+                                    style={styles.input}
                                     value={nationalId}
                                     onChange={(e) => setNationalId(e.target.value)}
-                                    style={styles.inputField}
+                                    required
                                 />
                             </div>
-                            <div style={styles.inputGroup}>
-                                <label htmlFor="age" style={styles.label}>Age</label>
+                            <div style={styles.formGroup}>
+                                <label style={styles.label} htmlFor="age">Age:</label>
                                 <input
                                     type="number"
                                     id="age"
-                                    placeholder="Enter age"
+                                    style={styles.input}
                                     value={age}
                                     onChange={(e) => setAge(e.target.value)}
-                                    style={styles.inputField}
+                                    required
                                 />
                             </div>
-                            <div style={styles.inputGroup}>
-                                <label htmlFor="contactNumber" style={styles.label}>Contact Number</label>
+                            <div style={styles.formGroup}>
+                                <label style={styles.label} htmlFor="contactNumber">Contact Number:</label>
                                 <input
                                     type="text"
                                     id="contactNumber"
-                                    placeholder="Enter contact number"
+                                    style={styles.input}
                                     value={contactNumber}
                                     onChange={(e) => setContactNumber(e.target.value)}
-                                    style={styles.inputField}
+                                    required
                                 />
                             </div>
-                            <div style={styles.inputGroup}>
-                                <label htmlFor="gender" style={styles.label}>Gender</label>
+                            <div style={styles.formGroup}>
+                                <label style={styles.label} htmlFor="gender">Gender:</label>
                                 <select
                                     id="gender"
+                                    style={styles.select}
                                     value={gender}
                                     onChange={(e) => setGender(e.target.value)}
-                                    style={styles.selectField}
+                                    required
                                 >
-                                    <option value="">Select gender</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="other">Other</option>
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
                                 </select>
                             </div>
-                            <div style={styles.inputGroup}>
-                                <label htmlFor="bloodGroup" style={styles.label}>Blood Group</label>
+                            <div style={styles.formGroup}>
+                                <label style={styles.label} htmlFor="bloodGroup">Blood Group:</label>
                                 <select
                                     id="bloodGroup"
+                                    style={styles.select}
                                     value={bloodGroup}
                                     onChange={(e) => setBloodGroup(e.target.value)}
-                                    style={styles.selectField}
                                 >
-                                    <option value="">Select blood group</option>
+                                    <option value="">Select Blood Group</option>
                                     <option value="A+">A+</option>
                                     <option value="A-">A-</option>
                                     <option value="B+">B+</option>
@@ -545,93 +681,165 @@ const NewPrescriptionForm = () => {
                                     <option value="O-">O-</option>
                                 </select>
                             </div>
-                        </div>
-
-                        <div style={{ ...styles.borderedSection, ...styles.additionalNotesSectionColored }}>
-                            <label htmlFor="additionalNotes" style={styles.label}>Diagnosis</label>
-                            <textarea
-                                id="diagnosis"
-                                placeholder="Enter diagnosis details"
-                                value={diagnosis}
-                                onChange={(e) => setDiagnosis(e.target.value)}
-                                rows="4"
-                                style={{ ...styles.inputField, ...styles.textarea }}
-                            ></textarea>
-                        </div>
-                        
-                        <div style={{ ...styles.borderedSection, ...styles.medicationsSectionColored }}>
-                            <h3 style={styles.h3}>Medications</h3>
-                            <button
-                                type="button"
-                                style={getAddBtnStyle()}
-                                onClick={handleAddMedicine}
-                                onMouseEnter={() => setAddBtnHover(true)}
-                                onMouseLeave={() => setAddBtnHover(false)}
-                            >
-                                + Add Medicine
-                            </button>
-                            <div style={styles.medicationList}>
-                                {medications.map((med) => (
-                                    <div key={med.id} style={styles.medicationRow}>
-                                        <input
-                                            type="text"
-                                            placeholder="Medicine name"
-                                            value={med.name}
-                                            onChange={(e) => handleMedicineChange(med.id, 'name', e.target.value)}
-                                            style={styles.medicationInput}
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="Dosage"
-                                            value={med.dosage}
-                                            onChange={(e) => handleMedicineChange(med.id, 'dosage', e.target.value)}
-                                            style={styles.medicationInput}
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="Frequency"
-                                            value={med.frequency}
-                                            onChange={(e) => handleMedicineChange(med.id, 'frequency', e.target.value)}
-                                            style={styles.medicationInput}
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="Duration"
-                                            value={med.duration}
-                                            onChange={(e) => handleMedicineChange(med.id, 'duration', e.target.value)}
-                                            style={styles.medicationInput}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemoveMedicine(med.id)}
-                                            style={getDeleteBtnStyle(med.id)}
-                                            onMouseEnter={() => setDeleteBtnHovers({ ...deleteBtnHovers, [med.id]: true })}
-                                            onMouseLeave={() => setDeleteBtnHovers({ ...deleteBtnHovers, [med.id]: false })}
-                                        >
-                                            &times;
-                                        </button>
-                                    </div>
-                                ))}
+                            <div style={styles.formGroup}>
+                                <label style={styles.label} htmlFor="patientRelationship">Patient Relationship:</label>
+                                <select
+                                    id="patientRelationship"
+                                    style={styles.select}
+                                    value={patientRelationship}
+                                    onChange={(e) => setPatientRelationship(e.target.value)}
+                                    required
+                                >
+                                    <option value="">Select Relationship</option>
+                                    <option value="Patient">Patient</option>
+                                    <option value="Guardian">Guardian</option>
+                                </select>
                             </div>
                         </div>
 
-                        <div style={{ ...styles.borderedSection, ...styles.additionalNotesSectionColored }}>
-                            <label htmlFor="additionalNotes" style={styles.label}>Additional Notes</label>
-                            <textarea
-                                id="additionalNotes"
-                                placeholder="Enter any additional notes"
-                                value={additionalNotes}
-                                onChange={(e) => setAdditionalNotes(e.target.value)}
-                                rows="4"
-                                style={{ ...styles.inputField, ...styles.textarea }}
-                            ></textarea>
+                        {/* Medical Details */}
+                        <div style={styles.formSection}>
+                            <h3>Medical Details</h3>
+                            {/* DIAGNOSIS PART MOVED HERE */}
+                            <div style={styles.formGroup}>
+                                <label style={styles.label} htmlFor="diagnosis">Diagnosis:</label>
+                                <textarea
+                                    id="diagnosis"
+                                    style={styles.textArea}
+                                    value={diagnosis}
+                                    onChange={(e) => setDiagnosis(e.target.value)}
+                                    required
+                                ></textarea>
+                            </div>
+
+                            <h4>Medications</h4>
+                            <table style={styles.medicationTable}>
+                                <thead>
+                                    <tr>
+                                        <th style={styles.tableHeader}>Medicine Name</th>
+                                        <th style={styles.tableHeader}>Dosage</th>
+                                        <th style={styles.tableHeader}>Frequency</th>
+                                        <th style={styles.tableHeader}>Duration</th>
+                                        <th style={styles.tableHeader}>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {medications.map((med) => (
+                                        <tr key={med.id}>
+                                            <td style={styles.tableCell}>
+                                                <input
+                                                    type="text"
+                                                    style={styles.input}
+                                                    value={med.name}
+                                                    onChange={(e) => handleMedicineChange(med.id, 'name', e.target.value)}
+                                                    required
+                                                />
+                                            </td>
+                                            <td style={styles.tableCell}>
+                                                <input
+                                                    type="text"
+                                                    style={styles.input}
+                                                    value={med.dosage}
+                                                    onChange={(e) => handleMedicineChange(med.id, 'dosage', e.target.value)}
+                                                    required
+                                                />
+                                            </td>
+                                            <td style={styles.tableCell}>
+                                                <select
+                                                    style={styles.select}
+                                                    value={med.frequency}
+                                                    onChange={(e) => handleMedicineChange(med.id, 'frequency', e.target.value)}
+                                                    required
+                                                >
+                                                    <option value="">Select Frequency</option>
+                                                    <option value="Once Daily">Once Daily</option>
+                                                    <option value="Twice Daily">Twice Daily</option>
+                                                    <option value="Thrice Daily">Thrice Daily</option>
+                                                    <option value="Every 4 hours">Every 4 hours</option>
+                                                    <option value="Every 6 hours">Every 6 hours</option>
+                                                    <option value="Every 8 hours">Every 8 hours</option>
+                                                    <option value="As Needed">As Needed (PRN)</option>
+                                                    <option value="Before Meal">Before Meal</option>
+                                                    <option value="After Meal">After Meal</option>
+                                                    <option value="At Bedtime">At Bedtime</option>
+                                                    <option value="Weekly">Weekly</option>
+                                                    <option value="Monthly">Monthly</option>
+                                                </select>
+                                            </td>
+                                            <td style={styles.tableCell}>
+                                                <input
+                                                    type="text"
+                                                    style={styles.input}
+                                                    value={med.duration}
+                                                    onChange={(e) => handleMedicineChange(med.id, 'duration', e.target.value)}
+                                                    required
+                                                />
+                                            </td>
+                                            {/* Corrected: Delete button in its own table cell */}
+                                            <td style={styles.tableCell}>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveMedicine(med.id)}
+                                                    style={styles.deleteMedicineBtn(deleteBtnHovers[med.id])}
+                                                    onMouseEnter={() => setDeleteBtnHovers(prev => ({ ...prev, [med.id]: true }))}
+                                                    onMouseLeave={() => setDeleteBtnHovers(prev => ({ ...prev, [med.id]: false }))}
+                                                >
+                                                    Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            <button
+                                type="button"
+                                onClick={handleAddMedicine}
+                                style={styles.addMedicineBtn}
+                                onMouseEnter={() => setAddBtnHover(true)}
+                                onMouseLeave={() => setAddBtnHover(false)}
+                            >
+                                Add Medicine
+                            </button>
+                            <div style={{ ...styles.formGroup, marginTop: '20px' }}>
+                                <label style={styles.label} htmlFor="additionalNotes">Additional Notes (if any):</label>
+                                <textarea
+                                    id="additionalNotes"
+                                    style={styles.textArea}
+                                    value={additionalNotes}
+                                    onChange={(e) => setAdditionalNotes(e.target.value)}
+                                ></textarea>
+                            </div>
                         </div>
 
-                        <div style={styles.formActions}>
+                        {/* Prescription Metadata */}
+                        <div style={styles.formSection}>
+                            <h3>Prescription Details</h3>
+                            <div style={styles.formGroup}>
+                                <label style={styles.label}>Date:</label>
+                                <input
+                                    type="text"
+                                    style={styles.input}
+                                    value={prescriptionDate.toLocaleDateString()}
+                                    readOnly
+                                />
+                            </div>
+                            <div style={styles.formGroup}>
+                                <label style={styles.label}>Time:</label>
+                                <input
+                                    type="text"
+                                    style={styles.input}
+                                    value={prescriptionTime.toLocaleTimeString()}
+                                    readOnly
+                                />
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div style={styles.buttonGroup}>
                             <button
                                 type="button"
                                 onClick={handleCancel}
-                                style={getCancelBtnStyle()}
+                                style={styles.cancelBtn}
                                 onMouseEnter={() => setCancelBtnHover(true)}
                                 onMouseLeave={() => setCancelBtnHover(false)}
                             >
@@ -639,98 +847,48 @@ const NewPrescriptionForm = () => {
                             </button>
                             <button
                                 type="submit"
-                                style={getSaveBtnStyle()}
+                                style={styles.saveBtn}
                                 onMouseEnter={() => setSaveBtnHover(true)}
                                 onMouseLeave={() => setSaveBtnHover(false)}
                             >
                                 Save Prescription
                             </button>
+                            {qrCodeImageUrl && (
+                                <button
+                                    type="button"
+                                    onClick={handlePrint}
+                                    style={styles.printBtn}
+                                    onMouseEnter={() => setPrintBtnHover(true)}
+                                    onMouseLeave={() => setPrintBtnHover(false)}
+                                >
+                                    Print QR Code
+                                </button>
+                            )}
                         </div>
-                    </form>
 
-                    {/* QR Code section */}
-                    {qrCodeDisplayValue && (
-                        <div style={styles.qrCodeContainer} ref={qrCodeContainerRef}>
-                            <h3 style={{ color: '#007bff' }}>Generated QR Code</h3>
-                            <p style={{ color: '#555', fontSize: '14px', marginBottom: '15px' }}>
-                                The QR code contains an encrypted link to the prescription.
-                                <br /> Scan it to view the details in a secure web page.
-                            </p>
-                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '20px' }}>
-                                <QRCodeCanvas value={qrCodeDisplayValue} />
+                        {/* QR Code Display for Print */}
+                        {qrCodeImageUrl && (
+                            <div ref={qrCodeContainerRef} className="qr-print-container" style={styles.qrCodeContainer}>
+                                <h3>Prescription Slip</h3>
+                                <div style={styles.printDetails}>
+                                    <p><strong>Patient Name:</strong> {patientName}</p>
+                                    <p><strong>National ID (NIC):</strong> {nationalId}</p>
+                                    <p><strong>Patient Relationship:</strong> {patientRelationship}</p>
+                                    <p><strong>Date:</strong> {prescriptionDate.toLocaleDateString()}</p>
+                                    <p><strong>Time:</strong> {prescriptionTime.toLocaleTimeString()}</p>
+                                </div>
+                                <img src={qrCodeImageUrl} alt="QR Code for Prescription" style={{ width: '200px', height: '200px' }} />
+                                <p className="small-text">
+                                    This QR code contains an encrypted reference to the prescription.
+                                </p>
                             </div>
-                            <button
-                                onClick={handlePrint}
-                                style={getPrintBtnStyle()}
-                                onMouseEnter={() => setPrintBtnHover(true)}
-                                onMouseLeave={() => setPrintBtnHover(false)}
-                            >
-                                Print QR Code
-                            </button>
-                        </div>
-                    )}
-                </div>
+                        )}
+                    </form>
+                </main>
             </div>
 
             {/* Footer */}
-            <footer style={styles.footer}>
-                <div style={styles.container}>
-                    <div style={styles.section}>
-                        <h3 style={styles.heading}>Shop Matcha</h3>
-                        <ul style={styles.list}>
-                            <li style={styles.listItem}>Starter Kits</li>
-                            <li style={styles.listItem}>Lattes & Sweetened</li>
-                            <li style={styles.listItem}>Just the Matcha</li>
-                            <li style={styles.listItem}>Matchaware</li>
-                            <li style={styles.listItem}>Shop All</li>
-                        </ul>
-                    </div>
-                    <div style={styles.section}>
-                        <h3 style={styles.heading}>Learn</h3>
-                        <ul style={styles.list}>
-                            <li style={styles.listItem}>Our Story</li>
-                            <li style={styles.listItem}>Matcha Recipes</li>
-                            <li style={styles.listItem}>Caffeine Content</li>
-                            <li style={styles.listItem}>Health Benefits</li>
-                            <li style={styles.listItem}>FAQ's</li>
-                        </ul>
-                    </div>
-                    <div style={styles.section}>
-                        <h3 style={styles.heading}>More from Tenzo</h3>
-                        <ul style={styles.list}>
-                            <li style={styles.listItem}>Sign In</li>
-                            <li style={styles.listItem}>Wholesale Opportunities</li>
-                            <li style={styles.listItem}>Affiliate</li>
-                            <li style={styles.listItem}>Contact Us</li>
-                        </ul>
-                    </div>
-                    <div style={styles.followUs}>
-                        <h3 style={styles.heading}>Follow us</h3>
-                        <div style={styles.socialIcon}>
-                            <a href="#" style={styles.iconLink}><FaPinterest style={{ fontSize: '1.5em' }} /></a>
-                            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" style={styles.iconLink}><FaFacebookF style={{ fontSize: '1.5em' }} /></a>
-                            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={styles.iconLink}><FaInstagram style={{ fontSize: '1.5em' }} /></a>
-                            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" style={styles.iconLink}><FaTwitter style={{ fontSize: '1.5em' }} /></a>
-                            <a href="https://whatsapp.com" target="_blank" rel="noopener noreferrer" style={styles.iconLink}><FaWhatsapp style={{ fontSize: '1.5em' }} /></a>
-                        </div>
-                    </div>
-                </div>
-                <div style={styles.bottomBar}>
-                    <p style={styles.copyright}>© 2025 tenzotea.co</p>
-                    <div style={styles.links}>
-                        <a href="#" style={styles.bottomLink}>Terms of Service</a>
-                        <span style={styles.separator}>|</span>
-                        <a href="#" style={styles.bottomLink}>Privacy Policy</a>
-                        <span style={styles.separator}>|</span>
-                        <a href="#" style={styles.bottomLink}>Refund Policy</a>
-                        <span style={styles.separator}>|</span>
-                        <a href="#" style={styles.bottomLink}>Accessibility Policy</a>
-                    </div>
-                </div>
-            </footer>
-            <div style={{ backgroundColor: '#111', color: '#ddd', textAlign: 'center', padding: '10px' }}>
-                <p>© 2025 MediPrescribe. All rights reserved.</p>
-            </div>
+            <Footer />
         </div>
     );
 };

@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "medisl-ed07f",
+  "private_key_id": "8722fd6b273e82d394d5034a9a926c1cb6de3288",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC8e/tvZAe5itSs\nfLYoLn7jt6qB3FPcOtVpwca8lhoRL6fWz6f2OvlRUhql+dI2jeo1FiG+8d65bLG+\nj5o2AkMY0KguCs8hoUYdmwm0GZwEp22VrUytQtQPmINLqa4qSao/zK7nYVOEJcFB\nk3HRFkwRfIgJ1HsS/998IO0OF5YqQnzSM4dZX+NAUGL+C1FOshs10GeeAVA3Sg9t\ni5pnkSi99/f1uIQzj77HuAhs1lASqUsZolJ5sHzfakfMSvoTXM0//jzgaPwc008X\nqizivMchEvSY3wEf4PIIU5NJkMMGnacG1UYCR3SPcTt/0lBJD616U8BJkWT39nLv\n63z4lW0jAgMBAAECggEAA2MiP0sgGV2n3gQosCn7dbHNtsfSiEYLio1XRlq4+Ik9\nO9Tj/nWJJNEH0an3JcRQLc7QcOoSywciamlhZJyCpyFeibKeaXWXycr83EYMBbAO\nTTK8U8m8SKQJuqvYA2DrDQzZJVgEFchmlI6WNcGs3z1Kfkk1BZVjTu0870UWrAD0\n7HEWx+EzpqMRqxUFf6bUJJcmTGN5RkYC1yxWz+c2qlOiRGoKY7Da4CeNSKTvB/fX\nqFKC6fbYkVQruInaduKybTnbp+TjULkrnaTSsXn7ALkQmOVuJauQgicSBmwRi7Ze\nm4JteiTHitfdjkqhPGk4XCE8PQ3iunqFyoTpg7H0YQKBgQDpgAACqPwG99MLWCSO\nUrfNDRJUJOS23/bMK/gAUJ/v0dPoN8Gi4VJeMDlpH97idA9XIdL/PIH/tXMMCENB\nI01ZV9z5aoDD6YL+VMtI2tZc6lSNL18M8BWpzbKH6sBL3TfLIQGN945iUDREQV/E\n3wUDxNvDKRZjWpTPUQ48n6jqkwKBgQDOpYfeR6Ar70GgNsM56R7QnpT6PuXlq1Hn\nGKR8oY0aKDO/foK/kyLkL8BYmu5pNfl6C1CiiN1+gKgaZYy/ObtEGp6/hjm/JGWD\nGvDznaPMUZQQD95UvuwGBBcoQVNyv40J6VlTnvWbfpPgGNhPcdRh+dl+X4+O11ob\ngHeUvOa9MQKBgQCQXEilXGBk1ncuPlJrg4yLQ5efWiflQFZPKKftWetn06xVl5Mp\n5nCMNvhnnAKqsuKBFjJjBr/AnigAumMKNI8vu3is40G03fvUzgvYgSOi0mVv3GfB\nkfVyw++qxGIbBSvndAKICROIiNmnkVtqVg+9osnTwOVMi8YQ3qYUqQk/7QKBgHi5\nTdH3CEUChtVhiNY5Me5w5tn3ivmNB9E5nUbOXo+scubpstrWy6iBmR5qjOPcS34Y\nRChgSv4PjaW2M+63fIbCAoIjmXLogYGBaMj6DGpeMmDb1GiwDVVKaHj1CRpde7kR\noUTv9c68uQlPmnd3Kbt/aqegjk7F0veEKtgzL53RAoGAFalvPayWRckn1pIEJjQz\n5sZee5tnLj/u8CBa8IlGGsRJbqENMMVARitN+gAOo79Ivp4DD4cendZAsGtIxBHW\n3FeV6Yj/i7sYPnRcWUUjttTc1VswGEJKUBU8FE5ppvKfij/4ycQMpZmQkO5w5Kf2\nILGsFxH/0l2T0KXbq1b4+KQ=\n-----END PRIVATE KEY-----\n",
+  "client_email": "chatbot-tts-service@medisl-ed07f.iam.gserviceaccount.com",
+  "client_id": "102132410164080049054",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/chatbot-tts-service%40medisl-ed07f.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

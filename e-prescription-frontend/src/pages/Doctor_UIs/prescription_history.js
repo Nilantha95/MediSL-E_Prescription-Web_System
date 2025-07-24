@@ -27,13 +27,30 @@ import pic from '../Main_Interface_UI/images/Doctor.png';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaFacebookF, FaTwitter, FaInstagram, FaPinterest, FaWhatsapp } from 'react-icons/fa';
+import Footer from '../Main_Interface_UI/Footer';
+
+// Imports from DoctorDashboard.js for the sidebar
+import { doc, getDoc } from 'firebase/firestore';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { FaUserMd, FaPrescriptionBottleAlt, FaHistory, FaHome } from 'react-icons/fa';
 
 // Firebase Imports
 import { collection, query, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '../firebase'; // Adjust the path to your firebaseConfig file
 
 const PrescriptionHistory = () => {
+    const auth = getAuth(); // Get the auth instance
+
+    // State to manage the doctor's profile information (from DoctorDashboard.js)
+    const [doctorData, setDoctorData] = useState({
+        firstName: 'Loading...',
+        lastName: '',
+        email: '',
+        userType: '',
+        photoURL: null,
+    });
+    const [doctorProfileLoading, setDoctorProfileLoading] = useState(true); // Renamed to avoid conflict
+
     // State to hold all prescriptions fetched from Firebase
     const [prescriptions, setPrescriptions] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -46,19 +63,56 @@ const PrescriptionHistory = () => {
 
     const navigate = useNavigate();
 
-    // Fetch data from Firebase when the component mounts
+    // Fetch doctor data from Firebase when the component mounts (from DoctorDashboard.js)
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const docRef = doc(db, 'users', user.uid);
+                try {
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        setDoctorData({
+                            firstName: data.firstName || 'Dr. Unknown',
+                            lastName: data.lastName || '',
+                            email: user.email || '',
+                            userType: data.userType || 'Doctor',
+                            photoURL: data.photoURL || pic,
+                        });
+                    } else {
+                        console.log("No such document for the user!");
+                        setDoctorData(prev => ({ ...prev, firstName: "Dr. Not Found", photoURL: pic }));
+                    }
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                    setDoctorData(prev => ({ ...prev, firstName: "Error", photoURL: pic }));
+                }
+            } else {
+                setDoctorData({ firstName: "Please Log In", lastName: "", email: "", userType: "", photoURL: pic });
+            }
+            setDoctorProfileLoading(false);
+        });
+        return () => unsubscribe();
+    }, [auth]);
+
+    // Function to get initials from a name (from DoctorDashboard.js)
+    const getInitials = (firstName, lastName) => {
+        const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
+        const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : '';
+        return `${firstInitial}${lastInitial}`;
+    };
+
+    // Fetch prescription data from Firebase when the component mounts
     useEffect(() => {
         const fetchPrescriptions = async () => {
             setIsLoading(true);
             try {
-                // Fetch all prescriptions and order them by date in descending order
                 const q = query(collection(db, 'prescriptions'), orderBy('prescriptionDate', 'desc'));
                 const querySnapshot = await getDocs(q);
 
                 const prescriptionsList = querySnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data(),
-                    // Convert Firebase Timestamp to a readable date string
                     issuedDate: doc.data().prescriptionDate ? doc.data().prescriptionDate.toDate().toLocaleDateString('en-CA') : 'N/A',
                 }));
 
@@ -76,16 +130,13 @@ const PrescriptionHistory = () => {
     // Filters for Active Prescriptions Table
     const filteredPrescriptions = prescriptions.filter(
         (prescription) => {
-            // Check if the patient name, ID, or medication matches the search term
             const matchesSearchTerm =
                 prescription.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 prescription.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 prescription.medications?.some(med => med.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
-            // Check if the issued date matches the selected date
             const matchesDate = !dateFilter || prescription.issuedDate === dateFilter;
 
-            // Return true if all filters pass (the status filter has been removed)
             return matchesSearchTerm && matchesDate;
         }
     );
@@ -105,35 +156,111 @@ const PrescriptionHistory = () => {
         navigate(`/prescription/${prescriptionId}`);
     };
 
-    const navBarStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 50px', backgroundColor: '#d7f3d2' };
-    const logoContainerStyle = { display: 'flex', alignItems: 'center' };
-    const logoStyle = { height: '50px', marginRight: '10px' };
-    const titleContainerStyle = { display: 'flex', flexDirection: 'column' };
-    const titleStyle = { margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#333' };
-    const subtitleStyle = { margin: 0, fontSize: '12px', color: '#777' };
-    const contactInfoStyle = { display: 'flex', alignItems: 'center', marginRight: '20px', color: '#007bff' };
-    const homeButtonDivStyle = { padding: '10px 20px', border: '1px solid #ddd', borderRadius: '20px', backgroundColor: 'lightblue', color: '#007bff', cursor: 'pointer', display: 'flex', alignItems: 'center' };
-    const sidebarStyle = { width: '200px', backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '5px', marginRight: '20px' };
-    const sidebarLinkStyle = { display: 'block', padding: '10px 0', color: '#333', textDecoration: 'none', borderBottom: '1px solid #eee' };
-    const sidebarLinkActiveStyle = { color: '#007bff', fontWeight: 'bold' };
-    const dashboardContainerStyle = { display: 'flex', padding: '20px', fontFamily: 'sans-serif', flexGrow: 1 };
-    const doctorAvatarStyle = { width: '60px', height: '60px', borderRadius: '50%', backgroundColor: '#00cba9', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5em', fontWeight: 'bold', marginBottom: '5px' };
-    const doctorNameStyle = { fontSize: '1em', color: '#555', margin: 0 };
-    const doctorInfoStyle = { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '15px 0', borderTop: '1px solid #eee', backgroundColor: '#d7f3d2', padding: '10px', borderRadius: '5px', margin: '10px 0' };
-    const footerStyle = { backgroundColor: '#d7f3d2', padding: '20px', marginTop: 'auto' };
-    const containerStyle = { display: 'flex', justifyContent: 'space-around', paddingBottom: '20px' };
-    const sectionStyle = { display: 'flex', flexDirection: 'column' };
-    const headingStyle = { fontSize: '1.2em', marginBottom: '10px', color: '#333' };
-    const listStyle = { listStyle: 'none', padding: 0, margin: 0 };
-    const listItemStyle = { marginBottom: '10px', color: '#555' };
-    const followUsStyle = { display: 'flex', flexDirection: 'column', alignItems: 'center' };
-    const socialIconStyle = { display: 'flex' };
-    const iconLinkStyle = { marginRight: '10px', textDecoration: 'none', color: '#333' };
-    const bottomBarStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #ccc' };
-    const copyrightStyle = { fontSize: '0.8em', color: '#777' };
-    const linksStyle = { display: 'flex' };
-    const bottomLinkStyle = { color: '#555', textDecoration: 'none', fontSize: '0.8em', marginRight: '10px' };
-    const separatorStyle = { color: '#ccc', marginRight: '10px' };
+    // Consolidated Styles from DoctorDashboard.js
+    const styles = {
+        navBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 50px', backgroundColor: '#d7f3d2' },
+        logoContainer: { display: 'flex', alignItems: 'center' },
+        logo: { height: '50px', marginRight: '10px' },
+        titleContainer: { display: 'flex', flexDirection: 'column' },
+        title: { margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#333' },
+        subtitle: { margin: 0, fontSize: '12px', color: '#777' },
+        contactInfo: { display: 'flex', alignItems: 'center', marginRight: '20px', color: '#007bff' },
+        homeButtonDiv: { padding: '10px 20px', border: '1px solid #ddd', borderRadius: '20px', backgroundColor: 'lightblue', color: '#007bff', cursor: 'pointer', display: 'flex', alignItems: 'center' },
+
+        dashboardContainer: {
+            display: 'flex',
+            padding: '20px',
+            fontFamily: 'sans-serif'
+        },
+        sidebar: {
+            width: '250px',
+            backgroundColor: '#f8f9fa',
+            padding: '20px',
+            borderRadius: '5px',
+            marginRight: '20px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+        },
+        sidebarLink: {
+            display: 'flex',
+            alignItems: 'center',
+            padding: '12px 15px',
+            color: '#333',
+            textDecoration: 'none',
+            borderBottom: '1px solid #eee',
+            width: '100%',
+            textAlign: 'left',
+            transition: 'background-color 0.2s, color 0.2s',
+            fontSize: '15px',
+            fontWeight: '500',
+            borderRadius: '5px',
+            marginBottom: '5px',
+        },
+        sidebarLinkActive: {
+            color: '#007bff',
+            backgroundColor: '#e6f2ff',
+            fontWeight: 'bold',
+        },
+        sidebarIcon: {
+            marginRight: '10px',
+            fontSize: '1.2em',
+        },
+        doctorAvatar: {
+            width: '80px',
+            height: '80px',
+            borderRadius: '50%',
+            backgroundColor: '#00cba9',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.5em',
+            fontWeight: 'bold',
+            marginBottom: '5px',
+            marginTop: '20px',
+            overflow: 'hidden'
+        },
+        doctorName: {
+            fontSize: '1.1em',
+            color: '#333',
+            margin: 0,
+            marginTop: '10px',
+            fontWeight: 'bold'
+        },
+        doctorType: {
+            fontSize: '0.9em',
+            color: '#6c757d',
+            margin: '5px 0 0 0'
+        },
+        doctorInfo: {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '15px 0',
+            borderBottom: '1px solid #eee',
+            backgroundColor: '#d7f3d2',
+            borderRadius: '5px',
+            marginBottom: '20px',
+            width: '100%'
+        },
+        footer: { backgroundColor: '#d7f3d2', padding: '20px', marginTop: 'auto' },
+        footerContainer: { display: 'flex', justifyContent: 'space-around', paddingBottom: '20px' },
+        footerSection: { display: 'flex', flexDirection: 'column' },
+        footerHeading: { fontSize: '1.2em', marginBottom: '10px', color: '#333' },
+        list: { listStyle: 'none', padding: 0, margin: 0 },
+        listItem: { marginBottom: '10px', color: '#555' },
+        followUs: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
+        socialIcon: { display: 'flex' },
+        iconLink: { marginRight: '10px', textDecoration: 'none', color: '#333' },
+        bottomBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #ccc' },
+        copyright: { fontSize: '0.8em', color: '#777' },
+        links: { display: 'flex' },
+        bottomLink: { color: '#555', textDecoration: 'none', fontSize: '0.8em', marginRight: '10px' },
+        separator: { color: '#ccc', marginRight: '10px' },
+    };
+
 
     const getStatusChipColor = (status) => {
         switch (status) {
@@ -148,24 +275,28 @@ const PrescriptionHistory = () => {
         }
     };
 
+    if (doctorProfileLoading) {
+        return <div style={{ textAlign: 'center', padding: '50px' }}>Loading doctor profile...</div>;
+    }
+
     return (
         <div style={{ fontFamily: 'sans-serif' }}>
             {/* Navigation Bar */}
-            <header style={navBarStyle}>
-                <div style={logoContainerStyle}>
-                    <img src={logo} alt="E-Prescribe Logo" style={logoStyle} />
-                    <div style={titleContainerStyle}>
-                        <h1 style={titleStyle}>MediPrescribe</h1>
-                        <p style={subtitleStyle}>Your Digital Healthcare Solution</p>
+            <header style={styles.navBar}>
+                <div style={styles.logoContainer}>
+                    <img src={logo} alt="E-Prescribe Logo" style={styles.logo} />
+                    <div style={styles.titleContainer}>
+                        <h1 style={styles.title}>MediPrescribe</h1>
+                        <p style={styles.subtitle}>Your Digital Healthcare Solution</p>
                     </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <div style={contactInfoStyle}>
+                    <div style={styles.contactInfo}>
                         <FaPhoneAlt style={{ marginRight: '5px' }} />
                         <span>+94 (011) 519-51919</span>
                     </div>
                     <Link to="/signin" style={{ textDecoration: 'none' }}>
-                        <div style={homeButtonDivStyle}>
+                        <div style={styles.homeButtonDiv}>
                             <span>Logout</span>
                             <IoIosArrowForward style={{ marginLeft: '5px' }} />
                         </div>
@@ -174,20 +305,24 @@ const PrescriptionHistory = () => {
             </header>
 
             {/* Dashboard Content */}
-            <div style={dashboardContainerStyle}>
-                {/* Sidebar */}
-                <aside style={sidebarStyle}>
-                    <Link to="/dashboard" style={sidebarLinkStyle}>Dashboard</Link>
-                    <Link to="/newprescription" style={sidebarLinkStyle}>Add New Prescription</Link>
-                    <Link to="/prescriptionhistory" style={{ ...sidebarLinkStyle, ...sidebarLinkActiveStyle }}>Prescriptions</Link>
-                    <Link to="/appointments" style={sidebarLinkStyle}>Appointments</Link>
-                    <Link to="/settings" style={sidebarLinkStyle}>Settings</Link>
-                    <div style={doctorInfoStyle}>
-                        <div style={doctorAvatarStyle}>
-                            <img src={pic} alt="Doctor Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+            <div style={styles.dashboardContainer}>
+                {/* Sidebar - Updated with new design from DoctorDashboard.js */}
+                <aside style={styles.sidebar}>
+                    <div style={styles.doctorInfo}>
+                        <div style={styles.doctorAvatar}>
+                            {doctorData.photoURL ? (
+                                <img src={doctorData.photoURL} alt="Doctor Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                            ) : (
+                                <span>{getInitials(doctorData.firstName, doctorData.lastName)}</span>
+                            )}
                         </div>
-                        <p style={doctorNameStyle}>Dr. John Smith</p>
+                        <p style={styles.doctorName}>{`${doctorData.firstName} ${doctorData.lastName}`}</p>
+                        <p style={styles.doctorType}>{doctorData.userType}</p>
                     </div>
+                    <Link to="/doctor/dashboard" style={styles.sidebarLink}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
+                    <Link to="/newprescription" style={styles.sidebarLink}><FaPrescriptionBottleAlt style={styles.sidebarIcon} />Create New Prescription</Link>
+                    <Link to="/prescriptionhistory" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaHistory style={styles.sidebarIcon} />Prescriptions</Link>
+                    <Link to="/docprofile" style={styles.sidebarLink}><FaUserMd style={styles.sidebarIcon} />Profile</Link>
                 </aside>
 
                 {/* Main Content Area */}
@@ -291,7 +426,6 @@ const PrescriptionHistory = () => {
                                                 />
                                             </TableCell>
                                             <TableCell>
-                                                {/* Updated Action button to navigate */}
                                                 <Link to={`/prescription/${row.id}`}>
                                                     <IconButton size="small">
                                                         <VisibilityIcon fontSize="small" />
@@ -336,64 +470,7 @@ const PrescriptionHistory = () => {
             </div>
 
             {/* Footer */}
-            <footer style={footerStyle}>
-                <div style={containerStyle}>
-                    <div style={sectionStyle}>
-                        <h3 style={headingStyle}>Shop Matcha</h3>
-                        <ul style={listStyle}>
-                            <li style={listItemStyle}>Starter Kits</li>
-                            <li style={listItemStyle}>Lattes & Sweetened</li>
-                            <li style={listItemStyle}>Just the Matcha</li>
-                            <li style={listItemStyle}>Matchaware</li>
-                            <li style={listItemStyle}>Shop All</li>
-                        </ul>
-                    </div>
-                    <div style={sectionStyle}>
-                        <h3 style={headingStyle}>Learn</h3>
-                        <ul style={listStyle}>
-                            <li style={listItemStyle}>Our Story</li>
-                            <li style={listItemStyle}>Matcha Recipes</li>
-                            <li style={listItemStyle}>Caffeine Content</li>
-                            <li style={listItemStyle}>Health Benefits</li>
-                            <li style={listItemStyle}>FAQ's</li>
-                        </ul>
-                    </div>
-                    <div style={sectionStyle}>
-                        <h3 style={headingStyle}>More from Tenzo</h3>
-                        <ul style={listStyle}>
-                            <li style={listItemStyle}>Sign In</li>
-                            <li style={listItemStyle}>Wholesale Opportunities</li>
-                            <li style={listItemStyle}>Affiliate</li>
-                            <li style={listItemStyle}>Contact Us</li>
-                        </ul>
-                    </div>
-                    <div style={followUsStyle}>
-                        <h3 style={headingStyle}>Follow us</h3>
-                        <div style={socialIconStyle}>
-                            <a href="#" style={iconLinkStyle}><FaPinterest style={{ fontSize: '1.5em' }} /></a>
-                            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" style={iconLinkStyle}><FaFacebookF style={{ fontSize: '1.5em' }} /></a>
-                            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={iconLinkStyle}><FaInstagram style={{ fontSize: '1.5em' }} /></a>
-                            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" style={iconLinkStyle}><FaTwitter style={{ fontSize: '1.5em' }} /></a>
-                            <a href="https://whatsapp.com" target="_blank" rel="noopener noreferrer" style={iconLinkStyle}><FaWhatsapp style={{ fontSize: '1.5em' }} /></a>
-                        </div>
-                    </div>
-                </div>
-                <div style={bottomBarStyle}>
-                    <p style={copyrightStyle}>© 2025 tenzotea.co</p>
-                    <div style={linksStyle}>
-                        <a href="#" style={bottomLinkStyle}>Terms of Service</a>
-                        <span style={separatorStyle}>|</span>
-                        <a href="#" style={bottomLinkStyle}>Privacy Policy</a>
-                        <span style={separatorStyle}>|</span>
-                        <a href="#" style={bottomLinkStyle}>Refund Policy</a>
-                        <span style={separatorStyle}>|</span>
-                        <a href="#" style={bottomLinkStyle}>Accessibility Policy</a>
-                    </div>
-                </div>
-            </footer>
-            <div style={{ backgroundColor: '#111', color: '#ddd', textAlign: 'center', padding: '10px' }}>
-                <p>© 2025 MediPrescribe. All rights reserved.</p>
-            </div>
+            <Footer />
         </div>
     );
 };

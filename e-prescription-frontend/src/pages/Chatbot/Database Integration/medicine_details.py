@@ -6,7 +6,7 @@ import os
 
 # --- Configuration ---
 # IMPORTANT: Replace with the actual path to your Firebase service account key
-SERVICE_ACCOUNT_KEY_PATH = '../API_keys/medisl-ed07f-firebase-adminsdk-fbsvc-2fe43ec477.json'
+SERVICE_ACCOUNT_KEY_PATH = '../API_keys/medisl-ed07f-firebase-adminsdk-fbsvc-ad3fdc406c.json'
 CSV_FILE_PATH = '../Dataset/diseases_medicines.csv'
 MEDICINE_DETAILS_COLLECTION = 'medicine_details' # New collection name for medicine details
 

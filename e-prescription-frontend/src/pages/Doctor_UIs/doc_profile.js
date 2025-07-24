@@ -4,11 +4,12 @@ import pic from '../Main_Interface_UI/images/Doctor.png'; // Using this as a pla
 import { IoIosArrowForward } from 'react-icons/io';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import { FaFacebookF, FaTwitter, FaInstagram, FaPinterest, FaWhatsapp } from 'react-icons/fa';
+import { FaUserMd, FaPrescriptionBottleAlt, FaHistory, FaCalendarAlt, FaCog, FaHome } from 'react-icons/fa'; // Added new icons
 import { getAuth, onAuthStateChanged, updatePassword, updateProfile } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase'; // adjust path if needed
+import Footer from '../Main_Interface_UI/Footer';
 
 const ProfilePage = () => {
     const auth = getAuth();
@@ -172,16 +173,17 @@ const ProfilePage = () => {
             <div style={styles.dashboardContainer}>
                 {/* Sidebar (Adapted from NewPrescriptionForm) */}
                 <aside style={styles.sidebar}>
-                    <Link to="/profile" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}>Profile</Link>
-                    <Link to="/dashboard" style={styles.sidebarLink}>Dashboard</Link>
-                    <Link to="/appointments" style={styles.sidebarLink}>Appointments</Link>
-                    <Link to="/settings" style={styles.sidebarLink}>Settings</Link>
                     <div style={styles.doctorInfo}>
                         <div style={styles.doctorAvatar}>
                             <img src={userData.photoURL || pic} alt="User Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                         </div>
                         <p style={styles.doctorName}>{`${userData.firstName} ${userData.lastName}`}</p>
+                        <p style={styles.doctorType}>{userData.userType}</p> {/* Display user type */}
                     </div>
+                    <Link to="/doctor/dashboard" style={styles.sidebarLink}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
+                    <Link to="/newprescription" style={styles.sidebarLink}><FaPrescriptionBottleAlt style={styles.sidebarIcon} />Create New Prescription</Link>
+                    <Link to="/prescriptionhistory" style={styles.sidebarLink}><FaHistory style={styles.sidebarIcon} />My Prescriptions</Link>
+                    <Link to="#" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaUserMd style={styles.sidebarIcon} />Profile</Link>
                 </aside>
 
                 {/* Profile Page Content */}
@@ -295,64 +297,7 @@ const ProfilePage = () => {
             </div>
 
             {/* Footer */}
-            <footer style={styles.footer}>
-                <div style={styles.footerContainer}>
-                    <div style={styles.footerSection}>
-                        <h3 style={styles.footerHeading}>Shop Matcha</h3>
-                        <ul style={styles.list}>
-                            <li style={styles.listItem}>Starter Kits</li>
-                            <li style={styles.listItem}>Lattes & Sweetened</li>
-                            <li style={styles.listItem}>Just the Matcha</li>
-                            <li style={styles.listItem}>Matchaware</li>
-                            <li style={styles.listItem}>Shop All</li>
-                        </ul>
-                    </div>
-                    <div style={styles.footerSection}>
-                        <h3 style={styles.footerHeading}>Learn</h3>
-                        <ul style={styles.list}>
-                            <li style={styles.listItem}>Our Story</li>
-                            <li style={styles.listItem}>Matcha Recipes</li>
-                            <li style={styles.listItem}>Caffeine Content</li>
-                            <li style={styles.listItem}>Health Benefits</li>
-                            <li style={styles.listItem}>FAQ's</li>
-                        </ul>
-                    </div>
-                    <div style={styles.footerSection}>
-                        <h3 style={styles.footerHeading}>More from Tenzo</h3>
-                        <ul style={styles.list}>
-                            <li style={styles.listItem}>Sign In</li>
-                            <li style={styles.listItem}>Wholesale Opportunities</li>
-                            <li style={styles.listItem}>Affiliate</li>
-                            <li style={styles.listItem}>Contact Us</li>
-                        </ul>
-                    </div>
-                    <div style={styles.followUs}>
-                        <h3 style={styles.footerHeading}>Follow us</h3>
-                        <div style={styles.socialIconContainer}>
-                            <a href="#" style={styles.iconLink}><FaPinterest style={{ fontSize: '1.5em' }} /></a>
-                            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" style={styles.iconLink}><FaFacebookF style={{ fontSize: '1.5em' }} /></a>
-                            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={styles.iconLink}><FaInstagram style={{ fontSize: '1.5em' }} /></a>
-                            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" style={styles.iconLink}><FaTwitter style={{ fontSize: '1.5em' }} /></a>
-                            <a href="https://whatsapp.com" target="_blank" rel="noopener noreferrer" style={styles.iconLink}><FaWhatsapp style={{ fontSize: '1.5em' }} /></a>
-                        </div>
-                    </div>
-                </div>
-                <div style={styles.bottomBar}>
-                    <p style={styles.copyright}>© 2025 tenzotea.co</p>
-                    <div style={styles.links}>
-                        <a href="#" style={styles.bottomLink}>Terms of Service</a>
-                        <span style={styles.separator}>|</span>
-                        <a href="#" style={styles.bottomLink}>Privacy Policy</a>
-                        <span style={styles.separator}>|</span>
-                        <a href="#" style={styles.bottomLink}>Refund Policy</a>
-                        <span style={styles.separator}>|</span>
-                        <a href="#" style={styles.bottomLink}>Accessibility Policy</a>
-                    </div>
-                </div>
-            </footer>
-            <div style={{ backgroundColor: '#111', color: '#ddd', textAlign: 'center', padding: '10px' }}>
-                <p>© 2025 E-Prescribe. All rights reserved.</p>
-            </div>
+            <Footer />
         </div>
     );
 };
@@ -383,16 +328,58 @@ const styles = {
     bottomLink: { color: '#555', textDecoration: 'none', fontSize: '0.8em', marginRight: '10px' },
     separator: { color: '#ccc', marginRight: '10px' },
 
-    // Sidebar Styles (Adapted from NewPrescriptionForm)
+    // Sidebar Styles (Adapted and enhanced)
     dashboardContainer: { display: 'flex', padding: '20px', fontFamily: 'sans-serif' },
-    sidebar: { width: '250px', backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '5px', marginRight: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' },
-    sidebarLink: { display: 'block', padding: '10px 0', color: '#333', textDecoration: 'none', borderBottom: '1px solid #eee', width: '100%', textAlign: 'center' },
-    sidebarLinkActive: { color: '#007bff', fontWeight: 'bold' },
-    doctorAvatar: { width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#00cba9', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5em', fontWeight: 'bold', marginBottom: '5px', marginTop: '20px' },
-    doctorName: { fontSize: '1em', color: '#555', margin: 0, marginTop: '10px' },
-    doctorInfo: { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '15px 0', borderTop: '1px solid #eee', backgroundColor: '#d7f3d2', padding: '10px', borderRadius: '5px', marginTop: '10px', width: '100%' },
+    sidebar: {
+        width: '250px',
+        backgroundColor: '#f8f9fa',
+        padding: '20px',
+        borderRadius: '5px',
+        marginRight: '20px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        boxShadow: '0 2px 5px rgba(0,0,0,0.05)' // Added shadow for better visual
+    },
+    sidebarLink: {
+        display: 'flex', // Changed to flex to align icon and text
+        alignItems: 'center', // Align items vertically
+        padding: '12px 15px', // Increased padding
+        color: '#333',
+        textDecoration: 'none',
+        borderBottom: '1px solid #eee',
+        width: '100%',
+        textAlign: 'left', // Align text to left
+        transition: 'background-color 0.2s, color 0.2s',
+        fontSize: '15px', // Slightly larger font
+        fontWeight: '500', // Slightly bolder
+    },
+    sidebarLinkActive: {
+        color: '#007bff',
+        backgroundColor: '#e6f2ff', // Light blue background for active link
+        fontWeight: 'bold',
+        borderRadius: '5px', // Rounded corners for active link
+    },
+    sidebarIcon: {
+        marginRight: '10px', // Space between icon and text
+        fontSize: '1.2em', // Slightly larger icon
+    },
+    doctorAvatar: { width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#00cba9', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5em', fontWeight: 'bold', marginBottom: '5px', marginTop: '20px', overflow: 'hidden' },
+    doctorName: { fontSize: '1.1em', color: '#333', margin: 0, marginTop: '10px', fontWeight: 'bold' },
+    doctorType: { fontSize: '0.9em', color: '#6c757d', margin: '5px 0 0 0' }, // Added style for userType
+    doctorInfo: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '15px 0',
+        borderBottom: '1px solid #eee', // Changed to borderBottom for clearer separation
+        backgroundColor: '#d7f3d2',
+        borderRadius: '5px',
+        marginBottom: '20px', // Increased margin to separate from links
+        width: '100%'
+    },
 
-    // Profile Page Specific Styles
+    // Profile Page Specific Styles (No changes unless requested)
     profileContainer: { flexGrow: 1, padding: '30px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)', maxWidth: '800px', margin: '0 auto' },
     h2: { margin: 0, color: '#333', fontSize: '24px', textAlign: 'center' },
     subHeading: { fontSize: '14px', color: '#6c757d', marginBottom: '30px', textAlign: 'center' },

@@ -7,16 +7,22 @@ import logo from '../Main_Interface_UI/images/Logo01.png';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
 import { Link } from 'react-router-dom';
-import { FaFacebookF, FaTwitter, FaInstagram, FaPinterest, FaWhatsapp } from 'react-icons/fa';
+import {FaUserMd, FaPrescriptionBottleAlt, FaHistory, FaHome } from 'react-icons/fa'; // Added FaUserMd, FaPrescriptionBottleAlt, FaHistory, FaHome
 import pic from '../Main_Interface_UI/images/Doctor.png';
+import Footer from '../Main_Interface_UI/Footer';
+
 
 const DoctorDashboard = () => {
     const auth = getAuth(); // Get the auth instance
 
     // State to manage the doctor's profile information
-    const [firstName, setFirstName] = useState('Loading...');
-    const [lastName, setLastName] = useState('');
-    const [doctorPic, setDoctorPic] = useState(null); // Set to null initially
+    const [doctorData, setDoctorData] = useState({
+        firstName: 'Loading...',
+        lastName: '',
+        email: '', // Added email
+        userType: '', // Added userType
+        photoURL: null, // Initialized as null, will use pic if photoURL is not available
+    });
     const [loading, setLoading] = useState(true);
 
     // Use useEffect to fetch data from Firebase
@@ -30,25 +36,25 @@ const DoctorDashboard = () => {
 
                     if (docSnap.exists()) {
                         const data = docSnap.data();
-                        // Update state with firstName, lastName, and photoURL from Firestore
-                        setFirstName(data.firstName || 'Dr. Unknown');
-                        setLastName(data.lastName || '');
-                        setDoctorPic(data.photoURL || pic); // Use default pic if none exists
+                        // Update state with firstName, lastName, photoURL, email, and userType from Firestore
+                        setDoctorData({
+                            firstName: data.firstName || 'Dr. Unknown',
+                            lastName: data.lastName || '',
+                            email: user.email || '', // Get email from user object
+                            userType: data.userType || 'Doctor', // Default to 'Doctor'
+                            photoURL: data.photoURL || pic, // Use default pic if none exists
+                        });
                     } else {
                         console.log("No such document for the user!");
-                        setFirstName("Dr. Not Found");
-                        setDoctorPic(pic);
+                        setDoctorData(prev => ({ ...prev, firstName: "Dr. Not Found", photoURL: pic }));
                     }
                 } catch (error) {
                     console.error("Error fetching user data:", error);
-                    setFirstName("Error");
-                    setDoctorPic(pic);
+                    setDoctorData(prev => ({ ...prev, firstName: "Error", photoURL: pic }));
                 }
             } else {
                 // Handle case where user is not logged in
-                setFirstName("Please Log In");
-                setLastName("");
-                setDoctorPic(pic);
+                setDoctorData({ firstName: "Please Log In", lastName: "", email: "", userType: "", photoURL: pic });
             }
             setLoading(false);
         });
@@ -59,9 +65,9 @@ const DoctorDashboard = () => {
 
     // Function to get initials from a name
     const getInitials = (firstName, lastName) => {
-      const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
-      const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : '';
-      return `${firstInitial}${lastInitial}`;
+        const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
+        const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : '';
+        return `${firstInitial}${lastInitial}`;
     };
 
     // Consolidated Styles
@@ -74,13 +80,85 @@ const DoctorDashboard = () => {
         subtitle: { margin: 0, fontSize: '12px', color: '#777' },
         contactInfo: { display: 'flex', alignItems: 'center', marginRight: '20px', color: '#007bff' },
         homeButtonDiv: { padding: '10px 20px', border: '1px solid #ddd', borderRadius: '20px', backgroundColor: 'lightblue', color: '#007bff', cursor: 'pointer', display: 'flex', alignItems: 'center' },
-        dashboardContainer: { display: 'flex', padding: '20px', fontFamily: 'sans-serif' },
-        sidebar: { width: '200px', backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '5px', marginRight: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' },
-        sidebarLink: { display: 'block', padding: '10px 0', color: '#333', textDecoration: 'none', borderBottom: '1px solid #eee', width: '100%', textAlign: 'center' },
-        sidebarLinkActive: { color: '#007bff', fontWeight: 'bold' },
-        doctorInfo: { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '15px 0', borderTop: '1px solid #eee', backgroundColor: '#d7f3d2', padding: '10px', borderRadius: '5px', marginTop: '10px', width: '100%' },
-        doctorAvatar: { width: '60px', height: '60px', borderRadius: '50%', backgroundColor: '#00cba9', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5em', fontWeight: 'bold', marginBottom: '5px', objectFit: 'cover' },
-        doctorName: { fontSize: '1em', color: '#555', margin: 0 },
+
+        dashboardContainer: {
+            display: 'flex',
+            padding: '20px',
+            fontFamily: 'sans-serif'
+        },
+        sidebar: {
+            width: '250px',
+            backgroundColor: '#f8f9fa',
+            padding: '20px',
+            borderRadius: '5px',
+            marginRight: '20px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+        },
+        sidebarLink: {
+            display: 'flex',
+            alignItems: 'center',
+            padding: '12px 15px',
+            color: '#333',
+            textDecoration: 'none',
+            borderBottom: '1px solid #eee',
+            width: '100%',
+            textAlign: 'left',
+            transition: 'background-color 0.2s, color 0.2s',
+            fontSize: '15px',
+            fontWeight: '500',
+            borderRadius: '5px',
+            marginBottom: '5px',
+        },
+        sidebarLinkActive: {
+            color: '#007bff',
+            backgroundColor: '#e6f2ff',
+            fontWeight: 'bold',
+        },
+        sidebarIcon: {
+            marginRight: '10px',
+            fontSize: '1.2em',
+        },
+        doctorAvatar: {
+            width: '80px',
+            height: '80px',
+            borderRadius: '50%',
+            backgroundColor: '#00cba9',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.5em',
+            fontWeight: 'bold',
+            marginBottom: '5px',
+            marginTop: '20px',
+            overflow: 'hidden'
+        },
+        doctorName: {
+            fontSize: '1.1em',
+            color: '#333',
+            margin: 0,
+            marginTop: '10px',
+            fontWeight: 'bold'
+        },
+        doctorType: {
+            fontSize: '0.9em',
+            color: '#6c757d',
+            margin: '5px 0 0 0'
+        },
+        doctorInfo: {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '15px 0',
+            borderBottom: '1px solid #eee',
+            backgroundColor: '#d7f3d2',
+            borderRadius: '5px',
+            marginBottom: '20px',
+            width: '100%'
+        },
         content: { flexGrow: 1, padding: '20px', backgroundColor: '#fff', borderRadius: '5px', boxShadow: '0 0 10px rgba(0, 0, 0, 0.05)' },
         dashboardHeader: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '20px', marginBottom: '20px' },
         headerCard: { backgroundColor: '#e9ecef', padding: '15px', borderRadius: '5px', textAlign: 'center' },
@@ -146,25 +224,23 @@ const DoctorDashboard = () => {
 
             {/* Dashboard Content */}
             <div style={styles.dashboardContainer}>
-                {/* Sidebar */}
+                {/* Sidebar - Updated with new design */}
                 <aside style={styles.sidebar}>
-                    <Link to="/dashboard" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}>Dashboard</Link>
-                    <Link to="/newprescription" style={styles.sidebarLink}>Add New Prescription</Link>
-                    <Link to="/prescriptionhistory" style={styles.sidebarLink}>Prescriptions</Link>
-                    <Link to="/appointments" style={styles.sidebarLink}>Appointments</Link>
-                    <Link to="/docprofile" style={styles.sidebarLink}>Settings</Link>
-
-                    {/* Dynamic doctor info section */}
                     <div style={styles.doctorInfo}>
                         <div style={styles.doctorAvatar}>
-                            {doctorPic ? (
-                                <img src={doctorPic} alt="Doctor Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                            {doctorData.photoURL ? (
+                                <img src={doctorData.photoURL} alt="Doctor Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                             ) : (
-                                <span>{getInitials(firstName, lastName)}</span>
+                                <span>{getInitials(doctorData.firstName, doctorData.lastName)}</span>
                             )}
                         </div>
-                        <p style={styles.doctorName}>{`${firstName} ${lastName}`}</p>
+                        <p style={styles.doctorName}>{`${doctorData.firstName} ${doctorData.lastName}`}</p>
+                        <p style={styles.doctorType}>{doctorData.userType}</p>
                     </div>
+                    <Link to="/doctor/dashboard" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
+                    <Link to="/newprescription" style={styles.sidebarLink}><FaPrescriptionBottleAlt style={styles.sidebarIcon} />Create New Prescription</Link>
+                    <Link to="/prescriptionhistory" style={styles.sidebarLink}><FaHistory style={styles.sidebarIcon} />Prescriptions</Link>
+                    <Link to="/docprofile" style={styles.sidebarLink}><FaUserMd style={styles.sidebarIcon} />Profile</Link>
                 </aside>
 
                 {/* Main Content */}
@@ -262,64 +338,7 @@ const DoctorDashboard = () => {
             </div>
 
             {/* Footer */}
-            <footer style={styles.footer}>
-                <div style={styles.footerContainer}>
-                    <div style={styles.footerSection}>
-                        <h3 style={styles.footerHeading}>Shop Matcha</h3>
-                        <ul style={styles.list}>
-                            <li style={styles.listItem}>Starter Kits</li>
-                            <li style={styles.listItem}>Lattes & Sweetened</li>
-                            <li style={styles.listItem}>Just the Matcha</li>
-                            <li style={styles.listItem}>Matchaware</li>
-                            <li style={styles.listItem}>Shop All</li>
-                        </ul>
-                    </div>
-                    <div style={styles.footerSection}>
-                        <h3 style={styles.footerHeading}>Learn</h3>
-                        <ul style={styles.list}>
-                            <li style={styles.listItem}>Our Story</li>
-                            <li style={styles.listItem}>Matcha Recipes</li>
-                            <li style={styles.listItem}>Caffeine Content</li>
-                            <li style={styles.listItem}>Health Benefits</li>
-                            <li style={styles.listItem}>FAQ's</li>
-                        </ul>
-                    </div>
-                    <div style={styles.footerSection}>
-                        <h3 style={styles.footerHeading}>More from Tenzo</h3>
-                        <ul style={styles.list}>
-                            <li style={styles.listItem}>Sign In</li>
-                            <li style={styles.listItem}>Wholesale Opportunities</li>
-                            <li style={styles.listItem}>Affiliate</li>
-                            <li style={styles.listItem}>Contact Us</li>
-                        </ul>
-                    </div>
-                    <div style={styles.followUs}>
-                        <h3 style={styles.footerHeading}>Follow us</h3>
-                        <div style={styles.socialIcon}>
-                            <a href="#" style={styles.iconLink}><FaPinterest style={{ fontSize: '1.5em' }} /></a>
-                            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" style={styles.iconLink}><FaFacebookF style={{ fontSize: '1.5em' }} /></a>
-                            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={styles.iconLink}><FaInstagram style={{ fontSize: '1.5em' }} /></a>
-                            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" style={styles.iconLink}><FaTwitter style={{ fontSize: '1.5em' }} /></a>
-                            <a href="https://whatsapp.com" target="_blank" rel="noopener noreferrer" style={styles.iconLink}><FaWhatsapp style={{ fontSize: '1.5em' }} /></a>
-                        </div>
-                    </div>
-                </div>
-                <div style={styles.bottomBar}>
-                    <p style={styles.copyright}>© 2025 tenzotea.co</p>
-                    <div style={styles.links}>
-                        <a href="#" style={styles.bottomLink}>Terms of Service</a>
-                        <span style={styles.separator}>|</span>
-                        <a href="#" style={styles.bottomLink}>Privacy Policy</a>
-                        <span style={styles.separator}>|</span>
-                        <a href="#" style={styles.bottomLink}>Refund Policy</a>
-                        <span style={styles.separator}>|</span>
-                        <a href="#" style={styles.bottomLink}>Accessibility Policy</a>
-                    </div>
-                </div>
-            </footer>
-            <div style={{ backgroundColor: '#111', color: '#ddd', textAlign: 'center', padding: '10px' }}>
-                <p>© 2025 MediPrescribe. All rights reserved.</p>
-            </div>
+            <Footer />
         </div>
     );
 };

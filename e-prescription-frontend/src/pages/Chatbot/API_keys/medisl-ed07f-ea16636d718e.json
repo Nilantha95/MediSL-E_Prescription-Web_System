@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "medisl-ed07f",
+  "private_key_id": "ea16636d718e624a33ece4475a947d818ca6b751",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC/a9xildox6bjb\nV15JkTfCGEZfLG1E6rwHApXciFz36rJfz/BHCqpbGmqQtCvGgsnKbqulqwlI0LFs\nwPGMPUlyugLhlPt/QfH3dh4QK818SLCkFDmgpVtsLNfZkRCNAmAHT5sip0ikTeB6\n2gSGVAW8Tr5jjDuwvaLSRb23+P3UiAShBVv24rRb5RIB8aaZq7xic/YQKCNtm6vt\nBLLcEbXXWrjhDsWGP+9g8OuFBNCm8/PSRmCB84LguBOEhQOr8DnfWgtG0/QhW0pv\nGGvbKG2AnryMNqSep8CbTc5EvRMP61O4kDnGjpUOxrrzr8ElBtBuOqTQ+Tw0e+uD\n4pAOeUi1AgMBAAECggEAAa6d3N0dpTzW2IQvumxej11gpO51gvQ5gcN2jXd1snue\nZKdY0679NaUjFMsLuKHAMMyz9zxsOpBG6g89MCYyH1V3uAONcDe91Un1VEWmRFAG\nAvMaJiMkQGxmdMcVdgyN/njaT3DySCtWn42+s28VyJ4ihl2eZ3YX8hdI/87EbQ0r\n0Xj9nyJ2OcJxlC/jcTmqUO6pGe3bN4W0UXO3IbveYUmyn3zPxRbhF27fMXyaOSEI\navzcGbWGBBVlJYNwN1Icq6ce/w3xdwrW+mqVaNhPxMVPt9Kys7N1VJP7f7j0AYV4\necleqSYeyMryUJ0KoerLhAFf6X4czoZNdrGS9AMn4QKBgQD5L4dr0KBoh/wRL49m\ne3TGeIkM4G3S3pfniFYkaw/VSga7YTWLqTWOmSYixI/HYfkoWzgFRoqM1uNuAI2y\nm0k1G1ZkvncfXAQHA2tqXuZslNg7J1A5RJZGdrg7Qtkn9FF3AeBkvExdTqd85+nA\n/IBiov74IyVEYxagi6ut6MI/0QKBgQDEp/EdvwEDfp7AQ3wQai4Yocg5KRQtLyqZ\nsbPaeioORKifT9MnrpxSrwEMbSfc5GeXwg6KGTc1Pwj0DwTn6M+QGCp62NkQ9yts\npbPtx8XMV4lMv1piSLSDgZKPzf3SRTf606ZBAY3zEOwedVJ+VPcOWtzC622BjwZC\nZFmJBtx3pQKBgD6Pxko1WPClo42VCUXLnSfvP0lyV2Bn7m989VOzZYhBS6tj3pOv\n6fhhTwfPneGLIYkWTdxVN5fgo70MeobrIdgpgulMQJApBAHWw/My3FtKi3deiW+3\nXptWVy7Zu7eiSYm9eN8Rv4J1qutbNn7zZjBdh/I4sLSYxCeOqY3CMHLhAoGAfJgy\nybfkOoSUrBeVmQjM38pQgval0+LYSLwvyTIxRwz1EMqQa8nTPQen0GmwIeGMSLgo\nYhKLye6AC7EgWJZGO3M0JtUQ4hDXsGRj1TkG9upXEQsDhtWtmMwVQYsvT3OPfhlu\nci079E46aynF9Eh8ptmmmNB0dutY+eN+XrS8JgkCgYB611p+ahnqQ92PyQzaENOh\nM7xlT4Mtusn2qofocMTp2+lj0V8Xso4/x+m18GyBcctzbIz/baQ2mHinFNZ3re6P\nLgLUgOoKSZyXEvDk7avvHUo0MiszyTTfTgRbKcWO8VzbvkbE2C7XPMMUm3OOTfGL\nrSnvdSIIm1Mn3uj7lXlCyw==\n-----END PRIVATE KEY-----\n",
+  "client_email": "medilk-translate@medisl-ed07f.iam.gserviceaccount.com",
+  "client_id": "115083209281898581198",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/medilk-translate%40medisl-ed07f.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
