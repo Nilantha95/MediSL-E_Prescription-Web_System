@@ -21,7 +21,7 @@ from google.cloud import texttospeech
 
 # Set GOOGLE_APPLICATION_CREDENTIALS environment variable or provide path here
 # Ensure this path points to your Google Cloud Service Account key for Translation and TTS
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./API_keys/Speech_API_Key/medisl-ed07f-909d96d62920.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./API_keys/medisl-ed07f-ea16636d718e.json"
 
 # Ensure NLTK data is available
 try:
@@ -40,7 +40,7 @@ except Exception as e:
 
 
 # --- Configuration ---
-SERVICE_ACCOUNT_KEY_PATH = './API_keys/medisl-ed07f-firebase-adminsdk-fbsvc-2fe43ec477.json'
+SERVICE_ACCOUNT_KEY_PATH = './API_keys/medisl-ed07f-firebase-adminsdk-fbsvc-ad3fdc406c.json'
 SYMPTOMS_DISEASES_COLLECTION = 'diseases_symptoms'
 DISEASES_MEDICINES_COLLECTION = 'diseases_medicines'
 MEDICINE_DETAILS_COLLECTION = 'medicine_details'

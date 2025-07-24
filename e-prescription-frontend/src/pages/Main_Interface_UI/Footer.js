@@ -1,234 +1,284 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaPinterest, FaFacebookF, FaInstagram, FaTwitter, FaWhatsapp } from 'react-icons/fa'; // Import social media icons
 
 const Footer = () => {
   // State to manage hover effect for links (workaround for :hover)
   const [hoveredLink, setHoveredLink] = useState(null);
 
+  // State for responsive styles
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Define responsive style variations based on screenWidth
+  const getResponsiveStyle = (desktopStyle, tabletStyle, mobileStyle, smallMobileStyle) => {
+    if (screenWidth <= 575) { // Small mobile
+      return smallMobileStyle;
+    } else if (screenWidth <= 768) { // General mobile
+      return mobileStyle;
+    } else if (screenWidth <= 992) { // Tablet
+      return tabletStyle;
+    }
+    return desktopStyle; // Desktop
+  };
+
   // Define the styles as JavaScript objects
-  const footerContainerStyle = {
-    backgroundColor: '#d7f3d2', // Black background
-    color: 'black', // White text
-    padding: '40px 20px', // Reverted to original padding for overall footer height
-    fontFamily: 'Roboto, sans-serif', // Default font for the footer content
-  };
+  const styles = {
+    footerContainer: {
+      backgroundColor: '#d7f3d2',
+      padding: getResponsiveStyle('30px 50px', '25px 30px', '20px 20px', '15px 15px'),
+      fontFamily: 'Roboto, sans-serif', // Ensure consistent font
+      marginTop: '50px', // Add some top margin to separate from content if needed
+    },
 
-  const footerContentStyle = {
-    display: 'flex',
-    justifyContent: 'space-around',
-    maxWidth: '1800px',
-    margin: '0 auto',
-    flexWrap: 'wrap',
-  };
+    footerContent: {
+      display: 'flex',
+      justifyContent: 'space-around',
+      paddingBottom: getResponsiveStyle('30px', '25px', '20px', '15px'),
+      flexWrap: 'wrap',
+      gap: getResponsiveStyle('20px', '20px', '15px', '10px'),
+      flexDirection: getResponsiveStyle('row', 'row', 'column', 'column'), // Stack sections on smaller screens
+    },
 
-  const footerSectionStyle = {
-    flex: '1',
-    minWidth: '200px', // Reverted to original min-width
-    margin: '0 15px 30px 15px', // Reverted to original horizontal and bottom margin
-  };
+    footerSection: {
+      flex: '1',
+      minWidth: getResponsiveStyle('220px', '200px', '100%', '100%'), // Take full width when stacked
+      margin: getResponsiveStyle('0 10px', '0 10px', '0', '0'), // Remove horizontal margin when stacked
+      textAlign: getResponsiveStyle('left', 'left', 'center', 'center'), // Center text when stacked
+      marginBottom: getResponsiveStyle('0', '0', '20px', '15px'), // Add vertical margin between stacked sections
+    },
 
-  const headingStyle = {
-    fontSize: '1.2em', // Reverted to original heading size
-    marginBottom: '20px', // Reverted to original margin below heading
-    color: 'black',
-    fontFamily: 'Montserrat, sans-serif', // Montserrat for headings
-    fontWeight: '700', // Make headings bold
-  };
+    heading: {
+      fontSize: getResponsiveStyle('1.3em', '1.2em', '1.2em', '1.1em'),
+      marginBottom: '12px',
+      color: '#333',
+      fontWeight: 'bold',
+    },
 
-  const paragraphStyle = {
-    fontSize: '0.9em', // Reverted to original paragraph text size
-    lineHeight: '1.6', // Reverted to original line height
-    color: 'black',
-    fontFamily: 'Roboto, sans-serif', // Roboto for paragraphs
-  };
+    list: {
+      listStyle: 'none',
+      padding: '0',
+      margin: '0',
+    },
 
-  const listStyle = {
-    listStyle: 'none',
-    padding: '0',
-    margin: '0',
-  };
+    listItem: {
+      marginBottom: '12px',
+      color: '#555',
+      fontSize: getResponsiveStyle('1.0em', '0.95em', '0.95em', '0.9em'),
+    },
 
-  const listItemStyle = {
-    marginBottom: '10px', // Reverted to original margin between list items
-    fontSize: '0.9em', // Reverted to original list item text size
-    display: 'flex',
-    alignItems: 'center',
-    fontFamily: 'Roboto, sans-serif', // Roboto for list items
-  };
+    // Function to get link style based on hover state
+    getLinkStyle: (linkName) => ({
+      color: hoveredLink === linkName ? '#007bff' : '#555',
+      textDecoration: 'none',
+      transition: 'color 0.3s ease',
+    }),
 
-  // Function to get link style based on hover state
-  const getLinkStyle = (linkName) => ({
-    color: hoveredLink === linkName ? 'black' : 'black', // White on hover, else grey
-    textDecoration: 'none',
-    transition: 'color 0.3s ease',
-    fontFamily: 'Roboto, sans-serif', // Ensure links also use Roboto
-  });
+    iconStyle: {
+      marginRight: '10px',
+      fontSize: '1.1em',
+      color: '#555',
+    },
 
-  const iconStyle = {
-    marginRight: '10px', // Reverted to original icon margin
-    fontSize: '1.1em', // Reverted to original icon size
-    color: 'black', // Set to black for consistency
-  };
+    // Styles for Follow Us section
+    followUs: {
+      flex: '1',
+      minWidth: getResponsiveStyle('220px', '200px', '100%', '100%'),
+      margin: getResponsiveStyle('0 10px', '0 10px', '0', '0'),
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center', // Always center for follow us section
+      textAlign: 'center', // Always center for follow us section
+      marginBottom: getResponsiveStyle('0', '0', '20px', '15px'), // Add vertical margin between stacked sections
+    },
 
-  // Styles for Follow Us section
-  const followUsStyle = {
-    flex: '1',
-    minWidth: '200px', // Reverted to original min-width for consistency
-    margin: '0 15px 30px 15px', // Consistent margins with other sections
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  };
+    socialIconContainer: {
+      display: 'flex',
+      gap: getResponsiveStyle('15px', '15px', '12px', '10px'),
+      marginTop: '10px',
+      color: '#333',
+    },
 
-  const followUsHeadingStyle = { // Specific style for Follow Us heading
-    ...headingStyle, // Inherit base heading styles
-    textAlign: 'center', // Override to center just this heading
-  };
+    socialIconLink: {
+      fontSize: getResponsiveStyle('1.5em', '1.4em', '1.3em', '1.2em'),
+      transition: 'color 0.3s ease',
+    },
 
-  const socialIconStyle = {
-    display: 'flex',
-    gap: '15px', // Reverted to original space between icons
-    fontSize: '1.5em', // Reverted to original size of social media icons
-    color: 'black', // Color of social media icons
-  };
+    getSocialIconLinkStyle: (iconName) => ({
+      ...styles.socialIconLink, // Inherit base social icon link styles
+      color: hoveredLink === iconName ? '#007bff' : '#333', // Change color on hover
+    }),
 
-  const iconLinkStyle = {
-    color: 'black', // Ensures icon color is black
-    textDecoration: 'none', // Removes underline from links
+    bottomBar: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingTop: '10px',
+      borderTop: '1px solid #ccc',
+      marginTop: getResponsiveStyle('20px', '20px', '15px', '10px'),
+      flexWrap: 'wrap',
+    },
+
+    copyright: {
+      fontSize: getResponsiveStyle('0.9em', '0.85em', '0.8em', '0.75em'),
+      color: '#777',
+      marginBottom: '0px',
+      textAlign: 'center', // Center copyright text on smaller screens
+    },
   };
 
   return (
-    <footer style={footerContainerStyle}>
-      <div style={footerContentStyle}>
+    <footer style={styles.footerContainer}>
+      <div style={styles.footerContent}>
         {/* MediSL Lanka Section */}
-        <div style={footerSectionStyle}>
-          <h3 style={headingStyle}>MediSL Lanka</h3>
-          <p style={paragraphStyle}>Securely manages digital prescriptions, connecting patients, doctors, and pharmacists efficiently.</p>
+        <div style={styles.footerSection}>
+          <h3 style={styles.heading}>MediSL Lanka</h3>
+          <p style={styles.listItem}>Securely manages digital prescriptions, connecting patients, doctors, and pharmacists efficiently.</p>
         </div>
 
         {/* Quick Links Section */}
-        <div style={footerSectionStyle}>
-          <h3 style={headingStyle}>Quick Links</h3>
-          <ul style={listStyle}>
-            <li style={listItemStyle}>
+        <div style={styles.footerSection}>
+          <h3 style={styles.heading}>Quick Links</h3>
+          <ul style={styles.list}>
+            <li style={styles.listItem}>
               <a
                 href="/home"
-                style={getLinkStyle('home')}
+                style={styles.getLinkStyle('home')}
                 onMouseEnter={() => setHoveredLink('home')}
                 onMouseLeave={() => setHoveredLink(null)}
               >
                 Home
               </a>
             </li>
-            <li style={listItemStyle}>
+            <li style={styles.listItem}>
               <a
-                href="/about"
-                style={getLinkStyle('about')}
-                onMouseEnter={() => setHoveredLink('about')}
+                href="/features"
+                style={styles.getLinkStyle('features')}
+                onMouseEnter={() => setHoveredLink('features')}
                 onMouseLeave={() => setHoveredLink(null)}
               >
-                About
+                Features
               </a>
             </li>
-            <li style={listItemStyle}>
+            <li style={styles.listItem}>
               <a
-                href="/products"
-                style={getLinkStyle('products')}
-                onMouseEnter={() => setHoveredLink('products')}
+                href="/doctors"
+                style={styles.getLinkStyle('doctors')}
+                onMouseEnter={() => setHoveredLink('doctors')}
                 onMouseLeave={() => setHoveredLink(null)}
               >
-                Products
+                Doctors
               </a>
             </li>
-            <li style={listItemStyle}>
+            <li style={styles.listItem}>
               <a
-                href="/shop"
-                style={getLinkStyle('shop')}
-                onMouseEnter={() => setHoveredLink('shop')}
+                href="/patients"
+                style={styles.getLinkStyle('patients')}
+                onMouseEnter={() => setHoveredLink('patients')}
                 onMouseLeave={() => setHoveredLink(null)}
               >
-                Shop
+                Patients
               </a>
             </li>
-          </ul>
-        </div>
-
-        {/* Support Section */}
-        <div style={footerSectionStyle}>
-          <h3 style={headingStyle}>Support</h3>
-          <ul style={listStyle}>
-            <li style={listItemStyle}>
+            <li style={styles.listItem}>
               <a
-                href="/contact"
-                style={getLinkStyle('contact')}
-                onMouseEnter={() => setHoveredLink('contact')}
+                href="/blog"
+                style={styles.getLinkStyle('blog')}
+                onMouseEnter={() => setHoveredLink('blog')}
                 onMouseLeave={() => setHoveredLink(null)}
               >
-                Contact Us
-              </a>
-            </li>
-            <li style={listItemStyle}>
-              <a
-                href="/faq"
-                style={getLinkStyle('faq')}
-                onMouseEnter={() => setHoveredLink('faq')}
-                onMouseLeave={() => setHoveredLink(null)}
-              >
-                FAQ
-              </a>
-            </li>
-            <li style={listItemStyle}>
-              <a
-                href="/shipping"
-                style={getLinkStyle('shipping')}
-                onMouseEnter={() => setHoveredLink('shipping')}
-                onMouseLeave={() => setHoveredLink(null)}
-              >
-                Shipping
-              </a>
-            </li>
-            <li style={listItemStyle}>
-              <a
-                href="/returns"
-                style={getLinkStyle('returns')}
-                onMouseEnter={() => setHoveredLink('returns')}
-                onMouseLeave={() => setHoveredLink(null)}
-              >
-                Returns
+                Blog
               </a>
             </li>
           </ul>
         </div>
 
         {/* Contact Info Section */}
-        <div style={footerSectionStyle}>
-          <h3 style={headingStyle}>Contact Info</h3>
-          <ul style={listStyle}>
-            <li style={listItemStyle}>
-              <span style={iconStyle}>📞</span>
+        <div style={styles.footerSection}>
+          <h3 style={styles.heading}>Contact Info</h3>
+          <ul style={styles.list}>
+            <li style={styles.listItem}>
+              <span style={styles.iconStyle}>📞</span>
               <span>+94 11 234 5678</span>
             </li>
-            <li style={listItemStyle}>
-              <span style={iconStyle}>✉️</span>
-              <span>info@tyveklanka.com</span>
+            <li style={styles.listItem}>
+              <span style={styles.iconStyle}>✉️</span>
+              <span>info@medisllanka.com</span>
             </li>
-            <li style={listItemStyle}>
-              <span style={iconStyle}>📍</span>
+            <li style={styles.listItem}>
+              <span style={styles.iconStyle}>📍</span>
               <span>Colombo, Sri Lanka</span>
             </li>
           </ul>
         </div>
 
-        {/* Follow Us Section - Only this section will have flex-column and centered content */}
-        <div style={followUsStyle}>
-          <h3 style={followUsHeadingStyle}>Follow us</h3> {/* Use the specific heading style here */}
-          <div style={socialIconStyle}>
-            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" style={iconLinkStyle}><FaFacebookF /></a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={iconLinkStyle}><FaInstagram /></a>
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" style={iconLinkStyle}><FaTwitter /></a>
-            <a href="https://whatsapp.com" target="_blank" rel="noopener noreferrer" style={iconLinkStyle}><FaWhatsapp /></a>
+        {/* Follow Us Section */}
+        <div style={styles.followUs}>
+          <h3 style={styles.heading}>Follow us</h3>
+          <div style={styles.socialIconContainer}>
+            <a
+              href="https://pinterest.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={styles.getSocialIconLinkStyle('pinterest')}
+              onMouseEnter={() => setHoveredLink('pinterest')}
+              onMouseLeave={() => setHoveredLink(null)}
+            >
+              <FaPinterest />
+            </a>
+            <a
+              href="https://facebook.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={styles.getSocialIconLinkStyle('facebook')}
+              onMouseEnter={() => setHoveredLink('facebook')}
+              onMouseLeave={() => setHoveredLink(null)}
+            >
+              <FaFacebookF />
+            </a>
+            <a
+              href="https://instagram.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={styles.getSocialIconLinkStyle('instagram')}
+              onMouseEnter={() => setHoveredLink('instagram')}
+              onMouseLeave={() => setHoveredLink(null)}
+            >
+              <FaInstagram />
+            </a>
+            <a
+              href="https://twitter.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={styles.getSocialIconLinkStyle('twitter')}
+              onMouseEnter={() => setHoveredLink('twitter')}
+              onMouseLeave={() => setHoveredLink(null)}
+            >
+              <FaTwitter />
+            </a>
+            <a
+              href="https://whatsapp.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={styles.getSocialIconLinkStyle('whatsapp')}
+              onMouseEnter={() => setHoveredLink('whatsapp')}
+              onMouseLeave={() => setHoveredLink(null)}
+            >
+              <FaWhatsapp />
+            </a>
           </div>
         </div>
+      </div>
+
+      <div style={styles.bottomBar}>
+        <p style={styles.copyright}>© 2025 MediSL Lanka. All rights reserved.</p>
       </div>
     </footer>
   );
