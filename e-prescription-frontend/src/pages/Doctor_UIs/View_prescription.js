@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { db } from '../firebase';
 import { FaPlus, FaTrashAlt } from 'react-icons/fa';
 import CryptoJS from 'crypto-js';
+
+// Import shared UI components and images
 import logo from '../Main_Interface_UI/images/Logo01.png';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
+import { FaUserMd, FaPrescriptionBottleAlt, FaHistory, FaHome } from 'react-icons/fa'; // Import icons for sidebar
+import pic from '../Main_Interface_UI/images/Doctor.png'; // Assuming a default doctor image
 import Footer from '../Main_Interface_UI/Footer';
 
 // The key must be securely managed in a real application.
@@ -50,10 +54,65 @@ const PrescriptionView = () => {
     const [error, setError] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
 
-    // ===================== USE EFFECT FOR AUTH & DATA FETCHING =====================
+    // Doctor data for sidebar
+    const [doctorData, setDoctorData] = useState({
+        firstName: 'Loading...',
+        lastName: '',
+        userType: '',
+        photoURL: null,
+    });
+    // Add isLogoutHovered state here, same as in doc_profile.js
+    const [isLogoutHovered, setIsLogoutHovered] = useState(false);
+
+    // Responsive Styles State
+    const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setScreenWidth(window.innerWidth);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Responsive style utility function (copied from DoctorDashboard)
+    const getResponsiveStyle = (desktopStyle, tabletStyle, mobileStyle, smallMobileStyle) => {
+        if (screenWidth <= 575) {
+            return smallMobileStyle;
+        } else if (screenWidth <= 768) {
+            return mobileStyle;
+        } else if (screenWidth <= 992) {
+            return tabletStyle;
+        }
+        return desktopStyle;
+    };
+
+    // Fetch doctor data and prescription data
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
+                // Fetch doctor data for sidebar
+                const userDocRef = doc(db, 'users', user.uid);
+                try {
+                    const userDocSnap = await getDoc(userDocRef);
+                    if (userDocSnap.exists()) {
+                        const userData = userDocSnap.data();
+                        setDoctorData({
+                            firstName: userData.firstName || 'Dr. Unknown',
+                            lastName: userData.lastName || '',
+                            userType: userData.userType || 'Doctor',
+                            photoURL: userData.photoURL || pic,
+                        });
+                    } else {
+                        console.log("No user document found!");
+                        setDoctorData(prev => ({ ...prev, firstName: "Dr. Not Found", photoURL: pic }));
+                    }
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                    setDoctorData(prev => ({ ...prev, firstName: "Error", photoURL: pic }));
+                }
+
                 // Fetch prescription data
                 const prescriptionDocRef = doc(db, 'prescriptions', prescriptionId);
                 try {
@@ -75,13 +134,9 @@ const PrescriptionView = () => {
                             diagnosis: decryptedDiagnosis,
                             medicines: decryptedMedications,
                             additionalNotes: decryptedAdditionalNotes,
-                            // Use prescriptionDate from the database for display
-                            prescriptionDate: data.prescriptionDate // Ensure this is passed
+                            prescriptionDate: data.prescriptionDate
                         });
-
-                        // Ensure each medicine has a 'duration' property, initialize if missing
                         setMedicines(decryptedMedications?.map(med => ({ ...med, duration: med.duration || '' })) || []);
-
                     } else {
                         setError("Prescription not found.");
                     }
@@ -94,12 +149,17 @@ const PrescriptionView = () => {
             } else {
                 setLoading(false);
                 setError("Please log in to view prescriptions.");
-                // Optionally redirect to login page
-                // navigate('/signin');
+                // navigate('/signin'); // Uncomment to redirect to login
             }
         });
         return () => unsubscribe();
     }, [prescriptionId, auth]);
+
+    const getInitials = (firstName, lastName) => {
+        const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
+        const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : '';
+        return `${firstInitial}${lastInitial}`;
+    };
 
     const handleMedicineChange = (index, field, value) => {
         const updatedMedicines = [...medicines];
@@ -137,23 +197,207 @@ const PrescriptionView = () => {
         }
     };
 
-    // Handler for the back button
     const handleBackClick = () => {
         navigate('/prescriptionhistory');
     };
 
-    // ===================== CONSOLIDATED STYLES =====================
+    // Consolidated Styles - ENSURE these are exactly as in doc_profile.js for the header section
     const styles = {
-        navBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 50px', backgroundColor: '#d7f3d2' },
-        logoContainer: { display: 'flex', alignItems: 'center' },
-        logo: { height: '50px', marginRight: '10px' },
-        titleContainer: { display: 'flex', flexDirection: 'column' },
-        title: { margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#333' },
-        subtitle: { margin: 0, fontSize: '12px', color: '#777' },
-        contactInfo: { display: 'flex', alignItems: 'center', marginRight: '20px', color: '#007bff' },
-        homeButtonDiv: { padding: '10px 20px', border: '1px solid #ddd', borderRadius: '20px', backgroundColor: 'lightblue', color: '#007bff', cursor: 'pointer', display: 'flex', alignItems: 'center' },
-        formContainer: { fontFamily: 'Arial, sans-serif', maxWidth: '900px', margin: '40px auto', padding: '30px', border: '1px solid #e0e0e0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)', backgroundColor: '#fff', flexGrow: 1 },
-        header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', paddingBottom: '15px', borderBottom: '1px solid #eee' },
+        // --- Header Styles ---
+        header: {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: getResponsiveStyle('20px 50px', '15px 40px', '12px 20px', '10px 15px'),
+            backgroundColor: '#e0ffe0', // This is the key color
+            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+            flexWrap: 'wrap',
+            flexDirection: getResponsiveStyle('row', 'row', 'column', 'column'),
+            alignItems: getResponsiveStyle('center', 'center', 'flex-start', 'center'),
+            gap: getResponsiveStyle('0px', '0px', '10px', '10px'),
+        },
+        headerLeft: {
+            display: 'flex',
+            alignItems: 'center',
+            flexShrink: 0,
+            flexDirection: getResponsiveStyle('row', 'row', 'row', 'column'),
+            textAlign: getResponsiveStyle('left', 'left', 'left', 'center'),
+            marginBottom: getResponsiveStyle('0', '0', '0', '0px'),
+        },
+        logo: {
+            height: getResponsiveStyle('55px', '55px', '50px', '45px'),
+            marginRight: getResponsiveStyle('15px', '15px', '15px', '0'),
+            marginBottom: getResponsiveStyle('0', '0', '0', '5px'),
+        },
+        siteTitle: {
+            margin: 0,
+            fontSize: getResponsiveStyle('24px', '24px', '22px', '20px'),
+            fontWeight: '700',
+            color: '#2c3e50',
+            whiteSpace: getResponsiveStyle('nowrap', 'nowrap', 'nowrap', 'normal'),
+        },
+        tagline: {
+            margin: 0,
+            fontSize: getResponsiveStyle('13px', '13px', '12px', '11px'),
+            color: '#7f8c8d',
+            whiteSpace: getResponsiveStyle('nowrap', 'nowrap', 'nowrap', 'normal'),
+        },
+        headerRight: {
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            justifyContent: getResponsiveStyle('flex-end', 'flex-end', 'center', 'center'),
+            marginTop: getResponsiveStyle('0', '0', '10px', '10px'),
+            width: getResponsiveStyle('auto', 'auto', '100%', '100%'),
+            flexDirection: getResponsiveStyle('row', 'row', 'row', 'column'),
+            gap: getResponsiveStyle('0px', '0px', '10px', '10px'),
+        },
+        phoneContact: {
+            display: 'flex',
+            alignItems: 'center',
+            marginRight: getResponsiveStyle('25px', '25px', '15px', '0'),
+            marginBottom: getResponsiveStyle('0', '0', '0', '5px'),
+            color: '#2980b9',
+            fontWeight: '500',
+            fontSize: getResponsiveStyle('15px', '15px', '14px', '13px'),
+            whiteSpace: 'nowrap',
+        },
+        phoneIcon: {
+            marginRight: '8px',
+            fontSize: '18px',
+        },
+        logoutButtonLink: {
+            textDecoration: 'none',
+            flexShrink: 0,
+            width: getResponsiveStyle('auto', 'auto', 'auto', '100%'),
+            textAlign: 'center',
+        },
+        logoutButton: {
+            padding: getResponsiveStyle('12px 25px', '12px 25px', '10px 20px', '8px 18px'),
+            // Use isLogoutHovered state for dynamic styling
+            border: isLogoutHovered ? '1px solid #9cd6fc' : '1px solid #a8dadc',
+            borderRadius: '30px',
+            backgroundColor: isLogoutHovered ? '#9cd6fc' : '#b3e0ff',
+            color: isLogoutHovered ? '#fff' : '#2980b9',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 'bold',
+            transition: 'all 0.3s ease',
+            whiteSpace: 'nowrap',
+            width: getResponsiveStyle('auto', 'auto', 'auto', '80%'),
+            margin: getResponsiveStyle('0', '0', '0', '0 auto'),
+        },
+        registerArrow: {
+            marginLeft: '5px',
+        },
+
+        // --- Dashboard Layout Styles (from DoctorDashboard) ---
+        dashboardContainer: {
+            display: 'flex',
+            padding: '20px',
+            fontFamily: 'sans-serif',
+            flexDirection: getResponsiveStyle('row', 'row', 'column', 'column'), // Adjust for responsiveness
+        },
+        sidebar: {
+            width: getResponsiveStyle('250px', '250px', '100%', '100%'), // Adjust for responsiveness
+            backgroundColor: '#f8f9fa',
+            padding: '20px',
+            borderRadius: '5px',
+            marginRight: getResponsiveStyle('20px', '20px', '0', '0'), // Remove right margin on smaller screens
+            marginBottom: getResponsiveStyle('0', '0', '20px', '20px'), // Add bottom margin on smaller screens
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+        },
+        sidebarLink: {
+            display: 'flex',
+            alignItems: 'center',
+            padding: '12px 15px',
+            color: '#333',
+            textDecoration: 'none',
+            borderBottom: '1px solid #eee',
+            width: '100%',
+            textAlign: 'left',
+            transition: 'background-color 0.2s, color 0.2s',
+            fontSize: '15px',
+            fontWeight: '500',
+            borderRadius: '5px',
+            marginBottom: '5px',
+        },
+        sidebarLinkActive: {
+            color: '#007bff',
+            backgroundColor: '#e6f2ff',
+            fontWeight: 'bold',
+        },
+        sidebarIcon: {
+            marginRight: '10px',
+            fontSize: '1.2em',
+        },
+        doctorAvatar: {
+            width: '80px',
+            height: '80px',
+            borderRadius: '50%',
+            backgroundColor: '#00cba9',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.5em',
+            fontWeight: 'bold',
+            marginBottom: '5px',
+            marginTop: '20px',
+            overflow: 'hidden'
+        },
+        doctorName: {
+            fontSize: '1.1em',
+            color: '#333',
+            margin: 0,
+            marginTop: '10px',
+            fontWeight: 'bold'
+        },
+        doctorType: {
+            fontSize: '0.9em',
+            color: '#6c757d',
+            margin: '5px 0 0 0'
+        },
+        doctorInfo: {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '15px 0',
+            borderBottom: '1px solid #eee',
+            backgroundColor: '#d7f3d2',
+            borderRadius: '5px',
+            marginBottom: '20px',
+            width: '100%'
+        },
+        content: {
+            flexGrow: 1,
+            padding: '20px',
+            backgroundColor: '#fff',
+            borderRadius: '5px',
+            boxShadow: '0 0 10px rgba(0, 0, 0, 0.05)',
+            width: getResponsiveStyle('auto', 'auto', '100%', '100%'), // Ensure content takes full width on small screens
+        },
+
+        // --- Prescription View Specific Styles ---
+        formContainer: {
+            fontFamily: 'Arial, sans-serif',
+            maxWidth: '100%', // Max width adjusted to fit within content area
+            margin: '0 auto', // Center within the flex container
+            padding: '30px',
+            border: '1px solid #e0e0e0',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+            backgroundColor: '#fff',
+        },
+        // The 'header' key here in styles object is causing conflict.
+        // It's overwriting the main 'header' style defined above for the navigation bar.
+        // Let's rename this inner header style to something specific like 'formHeader'.
+        formHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', paddingBottom: '15px', borderBottom: '1px solid #eee' },
         section: { marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '15px' },
         medicineTable: {
             width: '100%',
@@ -190,27 +434,50 @@ const PrescriptionView = () => {
             backgroundColor: '#fff',
             cursor: 'pointer',
         },
-        removeBtn: { backgroundColor: '#dc3545', color: '#fff', border: 'none', borderRadius: '4px', padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center' },
-        addBtn: { backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', padding: '10px 20px', cursor: 'pointer', fontSize: '1em', display: 'flex', alignItems: 'center', gap: '8px' },
-        saveBtn: { width: '100%', padding: '15px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1.1em', marginTop: '20px' },
+        removeBtn: {
+            backgroundColor: '#dc3545',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '8px 12px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center', // Center icon
+            width: '35px', // Fixed width for consistent look
+            height: '35px', // Fixed height
+            boxSizing: 'border-box',
+        },
+        addBtn: {
+            backgroundColor: '#28a745',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '10px 20px',
+            cursor: 'pointer',
+            fontSize: '1em',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+        },
+        saveBtn: {
+            width: '100%',
+            padding: '15px',
+            backgroundColor: '#007bff',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '1.1em',
+            marginTop: '20px',
+            opacity: isSaving ? 0.7 : 1, // Visual feedback for saving
+            cursor: isSaving ? 'not-allowed' : 'pointer',
+        },
         buttonContainer: { textAlign: 'right', marginTop: '10px' },
         infoText: { fontSize: '1em', color: '#777' },
-        errorText: { color: 'red', textAlign: 'center' },
-        loadingText: { color: '#007bff', textAlign: 'center' },
-        footer: { backgroundColor: '#d7f3d2', padding: '20px', marginTop: '20px' },
-        footerContainer: { display: 'flex', justifyContent: 'space-around', paddingBottom: '20px' },
-        footerSection: { display: 'flex', flexDirection: 'column' },
-        footerHeading: { fontSize: '1.2em', marginBottom: '10px', color: '#333' },
-        list: { listStyle: 'none', padding: 0, margin: 0 },
-        listItem: { marginBottom: '10px', color: '#555' },
-        followUs: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
-        socialIcon: { display: 'flex' },
-        iconLink: { marginRight: '10px', textDecoration: 'none', color: '#333' },
-        bottomBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #ccc' },
-        copyright: { fontSize: '0.8em', color: '#777' },
-        links: { display: 'flex' },
-        bottomLink: { color: '#555', textDecoration: 'none', fontSize: '0.8em', marginRight: '10px' },
-        separator: { color: '#ccc', marginRight: '10px' },
+        errorText: { color: 'red', textAlign: 'center', padding: '50px' },
+        loadingText: { color: '#007bff', textAlign: 'center', padding: '50px' },
+        footer: { backgroundColor: '#d7f3d2', padding: '20px', marginTop: '20px' }, // Kept from original
         backButton: {
             backgroundColor: '#6c757d',
             color: '#fff',
@@ -219,27 +486,20 @@ const PrescriptionView = () => {
             padding: '10px 20px',
             cursor: 'pointer',
             fontSize: '1em',
-            marginRight: '20px',
+            marginBottom: '20px',
             alignSelf: 'flex-start',
             display: 'flex',
             alignItems: 'center',
             gap: '5px',
-            marginBottom: '20px',
         },
         mainContentWrapper: {
             flexGrow: 1,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'flex-start',
-            padding: '20px',
-        },
-        dashboardContainer: {
-            display: 'flex',
-            justifyContent: 'center',
-            width: '100%',
+            width: getResponsiveStyle('auto', 'auto', '100%', '100%'), // Take full width of content area
         },
     };
-    // =========================================================================
 
     if (loading) {
         return <div style={styles.loadingText}>Loading prescription...</div>;
@@ -252,23 +512,27 @@ const PrescriptionView = () => {
     return (
         <div style={{ fontFamily: 'sans-serif' }}>
             {/* Navigation Bar */}
-            <header style={styles.navBar}>
-                <div style={styles.logoContainer}>
-                    <img src={logo} alt="E-Prescribe Logo" style={styles.logo} />
-                    <div style={styles.titleContainer}>
-                        <h1 style={styles.title}>MediPrescribe</h1>
-                        <p style={styles.subtitle}>Your Digital Healthcare Solution</p>
+            <header style={styles.header}>
+                <div style={styles.headerLeft}>
+                    <img src={logo} alt="MediPrescribe Logo" style={styles.logo} />
+                    <div>
+                        <h1 style={styles.siteTitle}>MediPrescribe</h1>
+                        <p style={styles.tagline}>Your Digital Healthcare Solution</p>
                     </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <div style={styles.contactInfo}>
-                        <FaPhoneAlt style={{ marginRight: '5px' }} />
+                <div style={styles.headerRight}>
+                    <div style={styles.phoneContact}>
+                        <FaPhoneAlt style={styles.phoneIcon} />
                         <span>+94 (011) 519-51919</span>
                     </div>
-                    <Link to="/signin" style={{ textDecoration: 'none' }}>
-                        <div style={styles.homeButtonDiv}>
+                    <Link to="/signin" style={styles.logoutButtonLink}>
+                        <div
+                            style={styles.logoutButton}
+                            onMouseEnter={() => setIsLogoutHovered(true)}
+                            onMouseLeave={() => setIsLogoutHovered(false)}
+                        >
                             <span>Logout</span>
-                            <IoIosArrowForward style={{ marginLeft: '5px' }} />
+                            <IoIosArrowForward style={styles.registerArrow} />
                         </div>
                     </Link>
                 </div>
@@ -276,112 +540,133 @@ const PrescriptionView = () => {
 
             {/* Dashboard Content */}
             <div style={styles.dashboardContainer}>
-                {/* Main Content (Prescription View) */}
-                <div style={styles.mainContentWrapper}>
-                    <button onClick={handleBackClick} style={styles.backButton}>
-                        <IoIosArrowForward style={{ transform: 'rotate(180deg)' }} />
-                        Back to Prescriptions
-                    </button>
-                    <div style={styles.formContainer}>
-                        <h1 style={styles.header}>Prescription Details</h1>
-                        <div style={styles.section}>
-                            <h3 style={{ color: '#007bff' }}>Patient Information</h3>
-                            <p style={styles.infoText}><strong>Patient Name:</strong> {prescription?.patientName}</p>
-                            <p style={styles.infoText}><strong>Diagnosis:</strong> {prescription?.diagnosis}</p>
-                            <p style={styles.infoText}>
-                                <strong>Created On:</strong>{' '}
-                                {/* Changed from prescription?.createdAt to prescription?.prescriptionDate */}
-                                {prescription?.prescriptionDate?.toDate ? new Date(prescription.prescriptionDate.toDate()).toLocaleDateString() : 'N/A'}
-                            </p>
-                            <p style={styles.infoText}><strong>Prescription ID:</strong> {prescriptionId}</p>
+                {/* Sidebar */}
+                <aside style={styles.sidebar}>
+                    <div style={styles.doctorInfo}>
+                        <div style={styles.doctorAvatar}>
+                            {doctorData.photoURL ? (
+                                <img src={doctorData.photoURL} alt="Doctor Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                            ) : (
+                                <span>{getInitials(doctorData.firstName, doctorData.lastName)}</span>
+                            )}
                         </div>
+                        <p style={styles.doctorName}>{`${doctorData.firstName} ${doctorData.lastName}`}</p>
+                        <p style={styles.doctorType}>{doctorData.userType}</p>
+                    </div>
+                    <Link to="/doctor/dashboard" style={styles.sidebarLink}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
+                    <Link to="/newprescription" style={styles.sidebarLink}><FaPrescriptionBottleAlt style={styles.sidebarIcon} />Create New Prescription</Link>
+                    <Link to="#" style={{ ...styles.sidebarLink }}><FaHistory style={styles.sidebarIcon} />Prescriptions</Link>
+                    <Link to="/docprofile" style={styles.sidebarLink}><FaUserMd style={styles.sidebarIcon} />Profile</Link>
+                </aside>
 
-                        <div style={styles.section}>
-                            <h3 style={{ color: '#28a745' }}>Medicines</h3>
-                            <form onSubmit={handleSave}>
-                                <table style={styles.medicineTable}>
-                                    <thead>
-                                        <tr>
-                                            <th style={styles.tableHeader}>Medicine Name</th>
-                                            <th style={styles.tableHeader}>Dosage</th>
-                                            <th style={styles.tableHeader}>Frequency</th>
-                                            <th style={styles.tableHeader}>Duration</th>
-                                            <th style={styles.tableHeader}>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {medicines.map((med, index) => (
-                                            <tr key={index} style={styles.tableRow}>
-                                                <td style={styles.tableCell}>
-                                                    <input
-                                                        style={styles.medicineInput}
-                                                        type="text"
-                                                        placeholder="Medicine Name"
-                                                        value={med.name}
-                                                        onChange={(e) => handleMedicineChange(index, 'name', e.target.value)}
-                                                        required
-                                                    />
-                                                </td>
-                                                <td style={styles.tableCell}>
-                                                    <input
-                                                        style={styles.medicineInput}
-                                                        type="text"
-                                                        placeholder="Dosage (e.g., 500mg)"
-                                                        value={med.dosage}
-                                                        onChange={(e) => handleMedicineChange(index, 'dosage', e.target.value)}
-                                                        required
-                                                    />
-                                                </td>
-                                                <td style={styles.tableCell}>
-                                                    <select
-                                                        style={styles.medicineSelect}
-                                                        value={med.frequency}
-                                                        onChange={(e) => handleMedicineChange(index, 'frequency', e.target.value)}
-                                                        required
-                                                    >
-                                                        <option value="">Select Frequency</option>
-                                                        <option value="Once Daily">Once Daily</option>
-                                                        <option value="Twice Daily">Twice Daily</option>
-                                                        <option value="Thrice Daily">Thrice Daily</option>
-                                                        <option value="Every 4 Hours">Every 4 Hours</option>
-                                                        <option value="As Needed">As Needed</option>
-                                                        {/* Add more frequency options as needed */}
-                                                    </select>
-                                                </td>
-                                                <td style={styles.tableCell}>
-                                                    <input
-                                                        style={styles.medicineInput}
-                                                        type="text"
-                                                        placeholder="Duration (e.g., 7 days)"
-                                                        value={med.duration}
-                                                        onChange={(e) => handleMedicineChange(index, 'duration', e.target.value)}
-                                                    />
-                                                </td>
-                                                <td style={styles.tableCell}>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemoveMedicine(index)}
-                                                        style={styles.removeBtn}
-                                                    >
-                                                        <FaTrashAlt />
-                                                    </button>
-                                                </td>
+                {/* Main Content (Prescription View) */}
+                <main style={styles.content}>
+                    <div style={styles.mainContentWrapper}>
+                        <button onClick={handleBackClick} style={styles.backButton}>
+                            <IoIosArrowForward style={{ transform: 'rotate(180deg)' }} />
+                            Back to Prescriptions
+                        </button>
+                        <div style={styles.formContainer}>
+                            {/* Changed from styles.header to styles.formHeader to avoid conflict */}
+                            <h1 style={styles.formHeader}>Prescription Details</h1>
+                            <div style={styles.section}>
+                                <h3 style={{ color: '#007bff' }}>Patient Information</h3>
+                                <p style={styles.infoText}><strong>Patient Name:</strong> {prescription?.patientName}</p>
+                                <p style={styles.infoText}><strong>Diagnosis:</strong> {prescription?.diagnosis}</p>
+                                <p style={styles.infoText}>
+                                    <strong>Created On:</strong>{' '}
+                                    {prescription?.prescriptionDate?.toDate ? new Date(prescription.prescriptionDate.toDate()).toLocaleDateString() : 'N/A'}
+                                </p>
+                                <p style={styles.infoText}><strong>Prescription ID:</strong> {prescriptionId}</p>
+                            </div>
+
+                            <div style={styles.section}>
+                                <h3 style={{ color: '#28a745' }}>Medicines</h3>
+                                <form onSubmit={handleSave}>
+                                    <table style={styles.medicineTable}>
+                                        <thead>
+                                            <tr>
+                                                <th style={styles.tableHeader}>Medicine Name</th>
+                                                <th style={styles.tableHeader}>Dosage</th>
+                                                <th style={styles.tableHeader}>Frequency</th>
+                                                <th style={styles.tableHeader}>Duration</th>
+                                                <th style={styles.tableHeader}>Actions</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                                <div style={styles.buttonContainer}>
-                                    <button type="button" onClick={handleAddMedicine} style={styles.addBtn}>
-                                        <FaPlus /> Add Medicine
+                                        </thead>
+                                        <tbody>
+                                            {medicines.map((med, index) => (
+                                                <tr key={index} style={styles.tableRow}>
+                                                    <td style={styles.tableCell}>
+                                                        <input
+                                                            style={styles.medicineInput}
+                                                            type="text"
+                                                            placeholder="Medicine Name"
+                                                            value={med.name}
+                                                            onChange={(e) => handleMedicineChange(index, 'name', e.target.value)}
+                                                            required
+                                                        />
+                                                    </td>
+                                                    <td style={styles.tableCell}>
+                                                        <input
+                                                            style={styles.medicineInput}
+                                                            type="text"
+                                                            placeholder="Dosage (e.g., 500mg)"
+                                                            value={med.dosage}
+                                                            onChange={(e) => handleMedicineChange(index, 'dosage', e.target.value)}
+                                                            required
+                                                        />
+                                                    </td>
+                                                    <td style={styles.tableCell}>
+                                                        <select
+                                                            style={styles.medicineSelect}
+                                                            value={med.frequency}
+                                                            onChange={(e) => handleMedicineChange(index, 'frequency', e.target.value)}
+                                                            required
+                                                        >
+                                                            <option value="">Select Frequency</option>
+                                                            <option value="Once Daily">Once Daily</option>
+                                                            <option value="Twice Daily">Twice Daily</option>
+                                                            <option value="Thrice Daily">Thrice Daily</option>
+                                                            <option value="Every 4 Hours">Every 4 Hours</option>
+                                                            <option value="As Needed">As Needed</option>
+                                                        </select>
+                                                    </td>
+                                                    <td style={styles.tableCell}>
+                                                        <input
+                                                            style={styles.medicineInput}
+                                                            type="text"
+                                                            placeholder="Duration (e.g., 7 days)"
+                                                            value={med.duration}
+                                                            onChange={(e) => handleMedicineChange(index, 'duration', e.target.value)}
+                                                            required
+                                                        />
+                                                    </td>
+                                                    <td style={styles.tableCell}>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveMedicine(index)}
+                                                            style={styles.removeBtn}
+                                                        >
+                                                            <FaTrashAlt />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    <div style={styles.buttonContainer}>
+                                        <button type="button" onClick={handleAddMedicine} style={styles.addBtn}>
+                                            <FaPlus /> Add Medicine
+                                        </button>
+                                    </div>
+                                    <button type="submit" style={styles.saveBtn} disabled={isSaving}>
+                                        {isSaving ? 'Saving...' : 'Save Changes'}
                                     </button>
-                                </div>
-                                <button type="submit" style={styles.saveBtn} disabled={isSaving}>
-                                    {isSaving ? 'Saving...' : 'Save Changes'}
-                                </button>
-                            </form>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </main>
             </div>
 
             {/* Footer */}

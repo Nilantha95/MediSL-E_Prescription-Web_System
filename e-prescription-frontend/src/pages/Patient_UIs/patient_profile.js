@@ -4,14 +4,14 @@ import pic from '../Main_Interface_UI/images/Doctor.png'; // Using this as a pla
 import { IoIosArrowForward } from 'react-icons/io';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import { FaUserMd, FaPrescriptionBottleAlt, FaHistory, FaHome } from 'react-icons/fa'; // Removed unused icons like FaCalendarAlt, FaCog
+import { FaUser, FaHistory, FaFileMedical, FaHome } from 'react-icons/fa'; // Patient-specific icons
 import { getAuth, onAuthStateChanged, updatePassword, updateProfile } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase'; // adjust path if needed
 import Footer from '../Main_Interface_UI/Footer';
 
-const ProfilePage = () => {
+const PatientProfilePage = () => {
     const auth = getAuth();
 
     // State for user data and form inputs
@@ -22,6 +22,7 @@ const ProfilePage = () => {
         email: '',
         userType: '',
         photoURL: null,
+        address: '', // Now Editable
     });
     const [newPassword, setNewPassword] = useState('');
     const [confirmNewPassword, setConfirmNewPassword] = useState('');
@@ -72,7 +73,8 @@ const ProfilePage = () => {
                             lastName: data.lastName || '',
                             email: currentUser.email,
                             userType: data.userType || '',
-                            photoURL: currentUser.photoURL || pic, // Use default pic if no photo exists
+                            photoURL: currentUser.photoURL || pic,
+                            address: data.address || '',
                         });
                     } else {
                         console.log("No such document for user profile!");
@@ -83,12 +85,12 @@ const ProfilePage = () => {
                 }
             } else {
                 setUser(null);
-                setUserData({ firstName: '', lastName: '', email: '', userType: '', photoURL: null });
+                // Removed DOB, gender, NIC, contactNumber from initial state as well
+                setUserData({ firstName: '', lastName: '', email: '', userType: '', photoURL: null, address: '' });
             }
             setLoading(false);
         });
 
-        // Clean up the subscription
         return () => unsubscribe();
     }, [auth]);
 
@@ -107,6 +109,7 @@ const ProfilePage = () => {
             await updateDoc(docRef, {
                 firstName: userData.firstName,
                 lastName: userData.lastName,
+                address: userData.address,
             });
             setStatusMessage('Profile updated successfully!');
         } catch (error) {
@@ -115,7 +118,7 @@ const ProfilePage = () => {
         }
     };
 
-    // Handle password change
+    // Handle password change (re-enabled)
     const handleChangePassword = async (e) => {
         e.preventDefault();
         setStatusMessage('');
@@ -135,14 +138,14 @@ const ProfilePage = () => {
             setStatusMessage('Password updated successfully!');
             setNewPassword('');
             setConfirmNewPassword('');
-            setIsPasswordChangeVisible(false); // Hide the form after success
+            setIsPasswordChangeVisible(false);
         } catch (error) {
             console.error('Error updating password:', error);
             setStatusMessage('Failed to update password. Please sign in again and try.');
         }
     };
 
-    // Handle profile picture upload
+    // Handle profile picture upload (unchanged)
     const handlePhotoChange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -153,10 +156,8 @@ const ProfilePage = () => {
             await uploadBytes(storageRef, file);
             const photoURL = await getDownloadURL(storageRef);
 
-            // Update user's photo in Firebase Auth
             await updateProfile(user, { photoURL });
 
-            // Update user's profile in Firestore
             const docRef = doc(db, 'users', user.uid);
             await updateDoc(docRef, { photoURL });
 
@@ -170,7 +171,6 @@ const ProfilePage = () => {
 
     // Consolidated Styles
     const styles = {
-        // --- Header Styles ---
         header: {
             display: 'flex',
             justifyContent: 'space-between',
@@ -260,7 +260,7 @@ const ProfilePage = () => {
         },
 
 
-        // Sidebar Styles (Adapted and enhanced)
+        // Sidebar Styles (Adapted for Patient)
         dashboardContainer: { display: 'flex', padding: '20px', fontFamily: 'sans-serif' },
         sidebar: {
             width: '250px',
@@ -271,47 +271,47 @@ const ProfilePage = () => {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.05)' // Added shadow for better visual
+            boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
         },
         sidebarLink: {
-            display: 'flex', // Changed to flex to align icon and text
-            alignItems: 'center', // Align items vertically
-            padding: '12px 15px', // Increased padding
+            display: 'flex',
+            alignItems: 'center',
+            padding: '12px 15px',
             color: '#333',
             textDecoration: 'none',
             borderBottom: '1px solid #eee',
             width: '100%',
-            textAlign: 'left', // Align text to left
+            textAlign: 'left',
             transition: 'background-color 0.2s, color 0.2s',
-            fontSize: '15px', // Slightly larger font
-            fontWeight: '500', // Slightly bolder
+            fontSize: '15px',
+            fontWeight: '500',
         },
         sidebarLinkActive: {
             color: '#007bff',
-            backgroundColor: '#e6f2ff', // Light blue background for active link
+            backgroundColor: '#e6f2ff',
             fontWeight: 'bold',
-            borderRadius: '5px', // Rounded corners for active link
+            borderRadius: '5px',
         },
         sidebarIcon: {
-            marginRight: '10px', // Space between icon and text
-            fontSize: '1.2em', // Slightly larger icon
+            marginRight: '10px',
+            fontSize: '1.2em',
         },
-        doctorAvatar: { width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#00cba9', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5em', fontWeight: 'bold', marginBottom: '5px', marginTop: '20px', overflow: 'hidden' },
-        doctorName: { fontSize: '1.1em', color: '#333', margin: 0, marginTop: '10px', fontWeight: 'bold' },
-        doctorType: { fontSize: '0.9em', color: '#6c757d', margin: '5px 0 0 0' }, // Added style for userType
-        doctorInfo: {
+        patientAvatar: { width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#00cba9', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5em', fontWeight: 'bold', marginBottom: '5px', marginTop: '20px', overflow: 'hidden' },
+        patientName: { fontSize: '1.1em', color: '#333', margin: 0, marginTop: '10px', fontWeight: 'bold' },
+        patientType: { fontSize: '0.9em', color: '#6c757d', margin: '5px 0 0 0' },
+        patientInfo: {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             padding: '15px 0',
-            borderBottom: '1px solid #eee', // Changed to borderBottom for clearer separation
+            borderBottom: '1px solid #eee',
             backgroundColor: '#d7f3d2',
             borderRadius: '5px',
-            marginBottom: '20px', // Increased margin to separate from links
+            marginBottom: '20px',
             width: '100%'
         },
 
-        // Profile Page Specific Styles (No changes unless requested)
+        // Profile Page Specific Styles
         profileContainer: { flexGrow: 1, padding: '30px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)', maxWidth: '800px', margin: '0 auto' },
         h2: { margin: 0, color: '#333', fontSize: '24px', textAlign: 'center' },
         subHeading: { fontSize: '14px', color: '#6c757d', marginBottom: '30px', textAlign: 'center' },
@@ -336,6 +336,16 @@ const ProfilePage = () => {
         inputGroup: { marginBottom: '15px' },
         label: { display: 'block', marginBottom: '8px', color: '#555', fontWeight: 'bold' },
         inputField: { width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '6px', boxSizing: 'border-box', fontSize: '15px' },
+        readOnlyField: { // Style for read-only fields
+            width: '100%',
+            padding: '12px',
+            border: '1px solid #e0e0e0',
+            borderRadius: '6px',
+            boxSizing: 'border-box',
+            fontSize: '15px',
+            backgroundColor: '#f8f8f8',
+            color: '#6c757d',
+        },
         nameFields: { display: 'flex', gap: '20px' },
         saveButton: {
             backgroundColor: '#007bff',
@@ -413,24 +423,24 @@ const ProfilePage = () => {
 
             {/* Dashboard Content */}
             <div style={styles.dashboardContainer}>
-                {/* Sidebar (Adapted from NewPrescriptionForm) */}
+                {/* Sidebar (Adapted for Patient) */}
                 <aside style={styles.sidebar}>
-                    <div style={styles.doctorInfo}>
-                        <div style={styles.doctorAvatar}>
+                    <div style={styles.patientInfo}>
+                        <div style={styles.patientAvatar}>
                             <img src={userData.photoURL || pic} alt="User Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                         </div>
-                        <p style={styles.doctorName}>{`${userData.firstName} ${userData.lastName}`}</p>
-                        <p style={styles.doctorType}>{userData.userType}</p> {/* Display user type */}
+                        <p style={styles.patientName}>{`${userData.firstName} ${userData.lastName}`}</p>
+                        <p style={styles.patientType}>{userData.userType}</p>
                     </div>
-                    <Link to="/doctor/dashboard" style={styles.sidebarLink}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
-                    <Link to="/newprescription" style={styles.sidebarLink}><FaPrescriptionBottleAlt style={styles.sidebarIcon} />Create New Prescription</Link>
-                    <Link to="/prescriptionhistory" style={styles.sidebarLink}><FaHistory style={styles.sidebarIcon} />My Prescriptions</Link>
-                    <Link to="#" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaUserMd style={styles.sidebarIcon} />Profile</Link>
+                    <Link to="/patient/dashboard" style={styles.sidebarLink}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
+                    <Link to="/patient/prescriptions" style={styles.sidebarLink}><FaFileMedical style={styles.sidebarIcon} />My Prescriptions</Link>
+                    <Link to="/patient-health-records" style={styles.sidebarLink}><FaHistory style={styles.sidebarIcon} />My Health Records</Link>
+                    <Link to="#" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaUser style={styles.sidebarIcon} />Profile</Link>
                 </aside>
 
                 {/* Profile Page Content */}
                 <div style={styles.profileContainer}>
-                    <h2 style={styles.h2}>User Profile</h2>
+                    <h2 style={styles.h2}>Patient Profile</h2>
                     <p style={styles.subHeading}>Manage your personal information and security settings.</p>
 
                     {statusMessage && (
@@ -451,7 +461,7 @@ const ProfilePage = () => {
                         </div>
                     </div>
 
-                    {/* Profile Details Section */}
+                    {/* Personal Information Section */}
                     <div style={styles.profileSection}>
                         <h3 style={styles.sectionHeading}>Personal Information</h3>
                         <form onSubmit={handleUpdateProfile}>
@@ -461,7 +471,7 @@ const ProfilePage = () => {
                                     type="email"
                                     id="email"
                                     value={userData.email}
-                                    style={{ ...styles.inputField, backgroundColor: '#f0f0f0' }}
+                                    style={styles.readOnlyField}
                                     disabled
                                 />
                             </div>
@@ -489,6 +499,19 @@ const ProfilePage = () => {
                                     />
                                 </div>
                             </div>
+
+                            {/* Editable Address Field */}
+                            <div style={styles.inputGroup}>
+                                <label htmlFor="address" style={styles.label}>Address</label>
+                                <input
+                                    type="text"
+                                    id="address"
+                                    value={userData.address}
+                                    onChange={(e) => setUserData({ ...userData, address: e.target.value })}
+                                    style={styles.inputField}
+                                />
+                            </div>
+
                             <button type="submit" style={styles.saveButton}>Save Changes</button>
                         </form>
                     </div>
@@ -544,4 +567,4 @@ const ProfilePage = () => {
     );
 };
 
-export default ProfilePage;
+export default PatientProfilePage;

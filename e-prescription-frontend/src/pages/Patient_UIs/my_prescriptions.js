@@ -1,44 +1,23 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+// src/pages/Patient_UIs/MyPrescriptions.js
+
+import React, { useState, useEffect } from 'react';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { db } from '../firebase';
-
-import logo from '../Main_Interface_UI/images/Logo01.png';
-import { FaPhoneAlt, FaSignOutAlt, FaHome, FaHistory, FaUser, FaPrescriptionBottleAlt } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
-import pic from '../Main_Interface_UI/images/Doctor.png';
-import ChatBotToggle from "../Chatbot/ChatBotToggle";
-import Footer from '../Main_Interface_UI/Footer';
+
+// Icons for the sidebar
+import { FaPhoneAlt, FaSignOutAlt, FaHome, FaHistory, FaUser, FaPrescriptionBottleAlt } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
 
-// Chart.js imports - ALL IMPORTS SHOULD BE AT THE TOP OF THE FILE
-import { Line } from 'react-chartjs-2';
+// Assets
+import pic from '../Main_Interface_UI/images/Doctor.png';
+import Footer from '../Main_Interface_UI/Footer';
+import logo from '../Main_Interface_UI/images/Logo01.png';
+
+// Encryption Library (ensure SECRET_KEY is the same as in Dashboard)
 import CryptoJS from 'crypto-js';
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend,
-    BarElement // If you prefer a Bar chart
-} from 'chart.js';
 
-// Register the components needed for your chart. This also needs to be after imports.
-ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend,
-    BarElement // Register if using Bar chart
-);
-
-// Encryption Library and SECRET_KEY should come AFTER all import statements.
 const SECRET_KEY = "your-super-secret-key-that-should-be-in-a-secure-place"; // <<< VERIFY THIS KEY CAREFULLY
 
 const decryptData = (encryptedData) => {
@@ -56,7 +35,7 @@ const decryptData = (encryptedData) => {
     }
 };
 
-const PatientDashboard = () => {
+const MyPrescriptions = () => {
     const auth = getAuth();
     const navigate = useNavigate();
 
@@ -68,7 +47,6 @@ const PatientDashboard = () => {
         photoURL: null,
     });
     const [prescriptions, setPrescriptions] = useState([]);
-    const [monthlyPrescriptionData, setMonthlyPrescriptionData] = useState({}); // New state for chart data
     const [loading, setLoading] = useState(true);
     const [loadingPrescriptions, setLoadingPrescriptions] = useState(true);
 
@@ -94,6 +72,7 @@ const PatientDashboard = () => {
         return desktopStyle;
     };
 
+    // Fetch patient data on auth state change
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -125,6 +104,7 @@ const PatientDashboard = () => {
         return () => unsubscribe();
     }, [auth, navigate]);
 
+    // Fetch prescriptions once patient email is available
     useEffect(() => {
         const fetchPrescriptions = async () => {
             if (patientData.email && patientData.email !== '') {
@@ -139,28 +119,6 @@ const PatientDashboard = () => {
                         ...doc.data()
                     }));
                     setPrescriptions(fetchedPrescriptions);
-
-                    // --- Process data for the monthly graph ---
-                    const monthlyCounts = {
-                        'January': 0, 'February': 0, 'March': 0, 'April': 0, 'May': 0, 'June': 0,
-                        'July': 0, 'August': 0, 'September': 0, 'October': 0, 'November': 0, 'December': 0
-                    };
-                    const monthNames = [
-                        'January', 'February', 'March', 'April', 'May', 'June',
-                        'July', 'August', 'September', 'October', 'November', 'December'
-                    ];
-
-                    fetchedPrescriptions.forEach(p => {
-                        if (p.prescriptionDate && p.prescriptionDate.seconds) {
-                            const date = new Date(p.prescriptionDate.seconds * 1000);
-                            const monthIndex = date.getMonth(); // 0 for January, 11 for December
-                            const monthName = monthNames[monthIndex];
-                            monthlyCounts[monthName]++;
-                        }
-                    });
-                    setMonthlyPrescriptionData(monthlyCounts);
-                    // --- End chart data processing ---
-
                 } catch (error) {
                     console.error("Error fetching prescriptions:", error);
                 } finally {
@@ -178,13 +136,6 @@ const PatientDashboard = () => {
         }
     }, [patientData.email, loading]);
 
-    const { activePrescriptionsCount, totalPrescriptionsCount, issuedPrescriptionsCount } = useMemo(() => {
-        const total = prescriptions.length;
-        const active = prescriptions.filter(p => typeof p.status === 'string' && p.status !== 'Fulfilled' && p.status !== 'Expired').length;
-        const issued = prescriptions.filter(p => typeof p.status === 'string' && p.status === 'Issued').length;
-        return { activePrescriptionsCount: active, totalPrescriptionsCount: total, issuedPrescriptionsCount: issued };
-    }, [prescriptions]);
-
     const getInitials = (firstName, lastName) => {
         const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
         const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : '';
@@ -200,86 +151,9 @@ const PatientDashboard = () => {
         }
     };
 
-    // Chart Data and Options
-    const chartData = {
-        labels: Object.keys(monthlyPrescriptionData), // Month names
-        datasets: [
-            {
-                label: 'Number of Prescriptions Issued',
-                data: Object.values(monthlyPrescriptionData), // Counts per month
-                fill: false,
-                backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                tension: 0.1,
-                // You can add more styling here for dots, line thickness etc.
-            },
-        ],
-    };
-
-    const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false, // Allows you to set height/width of container
-        plugins: {
-            legend: {
-                position: 'top',
-                labels: {
-                    font: {
-                        size: getResponsiveStyle(14, 13, 12, 10),
-                    },
-                },
-            },
-            title: {
-                display: true,
-                text: 'Monthly Prescription Activity (This Year)',
-                font: {
-                    size: getResponsiveStyle(18, 16, 15, 14),
-                },
-                color: '#333',
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        return `${context.dataset.label}: ${context.raw}`;
-                    }
-                }
-            }
-        },
-        scales: {
-            x: {
-                title: {
-                    display: true,
-                    text: 'Month',
-                    font: {
-                        size: getResponsiveStyle(14, 13, 12, 10),
-                    },
-                    color: '#555',
-                },
-                ticks: {
-                    font: {
-                        size: getResponsiveStyle(12, 11, 10, 9),
-                    },
-                },
-            },
-            y: {
-                title: {
-                    display: true,
-                    text: 'Number of Prescriptions',
-                    font: {
-                        size: getResponsiveStyle(14, 13, 12, 10),
-                    },
-                    color: '#555',
-                },
-                beginAtZero: true,
-                ticks: {
-                    precision: 0, // Ensure whole numbers for counts
-                    font: {
-                        size: getResponsiveStyle(12, 11, 10, 9),
-                    },
-                },
-            },
-        },
-    };
-
+    const handleViewDetails = (prescriptionId) => {
+        navigate(`/patient-view-prescription/${prescriptionId}`); // <-- Added a forward slash here
+    };
 
     const styles = {
         header: {
@@ -458,83 +332,65 @@ const PatientDashboard = () => {
             borderRadius: '5px',
             boxShadow: '0 0 10px rgba(0, 0, 0, 0.05)',
         },
-        dashboardHeader: {
-            display: 'grid',
-            gridTemplateColumns: getResponsiveStyle('repeat(auto-fit, minmax(150px, 1fr))', 'repeat(auto-fit, minmax(140px, 1fr))', 'repeat(auto-fit, minmax(120px, 1fr))', '1fr'),
-            gap: '20px',
-            marginBottom: '20px'
+        sectionTitle: {
+            fontSize: '1.8em',
+            color: '#2c3e50',
+            marginBottom: '20px',
+            borderBottom: '2px solid #eee',
+            paddingBottom: '10px',
         },
-        headerCard: {
-            backgroundColor: '#e9ecef',
-            padding: '15px',
-            borderRadius: '5px',
-            textAlign: 'center'
-        },
-        headerCardTitle: {
-            fontSize: '1em',
-            color: '#6c757d',
-            marginBottom: '5px'
-        },
-        headerCardValue: {
-            fontSize: '1.5em',
-            fontWeight: 'bold',
-            color: '#343a40'
-        },
-        recentPrescriptions: {
+        tableContainer: {
+            overflowX: 'auto', // Allows horizontal scrolling on small screens
             marginBottom: '20px',
             border: '1px solid #ddd',
             borderRadius: '5px',
-            padding: '15px',
-            backgroundColor: '#f8f9fa'
+            backgroundColor: '#f8f9fa',
         },
-        recentPrescriptionsTable: {
+        table: {
             width: '100%',
-            borderCollapse: 'collapse'
+            borderCollapse: 'collapse',
+            minWidth: getResponsiveStyle('600px', '550px', '500px', '400px'), // Ensures table doesn't get too squished
         },
-        recentPrescriptionsTableHeader: {
-            backgroundColor: '#eee',
-            padding: '8px',
+        tableHeader: {
+            backgroundColor: '#e9ecef',
+            padding: '12px 15px',
             textAlign: 'left',
-            borderBottom: '1px solid #ccc'
+            borderBottom: '1px solid #ccc',
+            color: '#333',
+            fontWeight: 'bold',
         },
-        recentPrescriptionsTableRow: {
-            borderBottom: '1px solid #eee'
+        tableRow: {
+            borderBottom: '1px solid #eee',
+            transition: 'background-color 0.2s',
+            '&:hover': {
+                backgroundColor: '#f1f1f1',
+            },
         },
-        recentPrescriptionsTableCell: {
-            padding: '8px',
-            textAlign: 'left'
+        tableCell: {
+            padding: '10px 15px',
+            textAlign: 'left',
+            color: '#555',
+            fontSize: '0.95em',
         },
-        viewDetailsButton: {
-            backgroundColor: 'transparent',
-            color: '#007bff',
-            border: '1px solid #007bff',
-            borderRadius: '5px',
-            padding: '8px 15px',
-            cursor: 'pointer',
-            fontSize: '0.9em',
-            marginRight: '5px'
-        },
-        requestRefillButton: {
-            backgroundColor: '#28a745',
+        viewButton: {
+            backgroundColor: '#007bff',
             color: '#fff',
             border: 'none',
             borderRadius: '5px',
-            padding: '8px 15px',
+            padding: '8px 12px',
             cursor: 'pointer',
-            fontSize: '0.9em'
+            fontSize: '0.9em',
+            fontWeight: 'bold',
+            transition: 'background-color 0.2s ease',
+            '&:hover': {
+                backgroundColor: '#0056b3',
+            },
         },
-        // New style for the chart container
-        chartContainer: {
-            marginBottom: '20px',
-            padding: '15px',
-            border: '1px solid #ddd',
-            borderRadius: '5px',
-            backgroundColor: '#fff',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-            height: getResponsiveStyle('400px', '350px', '300px', '250px'), // Set a fixed height for the chart
-            display: 'flex', // Ensures the chart fills the container
-            alignItems: 'center', // Centers content vertically
-            justifyContent: 'center', // Centers content horizontally
+        emptyState: {
+            textAlign: 'center',
+            padding: '50px',
+            color: '#6c757d',
+            fontSize: '1.1em',
         }
     };
 
@@ -543,7 +399,7 @@ const PatientDashboard = () => {
     }
 
     if (!auth.currentUser && !loading) {
-        return <div style={{ textAlign: 'center', padding: '50px' }}>Please log in to view the dashboard.</div>;
+        return <div style={{ textAlign: 'center', padding: '50px' }}>Please log in to view your prescriptions.</div>;
     }
 
     return (
@@ -586,88 +442,59 @@ const PatientDashboard = () => {
                         <p style={styles.patientName}>{`${patientData.firstName} ${patientData.lastName}`}</p>
                         <p style={styles.patientType}>{patientData.userType}</p>
                     </div>
-                    <Link to="/patient/dashboard" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
-                    <Link to="/patient-prescriptions" style={styles.sidebarLink}><FaPrescriptionBottleAlt style={styles.sidebarIcon} />My Prescriptions</Link>
-                    <Link to="/patient-health-records" style={{ ...styles.sidebarLink}}><FaHistory style={styles.sidebarIcon} />My Health Records</Link>
+                    <Link to="/patient/dashboard" style={styles.sidebarLink}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
+                    <Link to="/patient/prescriptions" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaPrescriptionBottleAlt style={styles.sidebarIcon} />My Prescriptions</Link>
+                    <Link to="/patient-health-records" style={styles.sidebarLink}><FaHistory style={styles.sidebarIcon} />My Health Records</Link>
                     <Link to="/patient-profile" style={styles.sidebarLink}><FaUser style={styles.sidebarIcon} />Profile</Link>
                 </aside>
 
                 <main style={styles.content}>
-                    <div style={styles.dashboardHeader}>
-                        <div style={styles.headerCard}>
-                            <p style={styles.headerCardTitle}>Active Prescriptions</p>
-                            <p style={styles.headerCardValue}>{activePrescriptionsCount}</p>
-                        </div>
-                        <div style={styles.headerCard}>
-                            <p style={styles.headerCardTitle}>Total Prescriptions</p>
-                            <p style={styles.headerCardValue}>{totalPrescriptionsCount}</p>
-                        </div>
-                        <div style={styles.headerCard}>
-                            <p style={styles.headerCardTitle}>Issued Prescriptions</p>
-                            <p style={styles.headerCardValue}>{issuedPrescriptionsCount}</p>
-                        </div>
-                    </div>
+                    <h1 style={styles.sectionTitle}>My Prescriptions</h1>
 
-                    {/* New Chart Section */}
-                    <div style={styles.chartContainer}>
-                        {loadingPrescriptions ? (
-                            <p>Loading chart data...</p>
-                        ) : (
-                             // You can switch Line to Bar if you prefer a bar chart
-                            <Line data={chartData} options={chartOptions} />
-                        )}
-                    </div>
-
-
-                    <div style={styles.recentPrescriptions}>
-                        <h2>Recent Prescriptions</h2>
-                        {loadingPrescriptions ? (
-                            <p>Loading prescriptions...</p>
-                        ) : prescriptions.length > 0 ? (
-                            <div style={{ overflowX: 'auto' }}>
-                                <table style={styles.recentPrescriptionsTable}>
-                                    <thead>
-                                        <tr>
-                                            <th style={styles.recentPrescriptionsTableHeader}>Prescription ID</th>
-                                            <th style={styles.recentPrescriptionsTableHeader}>Issue Date</th>
-                                            <th style={styles.recentPrescriptionsTableHeader}>Status</th>
+                    {loadingPrescriptions ? (
+                        <p style={styles.emptyState}>Loading prescriptions...</p>
+                    ) : prescriptions.length === 0 ? (
+                        <p style={styles.emptyState}>You have no prescriptions recorded yet.</p>
+                    ) : (
+                        <div style={styles.tableContainer}>
+                            <table style={styles.table}>
+                                <thead>
+                                    <tr>
+                                        <th style={styles.tableHeader}>Prescription ID</th>
+                                        <th style={styles.tableHeader}>Issue Date</th>
+                                        <th style={styles.tableHeader}>Status</th>
+                                        <th style={styles.tableHeader}>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {prescriptions.map((prescription) => (
+                                        <tr key={prescription.id} style={styles.tableRow}>
+                                            <td style={styles.tableCell}>{prescription.id}</td>
+                                            <td style={styles.tableCell}>
+                                                {prescription.prescriptionDate ? new Date(prescription.prescriptionDate.seconds * 1000).toLocaleDateString() : 'N/A'}
+                                            </td>
+                                            <td style={styles.tableCell}>
+                                                {prescription.status || 'N/A'}
+                                            </td>
+                                            <td style={styles.tableCell}>
+                                                <button
+                                                    style={styles.viewButton}
+                                                    onClick={() => handleViewDetails(prescription.id)}
+                                                >
+                                                    View Details
+                                                </button>
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        {prescriptions.map((prescription) => (
-                                            <tr key={prescription.id} style={styles.recentPrescriptionsTableRow}>
-                                                <td style={styles.recentPrescriptionsTableCell}>{prescription.id}</td>
-                                                <td style={styles.recentPrescriptionsTableCell}>
-                                                    {prescription.prescriptionDate ? new Date(prescription.prescriptionDate.seconds * 1000).toLocaleDateString() : 'N/A'}
-                                                </td>
-                                                <td style={styles.recentPrescriptionsTableCell}>
-                                                    {prescription.status || 'N/A'}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        ) : (
-                            <p>No prescriptions found for your account.</p>
-                        )}
-                    </div>
-
-                    <div style={styles.recentPrescriptions}>
-                        <h2>My Health Records</h2>
-                        <p>Access your complete health history, including lab results and past diagnoses.</p>
-                        <Link to="/patient-health-records" style={{textDecoration: 'none'}}>
-                            <button style={styles.viewDetailsButton}>View Health Records</button>
-                        </Link>
-                    </div>
-
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </main>
             </div>
-
-            <ChatBotToggle />
             <Footer />
         </div>
     );
 };
 
-export default PatientDashboard;
+export default MyPrescriptions;
