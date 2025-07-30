@@ -34,6 +34,10 @@ import PatientProfilePage from './pages/Patient_UIs/patient_profile'; // Adjust 
 import MyPrescriptions from './pages/Patient_UIs/my_prescriptions';
 import PatientViewPrescription from './pages/Patient_UIs/patient_viewPrescription';
 
+// ---- Admin Portal --- //
+import AdminDashboard from './pages/Admin/admin_dashboard';
+import Adminreport from './pages/Admin/admin_report';
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
@@ -62,6 +66,8 @@ root.render(
           <Route path="/patient-profile" element={<PatientProfilePage />} />
           <Route path="/patient-prescriptions" element={<MyPrescriptions />} />
           <Route path="/patient-view-prescription/:prescriptionId" element={<PatientViewPrescription />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin-report" element={<Adminreport />} />
         </Routes>
       </BrowserRouter>
     </I18nextProvider>
