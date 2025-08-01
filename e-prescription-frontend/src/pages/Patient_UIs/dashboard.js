@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
-import { db } from '../firebase';
+import { db } from '../../firebase';
 
 import logo from '../Main_Interface_UI/images/Logo01.png';
 import { FaPhoneAlt, FaSignOutAlt, FaHome, FaHistory, FaUser, FaPrescriptionBottleAlt } from 'react-icons/fa';
@@ -366,6 +366,7 @@ const PatientDashboard = () => {
             width: getResponsiveStyle('auto', 'auto', 'auto', '80%'),
             margin: getResponsiveStyle('0', '0', '0', '0 auto'),
         },
+        
         registerArrow: {
             marginLeft: '5px',
         },

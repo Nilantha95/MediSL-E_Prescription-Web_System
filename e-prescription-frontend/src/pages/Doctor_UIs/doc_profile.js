@@ -8,7 +8,7 @@ import { FaUserMd, FaPrescriptionBottleAlt, FaHistory, FaHome } from 'react-icon
 import { getAuth, onAuthStateChanged, updatePassword, updateProfile } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../firebase'; // adjust path if needed
+import { db, storage } from '../../firebase'; // adjust path if needed
 import Footer from '../Main_Interface_UI/Footer';
 
 const ProfilePage = () => {

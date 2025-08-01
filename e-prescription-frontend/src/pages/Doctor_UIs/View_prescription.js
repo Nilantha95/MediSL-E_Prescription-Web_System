@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { db } from '../firebase';
+import { db } from '../../firebase';
 import { FaPlus, FaTrashAlt } from 'react-icons/fa';
 import CryptoJS from 'crypto-js';
 

@@ -8,7 +8,7 @@ import { FaUser, FaUserMd, FaUserNurse } from 'react-icons/fa'; // Icons for use
 import backgroundImage from '../Main_Interface_UI/images/background.jpg';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase';
+import { auth, db } from '../../firebase';
 import Footer from '../Main_Interface_UI/Footer';
 
 const SignInForm = () => {

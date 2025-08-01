@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
-import { db } from '../firebase'; // Corrected relative path to firebase.js
+import { db } from '../../firebase'; // Corrected relative path to firebase.js
 
 // Icons for the sidebar
 import { FaPhoneAlt, FaHome, FaHistory, FaUser, FaPrescriptionBottleAlt, FaArrowLeft } from 'react-icons/fa';

@@ -11,7 +11,7 @@ import Footer from '../Main_Interface_UI/Footer';
 import CryptoJS from 'crypto-js';
 
 // Firebase Imports
-import { db, storage } from '../firebase';
+import { db, storage } from '../../firebase';
 import { collection, addDoc, Timestamp, doc, updateDoc, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';

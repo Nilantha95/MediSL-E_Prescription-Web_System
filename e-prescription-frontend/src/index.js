@@ -37,6 +37,8 @@ import PatientViewPrescription from './pages/Patient_UIs/patient_viewPrescriptio
 // ---- Admin Portal --- //
 import AdminDashboard from './pages/Admin/admin_dashboard';
 import Adminreport from './pages/Admin/admin_report';
+import Adminprofile from './pages/Admin/admin_profile'
+import UserInquiryPage from './pages/Admin/user_Inquiry';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -68,6 +70,8 @@ root.render(
           <Route path="/patient-view-prescription/:prescriptionId" element={<PatientViewPrescription />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin-report" element={<Adminreport />} />
+          <Route path="/admin-profile" element={<Adminprofile />} />
+          <Route path="/user-inquiry" element={<UserInquiryPage />} />
         </Routes>
       </BrowserRouter>
     </I18nextProvider>

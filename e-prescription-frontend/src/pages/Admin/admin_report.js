@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../firebase';
+import { db } from '../../firebase';
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore'; 
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { Link, useNavigate } from 'react-router-dom';
@@ -797,9 +797,8 @@ const AdminReportDashboard = () => {
                     <div style={styles.sidebarItemsContainer}>
                         {/* Admin-specific links */}
                         <Link to="/admin/dashboard" style={styles.sidebarLink}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
-                        <Link to="/admin/users" style={styles.sidebarLink}><FaUsers style={styles.sidebarIcon} />User Management</Link>
-                        <Link to="/admin/reports" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaChartBar style={styles.sidebarIcon} />Reports</Link>
-                        <Link to="/admin/settings" style={styles.sidebarLink}><FaCog style={styles.sidebarIcon} />Settings</Link>
+                        <Link to="#" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaChartBar style={styles.sidebarIcon} />Reports</Link>
+                        <Link to="/admin-profile" style={styles.sidebarLink}><FaCog style={styles.sidebarIcon} />Profile</Link>
                     </div>
                 </aside>
 

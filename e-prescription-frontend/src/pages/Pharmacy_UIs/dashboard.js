@@ -7,7 +7,7 @@ import { IoIosArrowForward } from 'react-icons/io';
 import logo from '../Main_Interface_UI/images/Logo01.png';
 import pic from './Images/phar01.jpg'; // Path for pharmacist profile picture
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db } from '../../firebase';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 
 // --- Mock Styles (move to a CSS file for production) ---

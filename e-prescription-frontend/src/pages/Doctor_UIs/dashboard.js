@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { db } from '../firebase';
+import { db } from '../../firebase';
 
 import logo from '../Main_Interface_UI/images/Logo01.png';
 import { FaPhoneAlt } from 'react-icons/fa';

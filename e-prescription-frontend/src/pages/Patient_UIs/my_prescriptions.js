@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
-import { db } from '../firebase';
+import { db } from '../../firebase';
 import { Link, useNavigate } from 'react-router-dom';
 
 // Icons for the sidebar

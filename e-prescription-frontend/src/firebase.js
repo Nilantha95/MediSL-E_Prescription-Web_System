@@ -2,7 +2,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-import { getStorage } from 'firebase/storage'; // Import getStorage
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   // Your Firebase config
@@ -17,6 +17,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
-const storage = getStorage(app); // Get storage instance
+const storage = getStorage(app); // Initialized Cloud Functions
 
-export { db, auth, storage }; // Export storage
+export { db, auth, storage}; // Exported all services

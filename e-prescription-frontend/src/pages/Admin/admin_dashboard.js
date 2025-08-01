@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../firebase'; // Adjust path if your firebase.js is elsewhere
+import { db } from '../../firebase'; // Adjust path if your firebase.js is elsewhere
 import { collection, getDocs, doc, deleteDoc, updateDoc, getDoc } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions'; // For Cloud Functions
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth'; // For getting current user's UID and signOut
@@ -521,10 +521,10 @@ const AdminDashboard = () => {
                         </div>
                     </div>
                     <div style={styles.sidebarItemsContainer}>
-                        <Link to="/admin/dashboard" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
-                        <Link to="/admin/users" style={styles.sidebarLink}><FaUsers style={styles.sidebarIcon} />User Management</Link>
+                        <Link to="#" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
+                        <Link to="/user-inquiry" style={{ ...styles.sidebarLink }}><FaHome style={styles.sidebarIcon} />User Inquiries</Link>
                         <Link to="/admin-report" style={styles.sidebarLink}><FaChartBar style={styles.sidebarIcon} />Reports</Link>
-                        <Link to="/admin/settings" style={styles.sidebarLink}><FaCog style={styles.sidebarIcon} />Settings</Link>
+                        <Link to="/admin-profile" style={styles.sidebarLink}><FaCog style={styles.sidebarIcon} />Profile</Link>
                         {/* Add more admin specific links as needed */}
                     </div>
                 </aside>

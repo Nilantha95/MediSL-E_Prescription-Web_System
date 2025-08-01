@@ -35,7 +35,7 @@ import { FaUserMd, FaPrescriptionBottleAlt, FaHistory, FaHome } from 'react-icon
 
 // Firebase Imports
 import { collection, query, getDocs, orderBy } from 'firebase/firestore';
-import { db } from '../firebase'; // Adjust the path to your firebaseConfig file
+import { db } from '../../firebase'; // Adjust the path to your firebaseConfig file
 
 const PrescriptionHistory = () => {
     const auth = getAuth(); // Get the auth instance
