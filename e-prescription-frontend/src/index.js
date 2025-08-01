@@ -28,6 +28,18 @@ import './pages/Chatbot/i18n'; // Make sure this line is present to initialize i
 import { I18nextProvider } from 'react-i18next';
 import i18n from './pages/Chatbot/i18n'; // Import the i18n instance
 
+// --- Patient Portal --- //
+import PatientHealthRecords from './pages/Patient_UIs/patient_health_records'; // <<< NEW IMPORT
+import PatientProfilePage from './pages/Patient_UIs/patient_profile'; // Adjust path
+import MyPrescriptions from './pages/Patient_UIs/my_prescriptions';
+import PatientViewPrescription from './pages/Patient_UIs/patient_viewPrescription';
+
+// ---- Admin Portal --- //
+import AdminDashboard from './pages/Admin/admin_dashboard';
+import Adminreport from './pages/Admin/admin_report';
+import Adminprofile from './pages/Admin/admin_profile'
+import UserInquiryPage from './pages/Admin/user_Inquiry';
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
@@ -52,6 +64,14 @@ root.render(
           <Route path="/pharmacy/qr-scan" element={<QrScanner />} />
           <Route path="/pharmacy/view/:prescriptionId" element={<PrescriptionView />} />
           <Route path="/aboutus" element={<AboutUs/>} />
+          <Route path="/patient-health-records" element={<PatientHealthRecords />} /> 
+          <Route path="/patient-profile" element={<PatientProfilePage />} />
+          <Route path="/patient-prescriptions" element={<MyPrescriptions />} />
+          <Route path="/patient-view-prescription/:prescriptionId" element={<PatientViewPrescription />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin-report" element={<Adminreport />} />
+          <Route path="/admin-profile" element={<Adminprofile />} />
+          <Route path="/user-inquiry" element={<UserInquiryPage />} />
         </Routes>
       </BrowserRouter>
     </I18nextProvider>

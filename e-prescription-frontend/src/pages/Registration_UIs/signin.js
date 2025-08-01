@@ -3,12 +3,12 @@ import logo from '../Main_Interface_UI/images/Logo01.png';
 import { IoIosArrowForward } from 'react-icons/io';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaFacebookF, FaTwitter, FaInstagram } from 'react-icons/fa'; // Removed unused Pinterest, Whatsapp
+import { FaFacebookF, FaTwitter, FaInstagram, FaUserSecret } from 'react-icons/fa'; // Ensure FaUserSecret is imported
 import { FaUser, FaUserMd, FaUserNurse } from 'react-icons/fa'; // Icons for user types
 import backgroundImage from '../Main_Interface_UI/images/background.jpg';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase';
+import { auth, db } from '../../firebase';
 import Footer from '../Main_Interface_UI/Footer';
 
 const SignInForm = () => {
@@ -65,11 +65,25 @@ const SignInForm = () => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // --- DEBUGGING LOGS START ---
+      console.log('Logged in Firebase User UID:', user.uid);
+      // --- DEBUGGING LOGS END ---
+
       const docRef = doc(db, 'users', user.uid);
       const docSnap = await getDoc(docRef);
 
+      // --- DEBUGGING LOGS START ---
+      console.log('Does Firestore document exist for this UID?', docSnap.exists());
+      // --- DEBUGGING LOGS END ---
+
       if (docSnap.exists()) {
         const userData = docSnap.data();
+
+        // --- DEBUGGING LOGS START ---
+        console.log('Firestore Data for this UID:', userData);
+        console.log('Selected User Type on form:', userType);
+        console.log('Firestore userType:', userData.userType);
+        // --- DEBUGGING LOGS END ---
 
         if (userData.userType !== userType) {
           setError(`You are registered as a ${userData.userType}. Please select the correct user type.`);
@@ -77,10 +91,20 @@ const SignInForm = () => {
         }
 
         // Role-based navigation
-        if (userType === 'doctor') navigate('/doctor/dashboard');
-        else if (userType === 'patient') navigate('/patient/dashboard');
-        else if (userType === 'pharmacist') navigate('/pharmacy/dashboard');
+        if (userType === 'doctor') {
+            navigate('/doctor/dashboard');
+        } else if (userType === 'patient') {
+            navigate('/patient/dashboard');
+        } else if (userType === 'pharmacist') {
+            navigate('/pharmacy/dashboard');
+        } else if (userType === 'admin') { // Corrected block for admin navigation
+            navigate('/admin/dashboard');
+        } else {
+            // Fallback for any other userType not explicitly handled, or a general dashboard
+            navigate('/dashboard'); // Or navigate to a default landing page if userType is unexpected
+        }
       } else {
+        // This is the error you are receiving if docSnap.exists() is false
         setError('User role not found. Please register or contact support.');
       }
     } catch (error) {
@@ -264,7 +288,8 @@ const SignInForm = () => {
       width: getResponsiveStyle('25px', '22px', '20px', '18px'),
       height: getResponsiveStyle('25px', '22px', '20px', '18px'),
       marginBottom: '8px',
-      color: userType ? (userType === hoveredUserType ? '#2ecc71' : '#2980b9') : '#95a5a6',
+      // Check if userType or hoveredUserType is current, then apply green. Otherwise, apply default blue/gray.
+      color: (userType === hoveredUserType && userType) ? '#2ecc71' : (userType === 'patient' || userType === 'doctor' || userType === 'pharmacist' || userType === 'admin' ? '#2980b9' : '#95a5a6'),
       transition: 'color 0.3s ease',
     },
     inputGroup: {
@@ -435,6 +460,17 @@ const SignInForm = () => {
             >
               <FaUserNurse style={styles.userTypeIcon} />
               Pharmacist
+            </button>
+            {/* ADD THIS NEW BUTTON FOR ADMIN */}
+            <button
+              type="button"
+              style={styles.userTypeButton('admin')}
+              onClick={() => handleUserTypeChange('admin')}
+              onMouseEnter={() => setHoveredUserType('admin')}
+              onMouseLeave={() => setHoveredUserType(null)}
+            >
+              <FaUserSecret style={styles.userTypeIcon} /> {/* Use FaUserSecret or FaUser */}
+              Admin
             </button>
           </div>
 

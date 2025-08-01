@@ -7,7 +7,7 @@ import { FaUser, FaUserMd, FaUserNurse } from 'react-icons/fa';  // Unused, but 
 import backgroundImage from '../Main_Interface_UI/images/background.jpg';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase';
+import { auth, db } from '../../firebase';
 import Footer from '../Main_Interface_UI/Footer';
 
 const RegistrationForm = () => {

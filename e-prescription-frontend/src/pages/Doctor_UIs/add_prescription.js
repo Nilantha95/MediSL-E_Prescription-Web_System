@@ -11,7 +11,7 @@ import Footer from '../Main_Interface_UI/Footer';
 import CryptoJS from 'crypto-js';
 
 // Firebase Imports
-import { db, storage } from '../firebase';
+import { db, storage } from '../../firebase';
 import { collection, addDoc, Timestamp, doc, updateDoc, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
@@ -78,6 +78,33 @@ const NewPrescriptionForm = () => {
         photoURL: null,
     });
     const [loadingDoctorInfo, setLoadingDoctorInfo] = useState(true);
+
+    // Header and Logout Button Hover State
+    const [isLogoutHovered, setIsLogoutHovered] = useState(false); // Renamed from isHomeHovered for clarity
+
+    // Responsive Styles State
+    const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setScreenWidth(window.innerWidth);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Responsive style utility function
+    const getResponsiveStyle = (desktopStyle, tabletStyle, mobileStyle, smallMobileStyle) => {
+        if (screenWidth <= 575) {
+            return smallMobileStyle;
+        } else if (screenWidth <= 768) {
+            return mobileStyle;
+        } else if (screenWidth <= 992) {
+            return tabletStyle;
+        }
+        return desktopStyle;
+    };
 
     // Fetch doctor's data from Firebase for the sidebar
     useEffect(() => {
@@ -349,14 +376,96 @@ const NewPrescriptionForm = () => {
     };
 
     const styles = {
-        navBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 50px', backgroundColor: '#d7f3d2' },
-        logoContainer: { display: 'flex', alignItems: 'center' },
-        logo: { height: '50px', marginRight: '10px' },
-        titleContainer: { display: 'flex', flexDirection: 'column' },
-        title: { margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#333' },
-        subtitle: { margin: 0, fontSize: '12px', color: '#777' },
-        contactInfo: { display: 'flex', alignItems: 'center', marginRight: '20px', color: '#007bff' },
-        homeButtonDiv: { padding: '10px 20px', border: '1px solid #ddd', borderRadius: '20px', backgroundColor: 'lightblue', color: '#007bff', cursor: 'pointer', display: 'flex', alignItems: 'center' },
+        // --- Header Styles ---
+        header: {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: getResponsiveStyle('20px 50px', '15px 40px', '12px 20px', '10px 15px'),
+            backgroundColor: '#e0ffe0',
+            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+            flexWrap: 'wrap',
+            flexDirection: getResponsiveStyle('row', 'row', 'column', 'column'),
+            alignItems: getResponsiveStyle('center', 'center', 'flex-start', 'center'),
+            gap: getResponsiveStyle('0px', '0px', '10px', '10px'),
+        },
+        headerLeft: {
+            display: 'flex',
+            alignItems: 'center',
+            flexShrink: 0,
+            flexDirection: getResponsiveStyle('row', 'row', 'row', 'column'),
+            textAlign: getResponsiveStyle('left', 'left', 'left', 'center'),
+            marginBottom: getResponsiveStyle('0', '0', '0', '0px'),
+        },
+        logo: {
+            height: getResponsiveStyle('55px', '55px', '50px', '45px'),
+            marginRight: getResponsiveStyle('15px', '15px', '15px', '0'),
+            marginBottom: getResponsiveStyle('0', '0', '0', '5px'),
+        },
+        siteTitle: { // Updated to match "MediPrescribe"
+            margin: 0,
+            fontSize: getResponsiveStyle('24px', '24px', '22px', '20px'),
+            fontWeight: '700',
+            color: '#2c3e50',
+            whiteSpace: getResponsiveStyle('nowrap', 'nowrap', 'nowrap', 'normal'),
+        },
+        tagline: { // Updated to match "Your Digital Healthcare Solution"
+            margin: 0,
+            fontSize: getResponsiveStyle('13px', '13px', '12px', '11px'),
+            color: '#7f8c8d',
+            whiteSpace: getResponsiveStyle('nowrap', 'nowrap', 'nowrap', 'normal'),
+        },
+        headerRight: {
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            justifyContent: getResponsiveStyle('flex-end', 'flex-end', 'center', 'center'),
+            marginTop: getResponsiveStyle('0', '0', '10px', '10px'),
+            width: getResponsiveStyle('auto', 'auto', '100%', '100%'),
+            flexDirection: getResponsiveStyle('row', 'row', 'row', 'column'),
+            gap: getResponsiveStyle('0px', '0px', '10px', '10px'),
+        },
+        phoneContact: {
+            display: 'flex',
+            alignItems: 'center',
+            marginRight: getResponsiveStyle('25px', '25px', '15px', '0'),
+            marginBottom: getResponsiveStyle('0', '0', '0', '5px'),
+            color: '#2980b9',
+            fontWeight: '500',
+            fontSize: getResponsiveStyle('15px', '15px', '14px', '13px'),
+            whiteSpace: 'nowrap',
+        },
+        phoneIcon: {
+            marginRight: '8px',
+            fontSize: '18px',
+        },
+        logoutButtonLink: { // Renamed from homeButtonLink
+            textDecoration: 'none',
+            flexShrink: 0,
+            width: getResponsiveStyle('auto', 'auto', 'auto', '100%'),
+            textAlign: 'center',
+        },
+        logoutButton: { // Renamed from homeButton
+            padding: getResponsiveStyle('12px 25px', '12px 25px', '10px 20px', '8px 18px'),
+            border: isLogoutHovered ? '1px solid #9cd6fc' : '1px solid #a8dadc',
+            borderRadius: '30px',
+            backgroundColor: isLogoutHovered ? '#9cd6fc' : '#b3e0ff',
+            color: isLogoutHovered ? '#fff' : '#2980b9',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 'bold',
+            transition: 'all 0.3s ease',
+            whiteSpace: 'nowrap',
+            width: getResponsiveStyle('auto', 'auto', 'auto', '80%'),
+            margin: getResponsiveStyle('0', '0', '0', '0 auto'),
+        },
+        registerArrow: { // Used for the forward arrow in the logout button
+            marginLeft: '5px',
+        },
+
+        // Original styles (from your uploaded file) preserved below
         footer: { backgroundColor: '#d7f3d2', padding: '20px' },
         footerContainer: { display: 'flex', justifyContent: 'space-around', paddingBottom: '20px' },
         footerSection: { display: 'flex', flexDirection: 'column' },
@@ -529,23 +638,27 @@ const NewPrescriptionForm = () => {
     return (
         <div style={{ fontFamily: 'sans-serif' }}>
             {/* Navigation Bar */}
-            <header style={styles.navBar}>
-                <div style={styles.logoContainer}>
-                    <img src={logo} alt="E-Prescribe Logo" style={styles.logo} />
-                    <div style={styles.titleContainer}>
-                        <h1 style={styles.title}>MediPrescribe</h1>
-                        <p style={styles.subtitle}>Your Digital Healthcare Solution</p>
+            <header style={styles.header}>
+                <div style={styles.headerLeft}>
+                    <img src={logo} alt="MediPrescribe Logo" style={styles.logo} />
+                    <div>
+                        <h1 style={styles.siteTitle}>MediPrescribe</h1>
+                        <p style={styles.tagline}>Your Digital Healthcare Solution</p>
                     </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <div style={styles.contactInfo}>
-                        <FaPhoneAlt style={{ marginRight: '5px' }} />
+                <div style={styles.headerRight}>
+                    <div style={styles.phoneContact}>
+                        <FaPhoneAlt style={styles.phoneIcon} />
                         <span>+94 (011) 519-51919</span>
                     </div>
-                    <Link to="/signin" style={{ textDecoration: 'none' }}>
-                        <div style={styles.homeButtonDiv}>
+                    <Link to="/signin" style={styles.logoutButtonLink}>
+                        <div
+                            style={styles.logoutButton}
+                            onMouseEnter={() => setIsLogoutHovered(true)}
+                            onMouseLeave={() => setIsLogoutHovered(false)}
+                        >
                             <span>Logout</span>
-                            <IoIosArrowForward style={{ marginLeft: '5px' }} />
+                            <IoIosArrowForward style={styles.registerArrow} />
                         </div>
                     </Link>
                 </div>

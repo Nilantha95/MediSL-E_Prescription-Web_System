@@ -561,7 +561,7 @@ function App() {
         <h2 style={styles.sectionTitle}>What Our Users Say</h2>
         <div style={styles.testimonialsContainer}>
           {[
-            { userImg: user1, name: 'Dr. John Cena', role: 'General Practitioner', quote: "E-Prescribe has revolutionized how I manage prescriptions. It's efficient, secure, and my patients love it!" },
+            { userImg: user1, name: 'Dr. Upul Fernando', role: 'General Practitioner', quote: "E-Prescribe has revolutionized how I manage prescriptions. It's efficient, secure, and my patients love it!" },
             { userImg: user2, name: 'Menoli Silva', role: 'Pharmacist', quote: "This platform has streamlined our workflow and reduced prescription processing time significantly." },
           ].map((testimonial, index) => (
             <div

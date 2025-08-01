@@ -21,9 +21,8 @@ import AddIcon from '@mui/icons-material/Add';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import Avatar from '@mui/material/Avatar';
 import logo from '../Main_Interface_UI/images/Logo01.png';
-import pic from '../Main_Interface_UI/images/Doctor.png';
+import pic from '../Main_Interface_UI/images/Doctor.png'; // Using this as a placeholder for a default profile pic
 import { FaPhoneAlt } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
@@ -36,7 +35,7 @@ import { FaUserMd, FaPrescriptionBottleAlt, FaHistory, FaHome } from 'react-icon
 
 // Firebase Imports
 import { collection, query, getDocs, orderBy } from 'firebase/firestore';
-import { db } from '../firebase'; // Adjust the path to your firebaseConfig file
+import { db } from '../../firebase'; // Adjust the path to your firebaseConfig file
 
 const PrescriptionHistory = () => {
     const auth = getAuth(); // Get the auth instance
@@ -62,6 +61,34 @@ const PrescriptionHistory = () => {
     const [rowsPerPage] = useState(10);
 
     const navigate = useNavigate();
+
+    // Header and Logout Button Hover State (from DoctorDashboard.js)
+    const [isLogoutHovered, setIsLogoutHovered] = useState(false);
+
+    // Responsive Styles State (from DoctorDashboard.js)
+    const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setScreenWidth(window.innerWidth);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Responsive style utility function (from DoctorDashboard.js)
+    const getResponsiveStyle = (desktopStyle, tabletStyle, mobileStyle, smallMobileStyle) => {
+        if (screenWidth <= 575) {
+            return smallMobileStyle;
+        } else if (screenWidth <= 768) {
+            return mobileStyle;
+        } else if (screenWidth <= 992) {
+            return tabletStyle;
+        }
+        return desktopStyle;
+    };
+
 
     // Fetch doctor data from Firebase when the component mounts (from DoctorDashboard.js)
     useEffect(() => {
@@ -110,10 +137,36 @@ const PrescriptionHistory = () => {
                 const q = query(collection(db, 'prescriptions'), orderBy('prescriptionDate', 'desc'));
                 const querySnapshot = await getDocs(q);
 
-                const prescriptionsList = querySnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data(),
-                    issuedDate: doc.data().prescriptionDate ? doc.data().prescriptionDate.toDate().toLocaleDateString('en-CA') : 'N/A',
+                const prescriptionsList = await Promise.all(querySnapshot.docs.map(async docSnapshot => {
+                    const data = docSnapshot.data();
+                    // console.log("Raw prescription data:", data); // Keep for debugging if needed
+
+                    let patientName = data.patientName || 'N/A'; // Default to existing patientName field
+
+                    // If patientUID exists, try to get patient's full name from 'users' collection
+                    if (data.patientUID) {
+                        const patientDocRef = doc(db, 'users', data.patientUID);
+                        try {
+                            const patientDocSnap = await getDoc(patientDocRef);
+                            if (patientDocSnap.exists()) {
+                                const patientData = patientDocSnap.data();
+                                patientName = `${patientData.firstName || ''} ${patientData.lastName || ''}`.trim() || patientName;
+                            } else {
+                                console.warn("Patient document not found for UID:", data.patientUID);
+                            }
+                        } catch (patientFetchError) {
+                            console.error("Error fetching patient profile for UID:", data.patientUID, patientFetchError);
+                        }
+                    } else {
+                        console.warn("Prescription ID:", docSnapshot.id, "is missing patientUID.");
+                    }
+
+                    return {
+                        id: docSnapshot.id,
+                        ...data,
+                        issuedDate: data.prescriptionDate ? data.prescriptionDate.toDate().toLocaleDateString('en-CA') : 'N/A',
+                        patientName: patientName,
+                    };
                 }));
 
                 setPrescriptions(prescriptionsList);
@@ -156,17 +209,98 @@ const PrescriptionHistory = () => {
         navigate(`/prescription/${prescriptionId}`);
     };
 
-    // Consolidated Styles from DoctorDashboard.js
+    // Consolidated Styles from DoctorDashboard.js and PrescriptionHistory.js
     const styles = {
-        navBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 50px', backgroundColor: '#d7f3d2' },
-        logoContainer: { display: 'flex', alignItems: 'center' },
-        logo: { height: '50px', marginRight: '10px' },
-        titleContainer: { display: 'flex', flexDirection: 'column' },
-        title: { margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#333' },
-        subtitle: { margin: 0, fontSize: '12px', color: '#777' },
-        contactInfo: { display: 'flex', alignItems: 'center', marginRight: '20px', color: '#007bff' },
-        homeButtonDiv: { padding: '10px 20px', border: '1px solid #ddd', borderRadius: '20px', backgroundColor: 'lightblue', color: '#007bff', cursor: 'pointer', display: 'flex', alignItems: 'center' },
+        // --- Header Styles (Copied from DoctorDashboard.js) ---
+        header: {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: getResponsiveStyle('20px 50px', '15px 40px', '12px 20px', '10px 15px'),
+            backgroundColor: '#e0ffe0',
+            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+            flexWrap: 'wrap',
+            flexDirection: getResponsiveStyle('row', 'row', 'column', 'column'),
+            alignItems: getResponsiveStyle('center', 'center', 'flex-start', 'center'),
+            gap: getResponsiveStyle('0px', '0px', '10px', '10px'),
+        },
+        headerLeft: {
+            display: 'flex',
+            alignItems: 'center',
+            flexShrink: 0,
+            flexDirection: getResponsiveStyle('row', 'row', 'row', 'column'),
+            textAlign: getResponsiveStyle('left', 'left', 'left', 'center'),
+            marginBottom: getResponsiveStyle('0', '0', '0', '0px'),
+        },
+        logo: {
+            height: getResponsiveStyle('55px', '55px', '50px', '45px'),
+            marginRight: getResponsiveStyle('15px', '15px', '15px', '0'),
+            marginBottom: getResponsiveStyle('0', '0', '0', '5px'),
+        },
+        siteTitle: { // Updated to match "MediPrescribe"
+            margin: 0,
+            fontSize: getResponsiveStyle('24px', '24px', '22px', '20px'),
+            fontWeight: '700',
+            color: '#2c3e50',
+            whiteSpace: getResponsiveStyle('nowrap', 'nowrap', 'nowrap', 'normal'),
+        },
+        tagline: { // Updated to match "Your Digital Healthcare Solution"
+            margin: 0,
+            fontSize: getResponsiveStyle('13px', '13px', '12px', '11px'),
+            color: '#7f8c8d',
+            whiteSpace: getResponsiveStyle('nowrap', 'nowrap', 'nowrap', 'normal'),
+        },
+        headerRight: {
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            justifyContent: getResponsiveStyle('flex-end', 'flex-end', 'center', 'center'),
+            marginTop: getResponsiveStyle('0', '0', '10px', '10px'),
+            width: getResponsiveStyle('auto', 'auto', '100%', '100%'),
+            flexDirection: getResponsiveStyle('row', 'row', 'row', 'column'),
+            gap: getResponsiveStyle('0px', '0px', '10px', '10px'),
+        },
+        phoneContact: {
+            display: 'flex',
+            alignItems: 'center',
+            marginRight: getResponsiveStyle('25px', '25px', '15px', '0'),
+            marginBottom: getResponsiveStyle('0', '0', '0', '5px'),
+            color: '#2980b9',
+            fontWeight: '500',
+            fontSize: getResponsiveStyle('15px', '15px', '14px', '13px'),
+            whiteSpace: 'nowrap',
+        },
+        phoneIcon: {
+            marginRight: '8px',
+            fontSize: '18px',
+        },
+        logoutButtonLink: { // Renamed from homeButtonLink
+            textDecoration: 'none',
+            flexShrink: 0,
+            width: getResponsiveStyle('auto', 'auto', 'auto', '100%'),
+            textAlign: 'center',
+        },
+        logoutButton: { // Renamed from homeButton
+            padding: getResponsiveStyle('12px 25px', '12px 25px', '10px 20px', '8px 18px'),
+            border: isLogoutHovered ? '1px solid #9cd6fc' : '1px solid #a8dadc',
+            borderRadius: '30px',
+            backgroundColor: isLogoutHovered ? '#9cd6fc' : '#b3e0ff',
+            color: isLogoutHovered ? '#fff' : '#2980b9',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 'bold',
+            transition: 'all 0.3s ease',
+            whiteSpace: 'nowrap',
+            width: getResponsiveStyle('auto', 'auto', 'auto', '80%'),
+            margin: getResponsiveStyle('0', '0', '0', '0 auto'),
+        },
+        registerArrow: { // Used for the forward arrow in the logout button
+            marginLeft: '5px',
+        },
 
+        // --- Sidebar Styles (from DoctorDashboard.js) ---
         dashboardContainer: {
             display: 'flex',
             padding: '20px',
@@ -245,6 +379,7 @@ const PrescriptionHistory = () => {
             marginBottom: '20px',
             width: '100%'
         },
+        // --- Footer Styles (from DoctorDashboard.js) ---
         footer: { backgroundColor: '#d7f3d2', padding: '20px', marginTop: 'auto' },
         footerContainer: { display: 'flex', justifyContent: 'space-around', paddingBottom: '20px' },
         footerSection: { display: 'flex', flexDirection: 'column' },
@@ -281,24 +416,28 @@ const PrescriptionHistory = () => {
 
     return (
         <div style={{ fontFamily: 'sans-serif' }}>
-            {/* Navigation Bar */}
-            <header style={styles.navBar}>
-                <div style={styles.logoContainer}>
-                    <img src={logo} alt="E-Prescribe Logo" style={styles.logo} />
-                    <div style={styles.titleContainer}>
-                        <h1 style={styles.title}>MediPrescribe</h1>
-                        <p style={styles.subtitle}>Your Digital Healthcare Solution</p>
+            {/* Navigation Bar (Copied from DoctorDashboard.js) */}
+            <header style={styles.header}>
+                <div style={styles.headerLeft}>
+                    <img src={logo} alt="MediPrescribe Logo" style={styles.logo} />
+                    <div>
+                        <h1 style={styles.siteTitle}>MediPrescribe</h1>
+                        <p style={styles.tagline}>Your Digital Healthcare Solution</p>
                     </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <div style={styles.contactInfo}>
-                        <FaPhoneAlt style={{ marginRight: '5px' }} />
+                <div style={styles.headerRight}>
+                    <div style={styles.phoneContact}>
+                        <FaPhoneAlt style={styles.phoneIcon} />
                         <span>+94 (011) 519-51919</span>
                     </div>
-                    <Link to="/signin" style={{ textDecoration: 'none' }}>
-                        <div style={styles.homeButtonDiv}>
+                    <Link to="/signin" style={styles.logoutButtonLink}>
+                        <div
+                            style={styles.logoutButton}
+                            onMouseEnter={() => setIsLogoutHovered(true)}
+                            onMouseLeave={() => setIsLogoutHovered(false)}
+                        >
                             <span>Logout</span>
-                            <IoIosArrowForward style={{ marginLeft: '5px' }} />
+                            <IoIosArrowForward style={styles.registerArrow} />
                         </div>
                     </Link>
                 </div>
@@ -341,7 +480,12 @@ const PrescriptionHistory = () => {
                         <Typography variant="h5" component="h1">
                             Prescription Overview
                         </Typography>
-                        <Button variant="contained" startIcon={<AddIcon />} sx={{ bgcolor: 'black', '&:hover': { bgcolor: '#333' } }}>
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            sx={{ bgcolor: 'black', '&:hover': { bgcolor: '#333' } }}
+                            onClick={() => navigate('/newprescription')} // Navigation path
+                        >
                             New Prescription
                         </Button>
                     </Box>
@@ -391,7 +535,6 @@ const PrescriptionHistory = () => {
                                     <TableCell>Date</TableCell>
                                     <TableCell>Patient</TableCell>
                                     <TableCell>Prescription ID</TableCell>
-                                    <TableCell>Medication</TableCell>
                                     <TableCell>Status</TableCell>
                                     <TableCell>Actions</TableCell>
                                 </TableRow>
@@ -407,14 +550,8 @@ const PrescriptionHistory = () => {
                                     paginatedPrescriptions.map((row) => (
                                         <TableRow key={row.id}>
                                             <TableCell>{row.issuedDate}</TableCell>
-                                            <TableCell sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <Avatar src={row.patientAvatar} alt={row.patientName || 'N/A'} />
-                                                {row.patientName || 'N/A'}
-                                            </TableCell>
+                                            <TableCell>{row.patientName || 'N/A'}</TableCell>
                                             <TableCell>{row.id}</TableCell>
-                                            <TableCell>
-                                                {row.medications?.[0]?.name || 'N/A'}
-                                            </TableCell>
                                             <TableCell>
                                                 <Chip
                                                     label={row.status}
