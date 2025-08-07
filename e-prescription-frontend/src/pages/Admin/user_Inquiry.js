@@ -6,7 +6,9 @@ import logo from '../Main_Interface_UI/images/Logo01.png';
 import Footer from '../Main_Interface_UI/Footer';
 
 import { db } from '../../firebase';
+// Import Firestore methods and now, Firebase Functions methods
 import { collection, getDocs, query, orderBy, doc, updateDoc } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 const UserInquiryPage = () => {
     const [isLogoutHovered, setIsLogoutHovered] = useState(false);
@@ -16,8 +18,10 @@ const UserInquiryPage = () => {
     const [loadingInquiries, setLoadingInquiries] = useState(true);
     const [error, setError] = useState(null);
 
-    // State for viewing inquiry details, replacing the reply form
     const [viewingInquiry, setViewingInquiry] = useState(null);
+    const [replySubject, setReplySubject] = useState('');
+    const [replyMessage, setReplyMessage] = useState('');
+    const [isReplying, setIsReplying] = useState(false);
 
     const [userData] = useState({
         firstName: 'Admin',
@@ -78,10 +82,10 @@ const UserInquiryPage = () => {
 
     const handleLogout = () => {
         alert('User logged out (placeholder action)');
-        // In a real app, you would perform Firebase signOut and redirect
     };
 
-    const handleMarkAsRead = async (inquiryId) => {
+    const handleMarkAsRead = async (e, inquiryId) => {
+        e.stopPropagation();
         try {
             const inquiryRef = doc(db, 'userInquiries', inquiryId);
             await updateDoc(inquiryRef, { status: 'read' });
@@ -94,6 +98,46 @@ const UserInquiryPage = () => {
             alert("Failed to mark as read: " + err.message);
         }
     };
+
+    // --- UPDATED FUNCTION ---
+    // This function now calls the backend Cloud Function to send the email.
+    const handleSendReply = async (e) => {
+        e.preventDefault();
+        setIsReplying(true);
+
+        try {
+            // 1. Initialize the connection to Cloud Functions
+            const functions = getFunctions();
+            // 2. Get a reference to the specific function by its name
+            const sendInquiryReply = httpsCallable(functions, 'sendInquiryReply');
+
+            // 3. Call the function and pass the email data
+            await sendInquiryReply({
+                to: viewingInquiry.email,
+                subject: replySubject,
+                message: replyMessage,
+            });
+
+            // 4. If the call succeeds, update the status in Firestore
+            const inquiryRef = doc(db, 'userInquiries', viewingInquiry.id);
+            await updateDoc(inquiryRef, { status: 'replied' });
+
+            // 5. Refresh the data and reset the UI
+            await fetchInquiries();
+            setReplySubject('');
+            setReplyMessage('');
+            setViewingInquiry(null);
+
+            alert('Reply sent and inquiry marked as replied!');
+        } catch (err) {
+            // This block will catch errors from both the Cloud Function call and Firestore update
+            console.error('Failed to send reply:', err);
+            alert('Failed to send reply. Please try again.');
+        } finally {
+            setIsReplying(false);
+        }
+    };
+
 
     const styles = {
         dashboardPage: {
@@ -408,6 +452,31 @@ const UserInquiryPage = () => {
             fontWeight: 'bold',
             marginRight: '5px',
         },
+        replyFormContainer: {
+            marginTop: '20px',
+            padding: getResponsiveStyle('20px', '15px', '12px', '10px'),
+            border: '1px solid #ccc',
+            borderRadius: '8px',
+            backgroundColor: '#f8f9fa',
+        },
+        replyInput: {
+            width: '100%',
+            padding: '8px',
+            marginTop: '5px',
+            marginBottom: '10px',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
+            boxSizing: 'border-box',
+        },
+        replyTextarea: {
+            width: '100%',
+            padding: '8px',
+            marginTop: '5px',
+            marginBottom: '10px',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
+            boxSizing: 'border-box',
+        },
     };
 
     if (loadingInquiries) {
@@ -494,7 +563,6 @@ const UserInquiryPage = () => {
                                     </div>
                                     <p style={styles.inquirySubject}>Subject: {inquiry.subject || 'N/A'}</p>
                                     
-                                    {/* Conditionally render the details container if this is the selected inquiry */}
                                     {viewingInquiry && viewingInquiry.id === inquiry.id && (
                                         <div style={styles.viewDetailsContainer}>
                                             <h3 style={styles.viewDetailsTitle}>Inquiry Details</h3>
@@ -518,15 +586,34 @@ const UserInquiryPage = () => {
                                                 {inquiry.status === 'pending' && (
                                                     <button
                                                         style={{ ...styles.actionButton, backgroundColor: '#17a2b8' }}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleMarkAsRead(inquiry.id);
-                                                        }}
+                                                        onClick={(e) => handleMarkAsRead(e, inquiry.id)}
                                                     >
                                                         Mark as Read <FaCheckCircle />
                                                     </button>
                                                 )}
                                             </div>
+                                            {inquiry.status !== 'replied' && (
+                                                <div style={styles.replyFormContainer}>
+                                                    <h3 style={styles.viewDetailsTitle}>Send a Reply</h3>
+                                                    <form onSubmit={handleSendReply}>
+                                                        <div style={styles.detailItem}>
+                                                            <span style={styles.detailLabel}>To:</span>
+                                                            <input type="email" value={inquiry.email} readOnly style={styles.replyInput} />
+                                                        </div>
+                                                        <div style={styles.detailItem}>
+                                                            <span style={styles.detailLabel}>Subject:</span>
+                                                            <input type="text" value={replySubject} onChange={(e) => setReplySubject(e.target.value)} style={styles.replyInput} required />
+                                                        </div>
+                                                        <div style={styles.detailItem}>
+                                                            <span style={styles.detailLabel}>Message:</span>
+                                                            <textarea value={replyMessage} onChange={(e) => setReplyMessage(e.target.value)} style={styles.replyTextarea} rows="5" required />
+                                                        </div>
+                                                        <button type="submit" style={styles.actionButton} disabled={isReplying}>
+                                                            {isReplying ? 'Sending...' : 'Send Reply'}
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
