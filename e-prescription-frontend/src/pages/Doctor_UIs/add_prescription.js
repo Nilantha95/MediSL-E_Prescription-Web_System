@@ -4,7 +4,7 @@ import pic from '../Main_Interface_UI/images/Doctor.png';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
 import { Link } from 'react-router-dom';
-import {FaUserMd, FaPrescriptionBottleAlt, FaHistory, FaHome } from 'react-icons/fa';
+import { FaUserMd, FaPrescriptionBottleAlt, FaHistory, FaHome } from 'react-icons/fa';
 import Footer from '../Main_Interface_UI/Footer';
 
 // Encryption Library
@@ -15,6 +15,8 @@ import { db, storage } from '../../firebase';
 import { collection, addDoc, Timestamp, doc, updateDoc, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+// Import Firebase Functions to call the backend email service
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 // UI Components
 import Autocomplete from '@mui/material/Autocomplete';
@@ -80,7 +82,7 @@ const NewPrescriptionForm = () => {
     const [loadingDoctorInfo, setLoadingDoctorInfo] = useState(true);
 
     // Header and Logout Button Hover State
-    const [isLogoutHovered, setIsLogoutHovered] = useState(false); // Renamed from isHomeHovered for clarity
+    const [isLogoutHovered, setIsLogoutHovered] = useState(false);
 
     // Responsive Styles State
     const [screenWidth, setScreenWidth] = useState(window.innerWidth);
@@ -246,17 +248,41 @@ const NewPrescriptionForm = () => {
             return null;
         }
     };
+    
+    // --- UPDATED FUNCTION ---
+    // This function now calls the backend Cloud Function to send the QR code email.
+    const sendQRCodeEmail = async (patientEmail, qrCodeImageUrl, patientName) => {
+        if (!patientEmail) {
+            console.log("No patient email provided, skipping email send.");
+            return;
+        }
 
-    const sendQRCodeEmail = async (patientEmail, qrCodeImageUrl) => {
-        console.log(`Attempting to send QR code to ${patientEmail} with image URL: ${qrCodeImageUrl}`);
         try {
-            console.log("Email sending request sent to backend (simulated).");
-            alert("QR Code email initiated for sending. Check patient's email.");
+            // 1. Initialize the connection to Cloud Functions
+            const functions = getFunctions();
+            // 2. Get a reference to the specific function by its name
+            const sendQrCodeEmailCallable = httpsCallable(functions, 'sendQrCodeEmail');
+
+            console.log(`Requesting to send QR code email to: ${patientEmail}`);
+
+            // 3. Call the function with the required payload
+            const result = await sendQrCodeEmailCallable({
+                to: patientEmail,
+                qrCodeImageUrl: qrCodeImageUrl,
+                patientName: patientName // Pass the patient's name
+            });
+
+            // 4. Log the success message from the backend
+            console.log('Email send function called successfully:', result.data.message);
+            alert('An email with the QR code has been sent to the patient.');
+
         } catch (error) {
-            console.error("Error sending QR code email:", error);
-            alert("Failed to send QR Code email.");
+            // 5. Catch and log any errors from the cloud function call
+            console.error("Error calling sendQrCodeEmail function:", error);
+            alert(`Failed to send QR code email. Error: ${error.message}`);
         }
     };
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -312,9 +338,11 @@ const NewPrescriptionForm = () => {
             if (qrCodeDownloadURL) {
                 const prescriptionRef = doc(db, 'prescriptions', docRef.id);
                 await updateDoc(prescriptionRef, { qrCodeUrl: qrCodeDownloadURL });
-
+                
+                // --- UPDATED CALL ---
+                // Now calls the new email function with the patient's name
                 if (patientmail) {
-                    await sendQRCodeEmail(patientmail, qrCodeDownloadURL);
+                    await sendQRCodeEmail(patientmail, qrCodeDownloadURL, patientName);
                 }
             }
 
