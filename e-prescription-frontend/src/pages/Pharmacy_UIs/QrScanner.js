@@ -62,7 +62,7 @@ const QrScanner = () => {
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px', fontFamily: 'sans-serif', backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px', fontFamily: 'sans-serif', backgroundColor: '#d7f3d2', minHeight: '100vh' }}>
             <div style={{ width: '100%', maxWidth: '600px', backgroundColor: '#fff', padding: '30px', borderRadius: '10px', boxShadow: '0 6px 18px rgba(0,0,0,0.1)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
                     <button onClick={handleBack} style={{ background: 'none', border: 'none', fontSize: '1.5em', cursor: 'pointer', color: '#555' }}>
