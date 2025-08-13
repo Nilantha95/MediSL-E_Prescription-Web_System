@@ -22,6 +22,8 @@ import AboutUs from './pages/Main_Interface_UI/aboutus';
 import PrescriptionIssue from './pages/Pharmacy_UIs/PrescriptionIssue';
 import QrScanner from './pages/Pharmacy_UIs/QrScanner';
 import PrescriptionView from './pages/Pharmacy_UIs/PrescriptionView';
+import PharmacyPrescriptionHistory from './pages/Pharmacy_UIs/pharmacy_history';
+import PharmacistProfilePage from './pages/Pharmacy_UIs/profilepage_pharmacy';
 
 // --- NEW IMPORTS FOR I18NEXT ---
 import './pages/Chatbot/i18n'; // Make sure this line is present to initialize i18next
@@ -62,7 +64,9 @@ root.render(
           <Route path="/patient/dashboard" element={<PatientDashboard />} />
           <Route path="/pharmacy/issue/:prescriptionId" element={<PrescriptionIssue />} />
           <Route path="/pharmacy/qr-scan" element={<QrScanner />} />
+          <Route path="/pharmacy_history" element={<PharmacyPrescriptionHistory />} />
           <Route path="/pharmacy/view/:prescriptionId" element={<PrescriptionView />} />
+          <Route path="/pharprofile" element={<PharmacistProfilePage />} />
           <Route path="/aboutus" element={<AboutUs/>} />
           <Route path="/patient-health-records" element={<PatientHealthRecords />} /> 
           <Route path="/patient-profile" element={<PatientProfilePage />} />

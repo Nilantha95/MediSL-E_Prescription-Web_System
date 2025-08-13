@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { db } from '../../firebase';
+
+// --- Import Chart.js for the graph ---
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { Bar } from 'react-chartjs-2';
 
 import logo from '../Main_Interface_UI/images/Logo01.png';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
 import { Link } from 'react-router-dom';
-import {FaUserMd, FaPrescriptionBottleAlt, FaHistory, FaHome } from 'react-icons/fa';
+import { FaUserMd, FaPrescriptionBottleAlt, FaHistory, FaHome, FaEye } from 'react-icons/fa'; // Added FaEye for the view icon
 import pic from '../Main_Interface_UI/images/Doctor.png';
 import Footer from '../Main_Interface_UI/Footer';
 
+// --- Register Chart.js components ---
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const DoctorDashboard = () => {
     const auth = getAuth();
@@ -22,32 +28,34 @@ const DoctorDashboard = () => {
         userType: '',
         photoURL: null,
     });
+
+    // State for dashboard statistics
+    const [totalPatients, setTotalPatients] = useState(0);
+    const [totalPrescriptions, setTotalPrescriptions] = useState(0);
+    const [todaysPrescriptions, setTodaysPrescriptions] = useState(0);
+
+    // --- New state for patient-specific stats and the full prescription list ---
+    const [patientStats, setPatientStats] = useState([]);
+    const [allPrescriptions, setAllPrescriptions] = useState([]); // To store the full list for filtering
+
+    // --- New state for modal control ---
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedPatient, setSelectedPatient] = useState(null); // To store data for the modal
+
     const [loading, setLoading] = useState(true);
-
-    // Header and Logout Button Hover State
     const [isLogoutHovered, setIsLogoutHovered] = useState(false);
-
-    // Responsive Styles State
     const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
     useEffect(() => {
-        const handleResize = () => {
-            setScreenWidth(window.innerWidth);
-        };
-
+        const handleResize = () => setScreenWidth(window.innerWidth);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Responsive style utility function
     const getResponsiveStyle = (desktopStyle, tabletStyle, mobileStyle, smallMobileStyle) => {
-        if (screenWidth <= 575) {
-            return smallMobileStyle;
-        } else if (screenWidth <= 768) {
-            return mobileStyle;
-        } else if (screenWidth <= 992) {
-            return tabletStyle;
-        }
+        if (screenWidth <= 575) return smallMobileStyle;
+        if (screenWidth <= 768) return mobileStyle;
+        if (screenWidth <= 992) return tabletStyle;
         return desktopStyle;
     };
 
@@ -57,7 +65,6 @@ const DoctorDashboard = () => {
                 const docRef = doc(db, 'users', user.uid);
                 try {
                     const docSnap = await getDoc(docRef);
-
                     if (docSnap.exists()) {
                         const data = docSnap.data();
                         setDoctorData({
@@ -68,19 +75,49 @@ const DoctorDashboard = () => {
                             photoURL: data.photoURL || pic,
                         });
                     } else {
-                        console.log("No such document for the user!");
                         setDoctorData(prev => ({ ...prev, firstName: "Dr. Not Found", photoURL: pic }));
                     }
+
+                    const prescriptionsQuery = query(collection(db, "prescriptions"), where("doctorId", "==", user.uid));
+                    const querySnapshot = await getDocs(prescriptionsQuery);
+                    const prescriptions = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+
+                    setAllPrescriptions(prescriptions); // Store all prescriptions
+                    setTotalPrescriptions(prescriptions.length);
+
+                    const uniquePatientIds = [...new Set(prescriptions.map(p => p.patientUID))];
+                    setTotalPatients(uniquePatientIds.length);
+
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const todaysAppointments = prescriptions.filter(p => {
+                        const prescriptionDate = p.prescriptionDate.toDate();
+                        prescriptionDate.setHours(0, 0, 0, 0);
+                        return prescriptionDate.getTime() === today.getTime();
+                    });
+                    setTodaysPrescriptions(todaysAppointments.length);
+
+                    const stats = {};
+                    prescriptions.forEach(p => {
+                        const patientName = p.patientName || "Unknown Patient";
+                        if (!stats[patientName]) stats[patientName] = 0;
+                        stats[patientName]++;
+                    });
+                    const statsArray = Object.keys(stats).map(name => ({
+                        patientName: name,
+                        count: stats[name]
+                    })).sort((a, b) => b.count - a.count);
+                    setPatientStats(statsArray);
+
                 } catch (error) {
-                    console.error("Error fetching user data:", error);
+                    console.error("Error fetching data:", error);
                     setDoctorData(prev => ({ ...prev, firstName: "Error", photoURL: pic }));
                 }
             } else {
-                setDoctorData({ firstName: "Please Log In", lastName: "", email: "", userType: "", photoURL: pic });
+                setDoctorData({ firstName: "Please Log In", photoURL: pic });
             }
             setLoading(false);
         });
-
         return () => unsubscribe();
     }, [auth]);
 
@@ -90,8 +127,35 @@ const DoctorDashboard = () => {
         return `${firstInitial}${lastInitial}`;
     };
 
+    // --- Function to handle opening the modal ---
+    const handleViewPatientPrescriptions = (patientName) => {
+        const prescriptionsForPatient = allPrescriptions.filter(p => p.patientName === patientName);
+        setSelectedPatient({ name: patientName, prescriptions: prescriptionsForPatient });
+        setIsModalOpen(true);
+    };
+
+    const chartData = {
+        labels: patientStats.map(stat => stat.patientName),
+        datasets: [{
+            label: 'Number of Prescriptions',
+            data: patientStats.map(stat => stat.count),
+            backgroundColor: 'rgba(0, 123, 255, 0.6)',
+            borderColor: 'rgba(0, 123, 255, 1)',
+            borderWidth: 1,
+        }],
+    };
+
+    const chartOptions = {
+        responsive: true,
+        plugins: {
+            legend: { position: 'top' },
+            title: { display: true, text: 'Patient Prescription Distribution', font: { size: 16 } },
+        },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+    };
+
     const styles = {
-        // --- Header Styles ---
+        // --- Header Styles (omitted for brevity, no changes from previous version) ---
         header: {
             display: 'flex',
             justifyContent: 'space-between',
@@ -179,118 +243,45 @@ const DoctorDashboard = () => {
         registerArrow: { // Used for the forward arrow in the logout button
             marginLeft: '5px',
         },
-
-        // Original styles (from your uploaded file) preserved below
-        dashboardContainer: {
-            display: 'flex',
-            padding: '20px',
-            fontFamily: 'sans-serif'
-        },
-        sidebar: {
-            width: '250px',
-            backgroundColor: '#f8f9fa',
-            padding: '20px',
-            borderRadius: '5px',
-            marginRight: '20px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
-        },
-        sidebarLink: {
-            display: 'flex',
-            alignItems: 'center',
-            padding: '12px 15px',
-            color: '#333',
-            textDecoration: 'none',
-            borderBottom: '1px solid #eee',
-            width: '100%',
-            textAlign: 'left',
-            transition: 'background-color 0.2s, color 0.2s',
-            fontSize: '15px',
-            fontWeight: '500',
-            borderRadius: '5px',
-            marginBottom: '5px',
-        },
-        sidebarLinkActive: {
-            color: '#007bff',
-            backgroundColor: '#e6f2ff',
-            fontWeight: 'bold',
-        },
-        sidebarIcon: {
-            marginRight: '10px',
-            fontSize: '1.2em',
-        },
-        doctorAvatar: {
-            width: '80px',
-            height: '80px',
-            borderRadius: '50%',
-            backgroundColor: '#00cba9',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '1.5em',
-            fontWeight: 'bold',
-            marginBottom: '5px',
-            marginTop: '20px',
-            overflow: 'hidden'
-        },
-        doctorName: {
-            fontSize: '1.1em',
-            color: '#333',
-            margin: 0,
-            marginTop: '10px',
-            fontWeight: 'bold'
-        },
-        doctorType: {
-            fontSize: '0.9em',
-            color: '#6c757d',
-            margin: '5px 0 0 0'
-        },
-        doctorInfo: {
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            padding: '15px 0',
-            borderBottom: '1px solid #eee',
-            backgroundColor: '#d7f3d2',
-            borderRadius: '5px',
-            marginBottom: '20px',
-            width: '100%'
-        },
+        dashboardContainer: { display: 'flex', padding: '20px', fontFamily: 'sans-serif' },
+        sidebar: { width: '250px', backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '5px', marginRight: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', alignSelf: 'flex-start' },
+        sidebarLink: { display: 'flex', alignItems: 'center', padding: '12px 15px', color: '#333', textDecoration: 'none', borderBottom: '1px solid #eee', width: '100%', textAlign: 'left', transition: 'background-color 0.2s, color 0.2s', fontSize: '15px', fontWeight: '500', borderRadius: '5px', marginBottom: '5px' },
+        sidebarLinkActive: { color: '#007bff', backgroundColor: '#e6f2ff', fontWeight: 'bold' },
+        sidebarIcon: { marginRight: '10px', fontSize: '1.2em' },
+        doctorAvatar: { width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#00cba9', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5em', fontWeight: 'bold', marginBottom: '5px', marginTop: '20px', overflow: 'hidden' },
+        doctorName: { fontSize: '1.1em', color: '#333', margin: 0, marginTop: '10px', fontWeight: 'bold' },
+        doctorType: { fontSize: '0.9em', color: '#6c757d', margin: '5px 0 0 0' },
+        doctorInfo: { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '15px 0', borderBottom: '1px solid #eee', backgroundColor: '#d7f3d2', borderRadius: '5px', marginBottom: '20px', width: '100%' },
         content: { flexGrow: 1, padding: '20px', backgroundColor: '#fff', borderRadius: '5px', boxShadow: '0 0 10px rgba(0, 0, 0, 0.05)' },
-        dashboardHeader: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '20px', marginBottom: '20px' },
+        dashboardHeader: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '20px', marginBottom: '40px' },
         headerCard: { backgroundColor: '#e9ecef', padding: '15px', borderRadius: '5px', textAlign: 'center' },
         headerCardTitle: { fontSize: '1em', color: '#6c757d', marginBottom: '5px' },
         headerCardValue: { fontSize: '1.5em', fontWeight: 'bold', color: '#343a40' },
-        recentPrescriptions: { marginBottom: '20px', border: '1px solid #ddd', borderRadius: '5px', padding: '15px', backgroundColor: '#f8f9fa' },
-        recentPrescriptionsTable: { width: '100%', borderCollapse: 'collapse' },
-        recentPrescriptionsTableHeader: { backgroundColor: '#eee', padding: '8px', textAlign: 'left', borderBottom: '1px solid #ccc' },
-        recentPrescriptionsTableRow: { borderBottom: '1px solid #eee' },
-        recentPrescriptionsTableCell: { padding: '8px', textAlign: 'left' },
-        recentPatients: { border: '1px solid #ddd', borderRadius: '5px', padding: '15px', backgroundColor: '#f8f9fa' },
-        recentPatientsList: { display: 'flex', gap: '20px', listStyle: 'none', padding: 0, margin: 0 },
-        recentPatientCard: { border: '1px solid #ccc', borderRadius: '5px', padding: '10px', textAlign: 'center' },
-        patientAvatar: { width: '50px', height: '50px', borderRadius: '50%', backgroundColor: '#007bff', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 10px 0 0', textAlign: 'center' },
-        patientName: { fontSize: '1em', fontWeight: 'bold', marginBottom: '5px' },
-        patientVisit: { fontSize: '0.8em', color: '#6c757d', marginBottom: '10px' },
-        newPrescriptionButton: { backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '5px', padding: '8px 15px', cursor: 'pointer', fontSize: '0.9em' },
-        viewHistoryButtonStyle: { backgroundColor: 'transparent', color: '#007bff', border: '1px solid #007bff', borderRadius: '5px', padding: '8px 15px', cursor: 'pointer', fontSize: '0.9em', marginRight: '5px' },
+        analyticsContainer: { marginTop: '30px', borderTop: '1px solid #e0e0e0', paddingTop: '20px' },
+        analyticsTitle: { fontSize: '1.5em', fontWeight: 'bold', color: '#343a40', marginBottom: '20px' },
+        statsLayout: { display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '30px', alignItems: 'flex-start' },
+        chartContainer: { padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' },
+        
+        // --- Enhanced and New Styles for Table and Modal ---
+        statsTableContainer: { backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', overflow: 'hidden' },
+        statsTable: { width: '100%', borderCollapse: 'collapse' },
+        statsTableHeader: { backgroundColor: '#f1f3f5', padding: '12px 15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', color: '#495057', fontWeight: '600' },
+        statsTableRow: { borderBottom: '1px solid #e9ecef', transition: 'background-color 0.2s ease' },
+        statsTableCell: { padding: '12px 15px', textAlign: 'left', color: '#495057' },
+        actionButton: { backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', transition: 'background-color 0.2s ease' },
+
+        // --- Modal Styles ---
+        modalBackdrop: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0, 0, 0, 0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
+        modalContent: { backgroundColor: 'white', padding: '25px', borderRadius: '8px', boxShadow: '0 5px 15px rgba(0,0,0,0.3)', width: '90%', maxWidth: '600px', position: 'relative' },
+        modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #dee2e6', paddingBottom: '15px', marginBottom: '15px' },
+        modalTitle: { margin: 0, fontSize: '1.25rem', fontWeight: '600' },
+        closeButton: { background: 'transparent', border: 'none', fontSize: '1.75rem', cursor: 'pointer', color: '#6c757d', lineHeight: 1 },
+        modalTable: { width: '100%', borderCollapse: 'collapse', marginTop: '10px' },
+        modalTableHeader: { backgroundColor: '#f8f9fa', padding: '10px', textAlign: 'left', borderBottom: '1px solid #dee2e6' },
+        modalTableCell: { padding: '10px', borderBottom: '1px solid #e9ecef' },
+        modalLink: { color: '#007bff', textDecoration: 'none', fontWeight: '500' },
+        
         footer: { backgroundColor: '#d7f3d2', padding: '20px', marginTop: '20px' },
-        footerContainer: { display: 'flex', justifyContent: 'space-around', paddingBottom: '20px' },
-        footerSection: { display: 'flex', flexDirection: 'column' },
-        footerHeading: { fontSize: '1.2em', marginBottom: '10px', color: '#333' },
-        list: { listStyle: 'none', padding: 0, margin: 0 },
-        listItem: { marginBottom: '10px', color: '#555' },
-        followUs: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
-        socialIcon: { display: 'flex' },
-        iconLink: { marginRight: '10px', textDecoration: 'none', color: '#333' },
-        bottomBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #ccc' },
-        copyright: { fontSize: '0.8em', color: '#777' },
-        links: { display: 'flex' },
-        bottomLink: { color: '#555', textDecoration: 'none', fontSize: '0.8em', marginRight: '10px' },
-        separator: { color: '#ccc', marginRight: '10px' },
     };
 
     if (loading) {
@@ -299,8 +290,8 @@ const DoctorDashboard = () => {
 
     return (
         <div style={{ fontFamily: 'sans-serif' }}>
-            {/* Navigation Bar */}
             <header style={styles.header}>
+                {/* Header content unchanged */}
                 <div style={styles.headerLeft}>
                     <img src={logo} alt="MediPrescribe Logo" style={styles.logo} />
                     <div>
@@ -326,11 +317,10 @@ const DoctorDashboard = () => {
                 </div>
             </header>
 
-            {/* Dashboard Content */}
             <div style={styles.dashboardContainer}>
-                {/* Sidebar - Updated with new design */}
                 <aside style={styles.sidebar}>
-                    <div style={styles.doctorInfo}>
+                    {/* Sidebar content unchanged */}
+                     <div style={styles.doctorInfo}>
                         <div style={styles.doctorAvatar}>
                             {doctorData.photoURL ? (
                                 <img src={doctorData.photoURL} alt="Doctor Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
@@ -347,101 +337,100 @@ const DoctorDashboard = () => {
                     <Link to="/docprofile" style={styles.sidebarLink}><FaUserMd style={styles.sidebarIcon} />Profile</Link>
                 </aside>
 
-                {/* Main Content */}
                 <main style={styles.content}>
                     <div style={styles.dashboardHeader}>
+                        {/* Header cards unchanged */}
                         <div style={styles.headerCard}>
                             <p style={styles.headerCardTitle}>Total Patients</p>
-                            <p style={styles.headerCardValue}>1,234</p>
+                            <p style={styles.headerCardValue}>{totalPatients}</p>
                         </div>
                         <div style={styles.headerCard}>
                             <p style={styles.headerCardTitle}>Prescriptions</p>
-                            <p style={styles.headerCardValue}>856</p>
+                            <p style={styles.headerCardValue}>{totalPrescriptions}</p>
                         </div>
                         <div style={styles.headerCard}>
                             <p style={styles.headerCardTitle}>Today's Appointments</p>
-                            <p style={styles.headerCardValue}>12</p>
-                        </div>
-                        <div style={styles.headerCard}>
-                            <p style={styles.headerCardTitle}>Pending Reviews</p>
-                            <p style={styles.headerCardValue}>8</p>
+                            <p style={styles.headerCardValue}>{todaysPrescriptions}</p>
                         </div>
                     </div>
 
-                    <div style={styles.recentPrescriptions}>
-                        <h2>Recent Prescriptions</h2>
-                        <table style={styles.recentPrescriptionsTable}>
-                            <thead>
-                                <tr>
-                                    <th style={styles.recentPrescriptionsTableHeader}>Patient</th>
-                                    <th style={styles.recentPrescriptionsTableHeader}>Date</th>
-                                    <th style={styles.recentPrescriptionsTableHeader}>Status</th>
-                                    <th style={styles.recentPrescriptionsTableHeader}>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr style={styles.recentPrescriptionsTableRow}>
-                                    <td style={styles.recentPrescriptionsTableCell}>
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
-                                            <div style={styles.patientAvatar}>JD</div>
-                                            <span style={{ marginLeft: '10px' }}>John Doe</span>
-                                        </div>
-                                    </td>
-                                    <td style={styles.recentPrescriptionsTableCell}>Apr 27, 2025</td>
-                                    <td style={styles.recentPrescriptionsTableCell}>Filled</td>
-                                    <td style={styles.recentPrescriptionsTableCell}>...</td>
-                                </tr>
-                                <tr style={styles.recentPrescriptionsTableRow}>
-                                    <td style={styles.recentPrescriptionsTableCell}>
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
-                                            <div style={{ ...styles.patientAvatar, backgroundColor: '#fd7e14' }}>JS</div>
-                                            <span style={{ marginLeft: '10px' }}>Jane Smith</span>
-                                        </div>
-                                    </td>
-                                    <td style={styles.recentPrescriptionsTableCell}>Apr 26, 2025</td>
-                                    <td style={styles.recentPrescriptionsTableCell}>Pending</td>
-                                    <td style={styles.recentPrescriptionsTableCell}>...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <div style={styles.analyticsContainer}>
+                        <h2 style={styles.analyticsTitle}>Patient Analytics</h2>
+                        <div style={styles.statsLayout}>
+                            <div style={styles.chartContainer}>
+                                <Bar options={chartOptions} data={chartData} />
+                            </div>
 
-                    <div style={styles.recentPatients}>
-                        <h2>Recent Patients</h2>
-                        <ul style={styles.recentPatientsList}>
-                            <li style={styles.recentPatientCard}>
-                                <div style={{ ...styles.patientAvatar, backgroundColor: '#6f42c1' }}>RJ</div>
-                                <p style={styles.patientName}>Robert Johnson</p>
-                                <p style={styles.patientVisit}>Last visit: Apr 25, 2025</p>
-                                <div style={{ display: 'flex', justifyContent: 'center', gap: '5px' }}>
-                                    <button style={styles.viewHistoryButtonStyle}>View History</button>
-                                    <button style={styles.newPrescriptionButton}>New Prescription</button>
-                                </div>
-                            </li>
-                            <li style={styles.recentPatientCard}>
-                                <div style={{ ...styles.patientAvatar, backgroundColor: '#dc3545' }}>MW</div>
-                                <p style={styles.patientName}>Mary Williams</p>
-                                <p style={styles.patientVisit}>Last visit: Apr 24, 2025</p>
-                                <div style={{ display: 'flex', justifyContent: 'center', gap: '5px' }}>
-                                    <button style={styles.viewHistoryButtonStyle}>View History</button>
-                                    <button style={styles.newPrescriptionButton}>New Prescription</button>
-                                </div>
-                            </li>
-                            <li style={styles.recentPatientCard}>
-                                <div style={{ ...styles.patientAvatar, backgroundColor: '#198754' }}>DB</div>
-                                <p style={styles.patientName}>David Brown</p>
-                                <p style={styles.patientVisit}>Last visit: Apr 23, 2025</p>
-                                <div style={{ display: 'flex', justifyContent: 'center', gap: '5px' }}>
-                                    <button style={styles.viewHistoryButtonStyle}>View History</button>
-                                    <button style={styles.newPrescriptionButton}>New Prescription</button>
-                                </div>
-                            </li>
-                        </ul>
+                            <div style={styles.statsTableContainer}>
+                                <table style={styles.statsTable}>
+                                    <thead>
+                                        <tr>
+                                            <th style={styles.statsTableHeader}>Patient</th>
+                                            <th style={styles.statsTableHeader}>Prescriptions</th>
+                                            <th style={styles.statsTableHeader}>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {patientStats.length > 0 ? patientStats.map((stat, index) => (
+                                            <tr key={index} style={{...styles.statsTableRow, backgroundColor: index % 2 === 0 ? '#f8f9fa' : 'white'}}>
+                                                <td style={styles.statsTableCell}>{stat.patientName}</td>
+                                                <td style={{ ...styles.statsTableCell, textAlign: 'center', fontWeight: 'bold' }}>{stat.count}</td>
+                                                <td style={styles.statsTableCell}>
+                                                    <button 
+                                                        style={styles.actionButton}
+                                                        onClick={() => handleViewPatientPrescriptions(stat.patientName)}
+                                                    >
+                                                        <FaEye />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        )) : (
+                                            <tr>
+                                                <td colSpan="3" style={{...styles.statsTableCell, textAlign: 'center'}}>No patient data.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </main>
             </div>
 
-            {/* Footer */}
+            {/* --- New Modal Component --- */}
+            {isModalOpen && selectedPatient && (
+                <div style={styles.modalBackdrop} onClick={() => setIsModalOpen(false)}>
+                    <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+                        <div style={styles.modalHeader}>
+                            <h3 style={styles.modalTitle}>Prescriptions for {selectedPatient.name}</h3>
+                            <button style={styles.closeButton} onClick={() => setIsModalOpen(false)}>&times;</button>
+                        </div>
+                        <table style={styles.modalTable}>
+                            <thead>
+                                <tr>
+                                    <th style={styles.modalTableHeader}>Prescription ID</th>
+                                    <th style={styles.modalTableHeader}>Date Issued</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {selectedPatient.prescriptions.map((p) => (
+                                    <tr key={p.id}>
+                                        <td style={styles.modalTableCell}>
+                                            <Link to={`/prescription/${p.id}`} style={styles.modalLink}>
+                                                {p.id}
+                                            </Link>
+                                        </td>
+                                        <td style={styles.modalTableCell}>
+                                            {p.prescriptionDate.toDate().toLocaleDateString()}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
             <Footer />
         </div>
     );
