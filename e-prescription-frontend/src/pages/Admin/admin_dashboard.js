@@ -9,7 +9,7 @@ import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate for 
 import logo from '../Main_Interface_UI/images/Logo01.png';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
-import { FaUserShield, FaUsers, FaCog, FaHome, FaChartBar } from 'react-icons/fa'; // New icons for Admin
+import {FaHome, FaChartBar, FaQuestionCircle, FaUser } from 'react-icons/fa'; // New icons for Admin
 import pic from '../Main_Interface_UI/images/Doctor.png'; // Placeholder for admin avatar, can be changed
 import Footer from '../Main_Interface_UI/Footer';
 
@@ -505,30 +505,25 @@ const AdminDashboard = () => {
 
             {/* Dashboard Content */}
             <div style={styles.dashboardContainer}>
-                {/* Sidebar */}
-                <aside style={styles.sidebar}>
-                    <div style={styles.adminInfo}>
-                        <div style={styles.adminAvatar}>
-                            {adminData.photoURL ? (
-                                <img src={adminData.photoURL} alt="Admin Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                            ) : (
-                                <span>{getInitials(adminData.firstName, adminData.lastName)}</span>
-                            )}
+                {/* Sidebar (Adapted for Admin) */}
+                    <aside style={styles.sidebar}>
+                        <div style={styles.adminInfo}> {/* Changed to adminInfo */}
+                            <div style={styles.adminAvatar}> {/* Changed to adminAvatar */}
+                                {adminData.photoURL ? (
+                                    <img src={adminData.photoURL} alt="Admin Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                                ) : (
+                                    <span>{getInitials(adminData.firstName, adminData.lastName)}</span>
+                                )}
+                            </div>
+                            <p style={styles.adminName}>{`${adminData.firstName} ${adminData.lastName}`}</p> {/* Changed to adminName */}
+                            <p style={styles.adminType}>{adminData.userType}</p> {/* Changed to adminType */}
                         </div>
-                        <div>
-                            <p style={styles.adminName}>{`${adminData.firstName} ${adminData.lastName}`}</p>
-                            <p style={styles.adminType}>{adminData.userType}</p>
-                        </div>
-                    </div>
-                    <div style={styles.sidebarItemsContainer}>
-                        <Link to="#" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
-                        <Link to="/user-inquiry" style={{ ...styles.sidebarLink }}><FaHome style={styles.sidebarIcon} />User Inquiries</Link>
-                        <Link to="/admin-report" style={styles.sidebarLink}><FaChartBar style={styles.sidebarIcon} />Reports</Link>
-                        <Link to="/admin-profile" style={styles.sidebarLink}><FaCog style={styles.sidebarIcon} />Profile</Link>
-                        {/* Add more admin specific links as needed */}
-                    </div>
-                </aside>
-
+                        {/* Admin-specific links */}
+                        <Link to="#" style={{...styles.sidebarLink, ...styles.sidebarLinkActive}}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
+                        <Link to="/user-inquiry" style={{ ...styles.sidebarLink}}><FaQuestionCircle style={styles.sidebarIcon} />User Inquiries</Link>
+                        <Link to="/admin-report" style={styles.sidebarLink}><FaChartBar style={styles.sidebarIcon} />Reports</Link> {/* Added Reports link */}
+                        <Link to="/admin-profile" style={{ ...styles.sidebarLink}}><FaUser style={styles.sidebarIcon} />Profile</Link>
+                    </aside>
                 {/* Main Content Area (User Management Table) */}
                 <main style={styles.content}>
                     <h2 style={styles.sectionTitle}>Admin Dashboard - User Management</h2>

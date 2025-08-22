@@ -3,8 +3,8 @@ import logo from '../Main_Interface_UI/images/Logo01.png';
 import { IoIosArrowForward } from 'react-icons/io';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaFacebookF, FaTwitter, FaInstagram, FaUserSecret } from 'react-icons/fa'; // Ensure FaUserSecret is imported
-import { FaUser, FaUserMd, FaUserNurse } from 'react-icons/fa'; // Icons for user types
+import { FaFacebookF, FaTwitter, FaInstagram, FaUserSecret } from 'react-icons/fa';
+import { FaUser, FaUserMd, FaUserNurse } from 'react-icons/fa';
 import backgroundImage from '../Main_Interface_UI/images/background.jpg';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -12,7 +12,7 @@ import { auth, db } from '../../firebase';
 import Footer from '../Main_Interface_UI/Footer';
 
 const SignInForm = () => {
-  const [userType, setUserType] = useState('patient'); // Default to patient
+  const [userType, setUserType] = useState('patient');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -22,7 +22,7 @@ const SignInForm = () => {
   // Header and Button Hover States
   const [isHomeHovered, setIsHomeHovered] = useState(false);
   const [isSignInButtonHovered, setIsSignInButtonHovered] = useState(false);
-  const [hoveredUserType, setHoveredUserType] = useState(null); // For user type button hover
+  const [hoveredUserType, setHoveredUserType] = useState(null);
 
   // Responsive Styles State
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
@@ -65,25 +65,19 @@ const SignInForm = () => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // --- DEBUGGING LOGS START ---
       console.log('Logged in Firebase User UID:', user.uid);
-      // --- DEBUGGING LOGS END ---
 
       const docRef = doc(db, 'users', user.uid);
       const docSnap = await getDoc(docRef);
 
-      // --- DEBUGGING LOGS START ---
       console.log('Does Firestore document exist for this UID?', docSnap.exists());
-      // --- DEBUGGING LOGS END ---
 
       if (docSnap.exists()) {
         const userData = docSnap.data();
 
-        // --- DEBUGGING LOGS START ---
         console.log('Firestore Data for this UID:', userData);
         console.log('Selected User Type on form:', userType);
         console.log('Firestore userType:', userData.userType);
-        // --- DEBUGGING LOGS END ---
 
         if (userData.userType !== userType) {
           setError(`You are registered as a ${userData.userType}. Please select the correct user type.`);
@@ -92,24 +86,21 @@ const SignInForm = () => {
 
         // Role-based navigation
         if (userType === 'doctor') {
-            navigate('/doctor/dashboard');
+          navigate('/doctor/dashboard');
         } else if (userType === 'patient') {
-            navigate('/patient/dashboard');
+          navigate('/patient/dashboard');
         } else if (userType === 'pharmacist') {
-            navigate('/pharmacy/dashboard');
-        } else if (userType === 'admin') { // Corrected block for admin navigation
-            navigate('/admin/dashboard');
+          navigate('/pharmacy/dashboard');
+        } else if (userType === 'admin') {
+          navigate('/admin/dashboard');
         } else {
-            // Fallback for any other userType not explicitly handled, or a general dashboard
-            navigate('/dashboard'); // Or navigate to a default landing page if userType is unexpected
+          navigate('/dashboard');
         }
       } else {
-        // This is the error you are receiving if docSnap.exists() is false
         setError('User role not found. Please register or contact support.');
       }
     } catch (error) {
       console.error('Error signing in:', error);
-      // More user-friendly error messages
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
         setError('Invalid email or password.');
       } else if (error.code === 'auth/invalid-email') {
@@ -129,14 +120,14 @@ const SignInForm = () => {
       overflowX: 'hidden',
       display: 'flex',
       flexDirection: 'column',
-      minHeight: '100vh', // Ensure page takes full height
+      minHeight: '100vh',
     },
     mainContentArea: {
-      flexGrow: 1, // Allows main content to take available space, pushing footer down
+      flexGrow: 1,
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center', // Center content vertically
+      justifyContent: 'center',
       padding: getResponsiveStyle('40px 20px', '30px 15px', '25px 10px', '20px 10px'),
       position: 'relative',
       overflow: 'hidden',
@@ -288,7 +279,6 @@ const SignInForm = () => {
       width: getResponsiveStyle('25px', '22px', '20px', '18px'),
       height: getResponsiveStyle('25px', '22px', '20px', '18px'),
       marginBottom: '8px',
-      // Check if userType or hoveredUserType is current, then apply green. Otherwise, apply default blue/gray.
       color: (userType === hoveredUserType && userType) ? '#2ecc71' : (userType === 'patient' || userType === 'doctor' || userType === 'pharmacist' || userType === 'admin' ? '#2980b9' : '#95a5a6'),
       transition: 'color 0.3s ease',
     },
@@ -324,8 +314,8 @@ const SignInForm = () => {
       marginBottom: '25px',
       width: '100%',
       fontSize: getResponsiveStyle('0.9em', '0.85em', '0.8em', '0.75em'),
-      flexWrap: 'wrap', // Allows wrapping on small screens
-      gap: getResponsiveStyle('0', '0', '10px', '10px'), // Gap for wrapped items
+      flexWrap: 'wrap',
+      gap: getResponsiveStyle('0', '0', '10px', '10px'),
     },
     rememberLabel: {
       display: 'flex',
@@ -366,7 +356,7 @@ const SignInForm = () => {
       margin: '0 auto',
     },
     registerLink: {
-      marginTop: '25px', // Increased margin
+      marginTop: '25px',
       fontSize: getResponsiveStyle('0.9em', '0.85em', '0.8em', '0.75em'),
       color: '#555',
       textAlign: 'center',
@@ -391,7 +381,7 @@ const SignInForm = () => {
 
   // Inline styles for input focus (applied via onFocus/onBlur)
   const getInputStyle = () => ({
-    ...styles.input, // Start with base input styles
+    ...styles.input,
   });
 
   return (
@@ -461,7 +451,6 @@ const SignInForm = () => {
               <FaUserNurse style={styles.userTypeIcon} />
               Pharmacist
             </button>
-            {/* ADD THIS NEW BUTTON FOR ADMIN */}
             <button
               type="button"
               style={styles.userTypeButton('admin')}
@@ -469,7 +458,7 @@ const SignInForm = () => {
               onMouseEnter={() => setHoveredUserType('admin')}
               onMouseLeave={() => setHoveredUserType(null)}
             >
-              <FaUserSecret style={styles.userTypeIcon} /> {/* Use FaUserSecret or FaUser */}
+              <FaUserSecret style={styles.userTypeIcon} />
               Admin
             </button>
           </div>

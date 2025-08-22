@@ -82,11 +82,14 @@ const DoctorDashboard = () => {
                     const querySnapshot = await getDocs(prescriptionsQuery);
                     const prescriptions = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
 
-                    setAllPrescriptions(prescriptions); // Store all prescriptions
+                    setAllPrescriptions(prescriptions);
                     setTotalPrescriptions(prescriptions.length);
 
-                    const uniquePatientIds = [...new Set(prescriptions.map(p => p.patientUID))];
-                    setTotalPatients(uniquePatientIds.length);
+                    // --- MODIFIED LOGIC FOR PATIENT COUNT ---
+                    const patientIdentifiers = prescriptions.map(p => p.patientUID || p.patientName);
+                    const uniquePatients = [...new Set(patientIdentifiers)];
+                    setTotalPatients(uniquePatients.length);
+                    // ----------------------------------------
 
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
