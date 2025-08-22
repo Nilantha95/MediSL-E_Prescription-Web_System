@@ -433,7 +433,7 @@ const PatientProfilePage = () => {
                         <p style={styles.patientType}>{userData.userType}</p>
                     </div>
                     <Link to="/patient/dashboard" style={styles.sidebarLink}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
-                    <Link to="/patient/prescriptions" style={styles.sidebarLink}><FaFileMedical style={styles.sidebarIcon} />My Prescriptions</Link>
+                    <Link to="/patient-prescriptions" style={styles.sidebarLink}><FaFileMedical style={styles.sidebarIcon} />My Prescriptions</Link>
                     <Link to="/patient-health-records" style={styles.sidebarLink}><FaHistory style={styles.sidebarIcon} />My Health Records</Link>
                     <Link to="#" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaUser style={styles.sidebarIcon} />Profile</Link>
                 </aside>

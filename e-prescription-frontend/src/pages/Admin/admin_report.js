@@ -12,7 +12,7 @@ import { autoTable } from 'jspdf-autotable';
 import logo from '../Main_Interface_UI/images/Logo01.png';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
-import { FaUserShield, FaUsers, FaCog, FaHome, FaChartBar, FaFilePdf, FaNotesMedical } from 'react-icons/fa'; 
+import {FaHome, FaChartBar, FaFilePdf, FaNotesMedical, FaUser, FaQuestionCircle } from 'react-icons/fa'; 
 import pic from '../Main_Interface_UI/images/Doctor.png'; // Placeholder for admin avatar, can be changed
 import Footer from '../Main_Interface_UI/Footer';
 
@@ -781,25 +781,22 @@ const AdminReportDashboard = () => {
             <div style={styles.dashboardContainer}>
                 {/* Sidebar */}
                 <aside style={styles.sidebar}>
-                    <div style={styles.adminInfo}>
-                        <div style={styles.adminAvatar}>
+                    <div style={styles.adminInfo}> {/* Changed to adminInfo */}
+                        <div style={styles.adminAvatar}> {/* Changed to adminAvatar */}
                             {adminData.photoURL ? (
                                 <img src={adminData.photoURL} alt="Admin Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                             ) : (
                                 <span>{getInitials(adminData.firstName, adminData.lastName)}</span>
                             )}
                         </div>
-                        <div>
-                            <p style={styles.adminName}>{`${adminData.firstName} ${adminData.lastName}`}</p>
-                            <p style={styles.adminType}>{adminData.userType}</p>
-                        </div>
+                        <p style={styles.adminName}>{`${adminData.firstName} ${adminData.lastName}`}</p> {/* Changed to adminName */}
+                        <p style={styles.adminType}>{adminData.userType}</p> {/* Changed to adminType */}
                     </div>
-                    <div style={styles.sidebarItemsContainer}>
-                        {/* Admin-specific links */}
-                        <Link to="/admin/dashboard" style={styles.sidebarLink}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
-                        <Link to="#" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaChartBar style={styles.sidebarIcon} />Reports</Link>
-                        <Link to="/admin-profile" style={styles.sidebarLink}><FaCog style={styles.sidebarIcon} />Profile</Link>
-                    </div>
+                    {/* Admin-specific links */}
+                    <Link to="/admin/dashboard" style={{ ...styles.sidebarLink}}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
+                    <Link to="/user-inquiry" style={{ ...styles.sidebarLink}}><FaQuestionCircle style={styles.sidebarIcon} />User Inquiries</Link>
+                    <Link to="#" style={{...styles.sidebarLink, ...styles.sidebarLinkActive}}><FaChartBar style={styles.sidebarIcon} />Reports</Link> {/* Added Reports link */}
+                    <Link to="/admin-profile" style={{ ...styles.sidebarLink}}><FaUser style={styles.sidebarIcon} />Profile</Link>
                 </aside>
 
                 {/* Main Content Area (Reports) */}

@@ -498,7 +498,7 @@ const PatientHealthRecords = () => {
                         <p style={styles.patientType}>{patientData.userType}</p>
                     </div>
                     <Link to="/patient/dashboard" style={styles.sidebarLink}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
-                    <Link to="/patient/prescriptions" style={styles.sidebarLink}><FaPrescriptionBottleAlt style={styles.sidebarIcon} />My Prescriptions</Link>
+                    <Link to="/patient-prescriptions" style={styles.sidebarLink}><FaPrescriptionBottleAlt style={styles.sidebarIcon} />My Prescriptions</Link>
                     <Link to="/patient/health-records" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaHistory style={styles.sidebarIcon} />My Health Records</Link>
                     <Link to="/patient-profile" style={styles.sidebarLink}><FaUser style={styles.sidebarIcon} />Profile</Link>
                 </aside>

@@ -498,13 +498,18 @@ function App() {
         <div style={styles.heroContent}>
           <h1 style={styles.heroTitle}>Digital Prescription Management Made Simple</h1>
           <p style={styles.heroSubtitle}>Streamline your healthcare experience with our secure e-prescription platform connecting patients, doctors, and pharmacists.</p>
-          <button
-            style={styles.getStartedBtn}
-            onMouseEnter={() => setIsGetStartedHovered(true)}
-            onMouseLeave={() => setIsGetStartedHovered(false)}
+          <a
+            href="/register" // Replace with the destination URL
+            style={{ textDecoration: 'none' }} // Remove underline from the link
           >
-            Get Started
-          </button>
+            <button
+              style={styles.getStartedBtn}
+              onMouseEnter={() => setIsGetStartedHovered(true)}
+              onMouseLeave={() => setIsGetStartedHovered(false)}
+            >
+              Get Started
+            </button>
+          </a>
         </div>
         <div style={styles.heroImageSliderContainer}>
           <Slider {...slickSettings}>

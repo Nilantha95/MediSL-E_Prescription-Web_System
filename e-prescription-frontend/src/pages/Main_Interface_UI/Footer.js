@@ -149,7 +149,7 @@ const Footer = () => {
           <ul style={styles.list}>
             <li style={styles.listItem}>
               <a
-                href="/home"
+                href="/home2"
                 style={styles.getLinkStyle('home')}
                 onMouseEnter={() => setHoveredLink('home')}
                 onMouseLeave={() => setHoveredLink(null)}
@@ -159,7 +159,7 @@ const Footer = () => {
             </li>
             <li style={styles.listItem}>
               <a
-                href="/features"
+                href="/featurepage"
                 style={styles.getLinkStyle('features')}
                 onMouseEnter={() => setHoveredLink('features')}
                 onMouseLeave={() => setHoveredLink(null)}
@@ -169,32 +169,22 @@ const Footer = () => {
             </li>
             <li style={styles.listItem}>
               <a
-                href="/doctors"
+                href="/aboutus"
                 style={styles.getLinkStyle('doctors')}
                 onMouseEnter={() => setHoveredLink('doctors')}
                 onMouseLeave={() => setHoveredLink(null)}
               >
-                Doctors
+                AboutUs
               </a>
             </li>
             <li style={styles.listItem}>
               <a
-                href="/patients"
+                href="/contact"
                 style={styles.getLinkStyle('patients')}
                 onMouseEnter={() => setHoveredLink('patients')}
                 onMouseLeave={() => setHoveredLink(null)}
               >
-                Patients
-              </a>
-            </li>
-            <li style={styles.listItem}>
-              <a
-                href="/blog"
-                style={styles.getLinkStyle('blog')}
-                onMouseEnter={() => setHoveredLink('blog')}
-                onMouseLeave={() => setHoveredLink(null)}
-              >
-                Blog
+                Contact
               </a>
             </li>
           </ul>

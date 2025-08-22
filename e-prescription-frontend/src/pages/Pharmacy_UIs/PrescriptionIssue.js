@@ -48,19 +48,19 @@ const PrescriptionIssue = () => {
     // State to hold the logged-in pharmacist's name
     const [pharmacistName, setPharmacistName] = useState(null);
 
+    // New state to store the initial, unchanged statuses from the database
+    const [initialMedicinesStatus, setInitialMedicinesStatus] = useState({});
+
     // This effect handles authentication state and fetching pharmacist's name
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
-                // Point to the 'users' collection instead of 'pharmacists'
                 const userDocRef = doc(db, 'users', currentUser.uid);
                 const userDocSnap = await getDoc(userDocRef);
 
                 if (userDocSnap.exists()) {
                     const userData = userDocSnap.data();
-                    // Check if user is a pharmacist before setting the name
                     if (userData.userType === 'pharmacist') {
-                        // Combine firstName and lastName
                         const fullName = `${userData.firstName} ${userData.lastName}`;
                         setPharmacistName(fullName);
                     } else {
@@ -84,15 +84,13 @@ const PrescriptionIssue = () => {
     // This effect handles fetching the prescription and runs only when
     // both the prescriptionId and the pharmacistName are available.
     useEffect(() => {
-        // Only proceed if both an ID and a pharmacist name are available
         if (!prescriptionId || !pharmacistName) {
-            // We'll wait until the first useEffect has populated the pharmacistName.
             return;
         }
 
         const fetchPrescription = async () => {
-            setLoading(true); // Set loading to true before fetching
-            setError(null); // Clear previous errors
+            setLoading(true);
+            setError(null);
             const docRef = doc(db, 'prescriptions', prescriptionId);
             
             try {
@@ -120,10 +118,27 @@ const PrescriptionIssue = () => {
                     
                     const initialMedicines = decryptedMedications.map(med => ({
                         ...med,
-                        status: med.status || 'Pending'
+                        status: med.status || 'Not Issued'
                     }));
+
+                    const statusMap = initialMedicines.reduce((acc, med) => {
+                        acc[med.name] = med.status;
+                        return acc;
+                    }, {});
+                    setInitialMedicinesStatus(statusMap);
                     
-                    setPrescription({ ...data });
+                    // NEW: Fetch doctor's name using doctorId from the prescription
+                    let doctorName = 'N/A';
+                    if (data.doctorId) {
+                        const doctorDocRef = doc(db, 'users', data.doctorId);
+                        const doctorDocSnap = await getDoc(doctorDocRef);
+                        if (doctorDocSnap.exists()) {
+                            const doctorData = doctorDocSnap.data();
+                            doctorName = `${doctorData.firstName} ${doctorData.lastName}`;
+                        }
+                    }
+                    
+                    setPrescription({ ...data, doctorName });
                     setMedicines(initialMedicines);
                 } else {
                     setError("Prescription not found.");
@@ -132,13 +147,13 @@ const PrescriptionIssue = () => {
                 console.error("Error fetching prescription:", err);
                 setError("Failed to fetch prescription. This may be due to an invalid QR code or a fulfilled prescription.");
             } finally {
-                setLoading(false); // Set loading to false when done, regardless of success or failure
+                setLoading(false);
             }
         };
         
         fetchPrescription();
         
-    }, [prescriptionId, pharmacistName]); // Dependency array now includes pharmacistName
+    }, [prescriptionId, pharmacistName]);
 
     const handleMedicineStatusChange = (index, newStatus) => {
         const updatedMedicines = [...medicines];
@@ -163,9 +178,26 @@ const PrescriptionIssue = () => {
         }
 
         const data = docSnap.data();
-        
-        const allIssued = medicines.every(med => med.status === 'Issued');
-        const anyIssued = medicines.some(med => med.status === 'Issued');
+        const existingMedications = decryptData(data.medications);
+
+        const existingMedMap = existingMedications.reduce((acc, med) => {
+            acc[med.name] = med.status;
+            return acc;
+        }, {});
+
+        const newlyIssuedMedicines = medicines.filter(med => 
+            med.status === 'Issued' && existingMedMap[med.name] !== 'Issued'
+        ).map(med => med.name);
+
+        const updatedMedicationList = medicines.map(med => {
+            return {
+                ...med,
+                status: existingMedMap[med.name] === 'Issued' ? 'Issued' : med.status
+            };
+        });
+
+        const allIssued = updatedMedicationList.every(med => med.status === 'Issued');
+        const anyIssued = updatedMedicationList.some(med => med.status === 'Issued');
         
         let finalStatus;
         if (allIssued) {
@@ -179,13 +211,13 @@ const PrescriptionIssue = () => {
         const newIssueRecord = {
             issuedBy: pharmacistName,
             issuedAt: new Date(),
-            medicinesIssued: medicines.filter(med => med.status === 'Issued').map(med => med.name)
+            medicinesIssued: newlyIssuedMedicines
         };
         
         const updatedIssueHistory = data.issueHistory ? [...data.issueHistory, newIssueRecord] : [newIssueRecord];
 
         const updatedPrescription = {
-            medications: encryptData(medicines),
+            medications: encryptData(updatedMedicationList),
             status: finalStatus,
             issueHistory: updatedIssueHistory,
         };
@@ -235,41 +267,52 @@ const PrescriptionIssue = () => {
         }
     };
 
+    const handleGoBack = () => {
+        navigate('/pharmacy/dashboard');
+    };
+
     if (loading) return <div style={{ textAlign: 'center', marginTop: '50px' }}>Loading...</div>;
     if (error) return <div style={{ color: 'red', textAlign: 'center', marginTop: '50px' }}>{error}</div>;
 
     return (
-        <div style={{ fontFamily: 'sans-serif', padding: '20px' }}>
-            <div style={{ maxWidth: '900px', margin: '0 auto', backgroundColor: '#fff', padding: '30px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                <h1 style={{ borderBottom: '1px solid #eee', paddingBottom: '10px' }}>Prescription for: {prescription?.patientName}</h1>
-                <p><strong>Diagnosis:</strong> {prescription?.diagnosis || 'N/A'}</p>
-                <p><strong>Doctor:</strong> {prescription?.doctorName || 'N/A'}</p>
-                <p><strong>Status:</strong> {prescription?.status || 'N/A'}</p>
+        <div style={{ fontFamily: 'sans-serif', padding: '20px', background: '#d7f3d2', minHeight: '100vh' }}>
+            <div style={{ maxWidth: '900px', margin: '0 auto', backgroundColor: '#fff', padding: '30px', borderRadius: '12px', boxShadow: '0 8px 20px rgba(0,0,0,0.1)' }}>
+                <h1 style={{ borderBottom: '2px solid #e2e8f0', paddingBottom: '15px', marginBottom: '20px', color: '#1a202c' }}>
+                    Prescription for: {prescription?.patientName}
+                </h1>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                    <p style={{ margin: 0 }}><strong>Diagnosis:</strong> {prescription?.diagnosis || 'N/A'}</p>
+                    <p style={{ margin: 0 }}><strong>Doctor:</strong> {prescription?.doctorName || 'N/A'}</p>
+                    <p style={{ margin: 0 }}><strong>Status:</strong> {prescription?.status || 'N/A'}</p>
+                </div>
 
-                <h3 style={{ marginTop: '30px', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>Medicines</h3>
+                <h3 style={{ marginTop: '30px', borderBottom: '2px solid #e2e8f0', paddingBottom: '10px', color: '#2d3748' }}>Medicines</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
                     {medicines.map((med, index) => (
-                        <div key={index} style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '8px', backgroundColor: '#f9f9f9' }}>
-                            <p><strong>Name:</strong> {med.name}</p>
-                            <p><strong>Dosage:</strong> {med.dosage}</p>
-                            <p><strong>Frequency:</strong> {med.frequency}</p>
+                        <div key={index} style={{ border: '1px solid #e2e8f0', padding: '20px', borderRadius: '10px', backgroundColor: '#f9fafb' }}>
+                            <p style={{ margin: '0 0 10px', fontWeight: 'bold' }}>{med.name}</p>
+                            <p style={{ margin: '0 0 5px', fontSize: '0.9em' }}>Dosage: {med.dosage}</p>
+                            <p style={{ margin: '0 0 15px', fontSize: '0.9em' }}>Frequency: {med.frequency}</p>
                             <div>
-                                <label style={{ marginRight: '10px' }}>
+                                <label style={{ marginRight: '15px', cursor: initialMedicinesStatus[med.name] === 'Issued' ? 'not-allowed' : 'pointer' }}>
                                     <input
                                         type="radio"
                                         name={`status-${index}`}
                                         value="Issued"
                                         checked={med.status === 'Issued'}
                                         onChange={() => handleMedicineStatusChange(index, 'Issued')}
+                                        disabled={initialMedicinesStatus[med.name] === 'Issued'}
                                     /> Issued
                                 </label>
-                                <label>
+                                <label style={{ cursor: initialMedicinesStatus[med.name] === 'Issued' ? 'not-allowed' : 'pointer' }}>
                                     <input
                                         type="radio"
                                         name={`status-${index}`}
                                         value="Not Issued"
                                         checked={med.status === 'Not Issued'}
                                         onChange={() => handleMedicineStatusChange(index, 'Not Issued')}
+                                        disabled={initialMedicinesStatus[med.name] === 'Issued'}
                                     /> Not Issued
                                 </label>
                             </div>
@@ -277,21 +320,35 @@ const PrescriptionIssue = () => {
                     ))}
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '30px', gap: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '40px', gap: '10px' }}>
                     <button
-                        onClick={handleReject}
-                        style={{ padding: '10px 20px', fontSize: '1em', backgroundColor: '#dc3545', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
-                        disabled={isSaving}
+                        onClick={handleGoBack}
+                        style={{ padding: '12px 24px', fontSize: '1em', color: '#4a5568', background: '#e2e8f0', border: 'none', borderRadius: '6px', cursor: 'pointer', transition: 'background-color 0.3s' }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#cbd5e0'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = '#e2e8f0'}
                     >
-                        Reject Prescription
+                        &larr; Back to Dashboard
                     </button>
-                    <button
-                        onClick={handleFinalize}
-                        style={{ padding: '10px 20px', fontSize: '1em', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
-                        disabled={isSaving}
-                    >
-                        {isSaving ? 'Finalizing...' : 'Finalize & Save'}
-                    </button>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button
+                            onClick={handleReject}
+                            style={{ padding: '12px 24px', fontSize: '1em', backgroundColor: '#e53e3e', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', transition: 'background-color 0.3s' }}
+                            disabled={isSaving}
+                            onMouseEnter={(e) => e.target.style.backgroundColor = '#c53030'}
+                            onMouseLeave={(e) => e.target.style.backgroundColor = '#e53e3e'}
+                        >
+                            Reject Prescription
+                        </button>
+                        <button
+                            onClick={handleFinalize}
+                            style={{ padding: '12px 24px', fontSize: '1em', backgroundColor: '#38a169', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', transition: 'background-color 0.3s' }}
+                            disabled={isSaving}
+                            onMouseEnter={(e) => e.target.style.backgroundColor = '#2f855a'}
+                            onMouseLeave={(e) => e.target.style.backgroundColor = '#38a169'}
+                        >
+                            {isSaving ? 'Finalizing...' : 'Finalize & Save'}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -14,9 +14,9 @@ import {
 import { BsCheckCircleFill } from 'react-icons/bs';
 
 // Import your local images for the background slider (ensure correct paths)
-import healthSlide1 from './images/Newslide02.jpg';
-import healthSlide2 from './images/Newslide02.jpg';
-import healthSlide3 from './images/Newslide03.jpg';
+import healthSlide1 from './images/photo-1628771065518-0d82f1938462.jpg';
+import healthSlide2 from './images/premium_photo-1661774852687-b16047215f1b.jpg';
+import healthSlide3 from './images/premium_photo-1676325101995-cdfc26d820bb.jpg';
 
 function Features() {
   // State to manage the current slide index for the background image slider
@@ -214,7 +214,7 @@ function Features() {
     },
     heroTitle: {
       fontSize: getResponsiveStyle('3.2em', '2.8em', '2.5em', '2em'),
-      color: 'white',
+      color: '#423E3D',
       marginBottom: '20px',
       position: 'relative',
       zIndex: 2,
@@ -224,7 +224,7 @@ function Features() {
     },
     heroSubtitle: {
       fontSize: getResponsiveStyle('1.2em', '1.1em', '1.0em', '0.9em'),
-      color: 'white',
+      color: '#423E3D',
       maxWidth: getResponsiveStyle('900px', '700px', '90%', '90%'),
       margin: '0 auto 30px auto',
       lineHeight: '1.6',
@@ -463,7 +463,6 @@ function Features() {
         <p style={styles.heroSubtitle}>
           E-Prescribe goes beyond basic prescriptions, offering a suite of powerful features designed to enhance efficiency, safety, and patient engagement across the healthcare ecosystem.
         </p>
-        <p style={styles.heroImageCredit}>Images from Freepik</p>
       </section>
 
       {/* Main Features Grid Section */}

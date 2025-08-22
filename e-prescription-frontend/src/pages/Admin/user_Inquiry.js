@@ -1,21 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { IoIosArrowForward } from 'react-icons/io';
-import { FaPhoneAlt, FaHome, FaQuestionCircle, FaInfoCircle, FaEnvelope, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { FaPhoneAlt, FaHome, FaQuestionCircle, FaChartBar, FaUser, FaTimesCircle, FaCheckCircle } from 'react-icons/fa';
 import logo from '../Main_Interface_UI/images/Logo01.png';
+import pic from '../Main_Interface_UI/images/Doctor.png'; // Make sure to import the default placeholder image
 import Footer from '../Main_Interface_UI/Footer';
 
 import { db } from '../../firebase';
-// Import Firestore methods and now, Firebase Functions methods
-import { collection, getDocs, query, orderBy, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 
 const UserInquiryPage = () => {
+    const auth = getAuth();
+    const navigate = useNavigate();
+
     const [isLogoutHovered, setIsLogoutHovered] = useState(false);
     const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
     const [inquiries, setInquiries] = useState([]);
     const [loadingInquiries, setLoadingInquiries] = useState(true);
+    const [loadingUser, setLoadingUser] = useState(true);
     const [error, setError] = useState(null);
 
     const [viewingInquiry, setViewingInquiry] = useState(null);
@@ -23,10 +28,11 @@ const UserInquiryPage = () => {
     const [replyMessage, setReplyMessage] = useState('');
     const [isReplying, setIsReplying] = useState(false);
 
-    const [userData] = useState({
-        firstName: 'Admin',
-        lastName: 'User',
-        userType: 'Admin',
+    // State for user data
+    const [adminData, setAdminData] = useState({
+        firstName: '',
+        lastName: '',
+        userType: '',
         photoURL: null,
     });
 
@@ -34,10 +40,47 @@ const UserInquiryPage = () => {
         const handleResize = () => {
             setScreenWidth(window.innerWidth);
         };
-
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    // Fetch user data from Firebase Auth and Firestore on component mount
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+            if (currentUser) {
+                try {
+                    const docRef = doc(db, 'users', currentUser.uid);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        if (data.userType === 'admin') {
+                            setAdminData({
+                                firstName: data.firstName || '',
+                                lastName: data.lastName || '',
+                                userType: data.userType || '',
+                                photoURL: currentUser.photoURL || pic,
+                            });
+                        } else {
+                            alert("You do not have administrative privileges to view this page.");
+                            navigate('/');
+                        }
+                    } else {
+                        console.log("No such document for user profile!");
+                        navigate('/signin');
+                    }
+                } catch (error) {
+                    console.error("Error fetching admin data:", error);
+                    navigate('/signin');
+                }
+            } else {
+                setAdminData({ firstName: '', lastName: '', userType: '', photoURL: null });
+                navigate('/signin');
+            }
+            setLoadingUser(false);
+        });
+
+        return () => unsubscribe();
+    }, [auth, navigate]);
 
     const fetchInquiries = async () => {
         setLoadingInquiries(true);
@@ -80,8 +123,14 @@ const UserInquiryPage = () => {
         return `${firstInitial}${lastInitial}`;
     };
 
-    const handleLogout = () => {
-        alert('User logged out (placeholder action)');
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+            navigate('/signin'); // Redirect to sign-in page after logout
+        } catch (error) {
+            console.error("Error logging out:", error);
+            alert("Failed to log out. Please try again.");
+        }
     };
 
     const handleMarkAsRead = async (e, inquiryId) => {
@@ -99,30 +148,22 @@ const UserInquiryPage = () => {
         }
     };
 
-    // --- UPDATED FUNCTION ---
-    // This function now calls the backend Cloud Function to send the email.
     const handleSendReply = async (e) => {
         e.preventDefault();
         setIsReplying(true);
 
         try {
-            // 1. Initialize the connection to Cloud Functions
             const functions = getFunctions();
-            // 2. Get a reference to the specific function by its name
             const sendInquiryReply = httpsCallable(functions, 'sendInquiryReply');
-
-            // 3. Call the function and pass the email data
             await sendInquiryReply({
                 to: viewingInquiry.email,
                 subject: replySubject,
                 message: replyMessage,
             });
 
-            // 4. If the call succeeds, update the status in Firestore
             const inquiryRef = doc(db, 'userInquiries', viewingInquiry.id);
             await updateDoc(inquiryRef, { status: 'replied' });
 
-            // 5. Refresh the data and reset the UI
             await fetchInquiries();
             setReplySubject('');
             setReplyMessage('');
@@ -130,14 +171,12 @@ const UserInquiryPage = () => {
 
             alert('Reply sent and inquiry marked as replied!');
         } catch (err) {
-            // This block will catch errors from both the Cloud Function call and Firestore update
             console.error('Failed to send reply:', err);
             alert('Failed to send reply. Please try again.');
         } finally {
             setIsReplying(false);
         }
     };
-
 
     const styles = {
         dashboardPage: {
@@ -275,10 +314,6 @@ const UserInquiryPage = () => {
             borderRadius: '5px',
             marginBottom: getResponsiveStyle('5px', '5px', '0', '0'),
             whiteSpace: 'nowrap',
-            '&:hover': {
-                backgroundColor: '#e6f2ff',
-                color: '#007bff',
-            },
         },
         sidebarLinkActive: {
             color: '#007bff',
@@ -289,11 +324,11 @@ const UserInquiryPage = () => {
             marginRight: getResponsiveStyle('10px', '8px', '5px', '3px'),
             fontSize: getResponsiveStyle('1.2em', '1.1em', '1em', '0.9em'),
         },
-        userAvatar: {
+        adminAvatar: {
             width: getResponsiveStyle('80px', '70px', '60px', '50px'),
             height: getResponsiveStyle('80px', '70px', '60px', '50px'),
             borderRadius: '50%',
-            backgroundColor: '#2ecc71',
+            backgroundColor: '#00cba9',
             color: '#fff',
             display: 'flex',
             alignItems: 'center',
@@ -304,7 +339,19 @@ const UserInquiryPage = () => {
             marginTop: getResponsiveStyle('20px', '15px', '0', '0'),
             overflow: 'hidden',
         },
-        userInfo: {
+        adminName: {
+            fontSize: getResponsiveStyle('1.1em', '1em', '0.95em', '0.9em'),
+            color: '#333',
+            margin: '0',
+            marginTop: getResponsiveStyle('10px', '8px', '0', '0'),
+            fontWeight: 'bold'
+        },
+        adminType: {
+            fontSize: getResponsiveStyle('0.9em', '0.85em', '0.8em', '0.75em'),
+            color: '#6c757d',
+            margin: '5px 0 0 0'
+        },
+        adminInfo: {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -317,18 +364,6 @@ const UserInquiryPage = () => {
             flexDirection: getResponsiveStyle('column', 'column', 'row', 'row'),
             gap: getResponsiveStyle('0', '0', '10px', '5px'),
             justifyContent: getResponsiveStyle('center', 'center', 'flex-start', 'flex-start'),
-        },
-        userName: {
-            fontSize: getResponsiveStyle('1.1em', '1em', '0.95em', '0.9em'),
-            color: '#333',
-            margin: '0',
-            marginTop: getResponsiveStyle('10px', '8px', '0', '0'),
-            fontWeight: 'bold'
-        },
-        userType: {
-            fontSize: getResponsiveStyle('0.9em', '0.85em', '0.8em', '0.75em'),
-            color: '#6c757d',
-            margin: '5px 0 0 0'
         },
         content: {
             flexGrow: 1,
@@ -478,9 +513,9 @@ const UserInquiryPage = () => {
             boxSizing: 'border-box',
         },
     };
-
-    if (loadingInquiries) {
-        return <div style={{ textAlign: 'center', padding: '50px' }}>Loading inquiries...</div>;
+    
+    if (loadingUser || loadingInquiries) {
+        return <div style={{ textAlign: 'center', padding: '50px' }}>Loading...</div>;
     }
 
     if (error) {
@@ -515,27 +550,27 @@ const UserInquiryPage = () => {
             </header>
 
             <div style={styles.dashboardContainer}>
+                {/* Replaced Sidebar from admin_profile.js */}
                 <aside style={styles.sidebar}>
-                    <div style={styles.userInfo}>
-                        <div style={styles.userAvatar}>
-                            {userData.photoURL ? (
-                                <img src={userData.photoURL} alt="User Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                    <div style={styles.adminInfo}>
+                        <div style={styles.adminAvatar}>
+                            {adminData.photoURL ? (
+                                <img src={adminData.photoURL} alt="Admin Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                             ) : (
-                                <span>{getInitials(userData.firstName, userData.lastName)}</span>
+                                <span>{getInitials(adminData.firstName, adminData.lastName)}</span>
                             )}
                         </div>
-                        <div>
-                            <p style={styles.userName}>{`${userData.firstName} ${userData.lastName}`}</p>
-                            <p style={styles.userType}>{userData.userType}</p>
-                        </div>
+                        <p style={styles.adminName}>{`${adminData.firstName} ${adminData.lastName}`}</p>
+                        <p style={styles.adminType}>{adminData.userType}</p>
                     </div>
                     <div style={styles.sidebarItemsContainer}>
                         <Link to="/admin/dashboard" style={styles.sidebarLink}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
-                        <Link to="/admin/inquiries" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaQuestionCircle style={styles.sidebarIcon} />User Inquiries</Link>
-                        <Link to="/admin/reports" style={styles.sidebarLink}><FaInfoCircle style={styles.sidebarIcon} />Reports</Link>
-                        <Link to="/admin/contact" style={styles.sidebarLink}><FaEnvelope style={styles.sidebarIcon} />Contact Support</Link>
+                        <Link to="#" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaQuestionCircle style={styles.sidebarIcon} />User Inquiries</Link>
+                        <Link to="/admin-report" style={styles.sidebarLink}><FaChartBar style={styles.sidebarIcon} />Reports</Link>
+                        <Link to="/admin/profile" style={styles.sidebarLink}><FaUser style={styles.sidebarIcon} />Profile</Link>
                     </div>
                 </aside>
+                {/* End of Replaced Sidebar */}
 
                 <main style={styles.content}>
                     <h2 style={styles.sectionTitle}>User Inquiries</h2>

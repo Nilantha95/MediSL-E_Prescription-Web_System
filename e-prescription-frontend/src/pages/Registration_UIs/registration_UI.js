@@ -3,7 +3,7 @@ import logo from '../Main_Interface_UI/images/Logo01.png';
 import { IoIosArrowForward } from 'react-icons/io';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import { FaUser, FaUserMd, FaUserNurse } from 'react-icons/fa';  // Unused, but kept as per original import
+import { FaUser, FaUserMd, FaUserNurse } from 'react-icons/fa';
 import backgroundImage from '../Main_Interface_UI/images/background.jpg';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
@@ -19,6 +19,7 @@ const RegistrationForm = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [error, setError] = useState('');
+  const [passwordStrength, setPasswordStrength] = useState('');
 
   // Header and Button Hover States
   const [isHomeHovered, setIsHomeHovered] = useState(false);
@@ -36,6 +37,41 @@ const RegistrationForm = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Password strength check utility function
+  const checkPasswordStrength = (pwd) => {
+    let score = 0;
+    if (!pwd) return '';
+
+    // Award points for different criteria
+    if (pwd.length > 7) score++;
+    if (pwd.match(/[a-z]+/)) score++;
+    if (pwd.match(/[A-Z]+/)) score++;
+    if (pwd.match(/[0-9]+/)) score++;
+    if (pwd.match(/[^a-zA-Z0-9]+/)) score++;
+
+    // Translate score to strength level
+    switch (score) {
+      case 0:
+      case 1:
+        return 'Weak';
+      case 2:
+      case 3:
+        return 'Fair';
+      case 4:
+        return 'Good';
+      case 5:
+        return 'Strong';
+      default:
+        return 'Weak';
+    }
+  };
+
+  const handlePasswordChange = (e) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    setPasswordStrength(checkPasswordStrength(newPassword));
+  };
 
   // Responsive style utility function
   const getResponsiveStyle = (desktopStyle, tabletStyle, mobileStyle, smallMobileStyle) => {
@@ -72,6 +108,11 @@ const RegistrationForm = () => {
       return;
     }
 
+    if (passwordStrength === 'Weak' || passwordStrength === 'Fair') {
+      setError('Please enter a stronger password. It should be at least 8 characters long and include a mix of uppercase letters, lowercase letters, numbers, and special characters.');
+      return;
+    }
+
     if (!agreeTerms) {
       setError('Please agree to the Terms of Service and Privacy Policy.');
       return;
@@ -102,6 +143,7 @@ const RegistrationForm = () => {
       setConfirmPassword('');
       setAgreeTerms(false);
       setError('');
+      setPasswordStrength('');
     } catch (error) {
       console.error('Error creating account:', error);
       setError(error.message);
@@ -117,15 +159,15 @@ const RegistrationForm = () => {
       overflowX: 'hidden',
       display: 'flex',
       flexDirection: 'column',
-      minHeight: '100vh', // Ensure page takes full height
+      minHeight: '100vh',
     },
     mainContentArea: {
-      flexGrow: 1, // Allows main content to take available space, pushing footer down
+      flexGrow: 1,
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center', // Center content vertically
-      padding: getResponsiveStyle('40px 20px', '30px 15px', '25px 10px', '20px 10px'), // Responsive padding
+      justifyContent: 'center',
+      padding: getResponsiveStyle('40px 20px', '30px 15px', '25px 10px', '20px 10px'),
       position: 'relative',
       overflow: 'hidden',
     },
@@ -228,18 +270,18 @@ const RegistrationForm = () => {
 
     // --- Form Specific Styles ---
     formContainer: {
-      backgroundColor: '#fff', // Changed to white for better contrast
+      backgroundColor: '#fff',
       padding: getResponsiveStyle('40px', '30px', '25px', '20px'),
       borderRadius: '10px',
-      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)', // Enhanced shadow
+      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
       width: getResponsiveStyle('500px', '450px', '90%', '95%'),
       maxWidth: '95%',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       zIndex: 1,
-      marginTop: '20px', // Space below header
-      marginBottom: '40px', // Space above footer
+      marginTop: '20px',
+      marginBottom: '40px',
     },
     heading: {
       fontSize: getResponsiveStyle('2.5em', '2.2em', '2em', '1.8em'),
@@ -255,7 +297,7 @@ const RegistrationForm = () => {
     userType: {
       marginBottom: '25px',
       textAlign: 'center',
-      width: '100%', // Ensure it takes full width of formContainer
+      width: '100%',
     },
     userTypeLabel: {
       display: 'block',
@@ -268,14 +310,14 @@ const RegistrationForm = () => {
       display: 'flex',
       gap: getResponsiveStyle('15px', '12px', '10px', '8px'),
       justifyContent: 'center',
-      flexWrap: 'wrap', // Allow buttons to wrap on smaller screens
+      flexWrap: 'wrap',
     },
     userTypeButton: (type) => ({
       padding: getResponsiveStyle('12px 20px', '10px 18px', '8px 15px', '8px 12px'),
-      borderRadius: '8px', // Slightly larger border-radius
-      border: `1px solid ${userType === type ? '#2ecc71' : '#e0e0e0'}`, // Green border for active
-      backgroundColor: userType === type ? '#e6ffe6' : (hoveredUserType === type ? '#f0f0f0' : '#f9f9f9'), // Light green for active
-      color: userType === type ? '#2ecc71' : '#555', // Darker green text for active
+      borderRadius: '8px',
+      border: `1px solid ${userType === type ? '#2ecc71' : '#e0e0e0'}`,
+      backgroundColor: userType === type ? '#e6ffe6' : (hoveredUserType === type ? '#f0f0f0' : '#f9f9f9'),
+      color: userType === type ? '#2ecc71' : '#555',
       cursor: 'pointer',
       display: 'flex',
       flexDirection: 'column',
@@ -283,14 +325,14 @@ const RegistrationForm = () => {
       fontSize: getResponsiveStyle('0.95em', '0.9em', '0.85em', '0.8em'),
       fontWeight: userType === type ? 'bold' : 'normal',
       transition: 'all 0.3s ease',
-      minWidth: getResponsiveStyle('120px', '110px', '100px', '90px'), // Ensure consistent button width
-      flexGrow: 1, // Allow buttons to grow to fill space
+      minWidth: getResponsiveStyle('120px', '110px', '100px', '90px'),
+      flexGrow: 1,
     }),
     userTypeIcon: {
       width: getResponsiveStyle('25px', '22px', '20px', '18px'),
       height: getResponsiveStyle('25px', '22px', '20px', '18px'),
       marginBottom: '8px',
-      color: userType ? (userType === hoveredUserType ? '#2ecc71' : '#007bff') : '#95a5a6', // Dynamic color
+      color: userType ? (userType === hoveredUserType ? '#2ecc71' : '#007bff') : '#95a5a6',
       transition: 'color 0.3s ease',
     },
     label: {
@@ -302,7 +344,9 @@ const RegistrationForm = () => {
     },
     inputGroup: {
       marginBottom: '20px',
-      width: '100%', // Ensure it takes full width
+      width: '100%',
+      // Ensure positioning context for children
+      position: 'relative', 
     },
     input: {
       width: '100%',
@@ -318,23 +362,77 @@ const RegistrationForm = () => {
         outline: 'none',
       },
     },
+    passwordStrengthContainer: {
+      position: 'absolute',
+      // Position the meter relative to the input field
+      top: getResponsiveStyle('calc(100% + 5px)', 'calc(100% + 5px)', 'calc(100% + 5px)', 'calc(100% + 5px)'),
+      left: 0,
+      width: '100%',
+      height: 'auto',
+      zIndex: 2,
+    },
+    passwordStrengthBar: {
+      height: '8px',
+      backgroundColor: '#f0f0f0',
+      borderRadius: '4px',
+      overflow: 'hidden',
+    },
+    passwordStrengthFill: (strength) => ({
+      height: '100%',
+      width: (() => {
+        switch (strength) {
+          case 'Weak': return '25%';
+          case 'Fair': return '50%';
+          case 'Good': return '75%';
+          case 'Strong': return '100%';
+          default: return '0%';
+        }
+      })(),
+      backgroundColor: (() => {
+        switch (strength) {
+          case 'Weak': return '#e74c3c';
+          case 'Fair': return '#f39c12';
+          case 'Good': return '#3498db';
+          case 'Strong': return '#2ecc71';
+          default: return 'transparent';
+        }
+      })(),
+      transition: 'width 0.3s ease, background-color 0.3s ease',
+    }),
+    passwordStrengthText: (strength) => ({
+      fontSize: '0.85em',
+      fontWeight: 'bold',
+      color: (() => {
+        switch (strength) {
+          case 'Weak': return '#e74c3c';
+          case 'Fair': return '#f39c12';
+          case 'Good': return '#3498db';
+          case 'Strong': return '#2ecc71';
+          default: return '#7f8c8d';
+        }
+      })(),
+      textAlign: 'right',
+      marginTop: '5px',
+      transition: 'color 0.3s ease',
+    }),
     nameFields: {
       display: 'flex',
       gap: getResponsiveStyle('20px', '15px', '10px', '10px'),
       marginBottom: '20px',
       width: '100%',
-      flexDirection: getResponsiveStyle('row', 'row', 'column', 'column'), // Stack on small screens
+      flexDirection: getResponsiveStyle('row', 'row', 'column', 'column'),
     },
     terms: {
       display: 'flex',
       alignItems: 'center',
-      marginBottom: '25px',
+      // Adjust margin to create space for absolutely positioned error message
+      marginBottom: getResponsiveStyle('40px', '35px', '30px', '25px'),
       width: '100%',
-      flexWrap: 'wrap', // Allow text to wrap
+      flexWrap: 'wrap',
     },
     checkbox: {
       marginRight: '10px',
-      minWidth: '20px', // Ensure checkbox is not too small
+      minWidth: '20px',
       minHeight: '20px',
       cursor: 'pointer',
     },
@@ -344,7 +442,7 @@ const RegistrationForm = () => {
       lineHeight: '1.4',
     },
     link: {
-      color: '#2980b9', // A slightly darker blue for better contrast
+      color: '#2980b9',
       textDecoration: 'none',
       transition: 'color 0.3s ease',
       '&:hover': {
@@ -352,7 +450,7 @@ const RegistrationForm = () => {
       },
     },
     createAccountButton: {
-      backgroundColor: isSubmitButtonHovered ? '#27ae60' : '#2ecc71', // Green shades for consistency
+      backgroundColor: isSubmitButtonHovered ? '#27ae60' : '#2ecc71',
       color: '#fff',
       padding: getResponsiveStyle('15px 30px', '12px 25px', '10px 20px', '8px 18px'),
       borderRadius: '30px',
@@ -360,40 +458,34 @@ const RegistrationForm = () => {
       fontSize: getResponsiveStyle('1.1em', '1em', '0.95em', '0.9em'),
       fontWeight: 'bold',
       cursor: 'pointer',
-      width: getResponsiveStyle('100%', '100%', '90%', '90%'), // Wider button
+      width: getResponsiveStyle('100%', '100%', '90%', '90%'),
       transition: 'background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease',
       boxShadow: isSubmitButtonHovered ? '0 8px 20px rgba(46, 204, 113, 0.4)' : '0 5px 15px rgba(46, 204, 113, 0.3)',
       transform: isSubmitButtonHovered ? 'translateY(-2px)' : 'translateY(0)',
-      display: 'flex', // Center text and possibly icon if added
+      display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      margin: '0 auto', // Center the button horizontally
-    },
-    loginLink: {
-      marginTop: '20px',
-      fontSize: getResponsiveStyle('0.9em', '0.85em', '0.8em', '0.75em'),
-      color: '#555',
-      textAlign: 'center',
+      margin: '0 auto',
     },
     error: {
-      color: '#e74c3c', // A more distinct error red
-      marginBottom: '15px',
+      position: 'absolute',
+      // Position the error message relative to the terms container
+      top: getResponsiveStyle('calc(100% + 5px)', 'calc(100% + 5px)', 'calc(100% + 5px)', 'calc(100% + 5px)'),
+      left: '50%',
+      transform: 'translateX(-50%)',
+      width: '100%',
+      color: '#e74c3c',
       fontSize: getResponsiveStyle('0.9em', '0.85em', '0.8em', '0.75em'),
       textAlign: 'center',
-      width: '100%',
     },
   };
 
-  // Inline styles for input focus (cannot be directly in style object)
-  const getInputStyle = (isFocused) => ({
+  const getInputStyle = () => ({
     ...styles.input,
-    borderColor: isFocused ? '#2ecc71' : '#ccc',
-    boxShadow: isFocused ? '0 0 0 3px rgba(46, 204, 113, 0.2)' : 'none',
   });
 
   return (
     <div style={styles.registrationPage}>
-      {/* Header */}
       <header style={styles.header}>
         <div style={styles.headerLeft}>
           <img src={logo} alt="E-Prescribe Logo" style={styles.logo} />
@@ -402,13 +494,12 @@ const RegistrationForm = () => {
             <p style={styles.tagline}>Digital Healthcare</p>
           </div>
         </div>
-
         <div style={styles.headerRight}>
           <div style={styles.phoneContact}>
             <FaPhoneAlt style={styles.phoneIcon} />
             <span>+94 (011) 519-51919</span>
           </div>
-          <Link to="/" style={styles.homeButtonLink}> {/* Link to Home page */}
+          <Link to="/" style={styles.homeButtonLink}>
             <div
               style={styles.homeButton}
               onMouseEnter={() => setIsHomeHovered(true)}
@@ -421,7 +512,6 @@ const RegistrationForm = () => {
         </div>
       </header>
 
-      {/* Main Content Area */}
       <div style={styles.mainContentArea}>
         <div style={styles.backgroundOverlay} />
         <div style={styles.formContainer}>
@@ -431,35 +521,35 @@ const RegistrationForm = () => {
             <p style={styles.userTypeLabel}>I am a</p>
             <div style={styles.userTypeButtons}>
               <button
-                            type="button"
-                            style={styles.userTypeButton('patient')}
-                            onClick={() => handleUserTypeChange('patient')}
-                            onMouseEnter={() => setHoveredUserType('patient')}
-                            onMouseLeave={() => setHoveredUserType(null)}
-                          >
-                          <FaUser style={styles.userTypeIcon} />
-                            Patient
-                          </button>
-                          <button
-                            type="button"
-                            style={styles.userTypeButton('doctor')}
-                            onClick={() => handleUserTypeChange('doctor')}
-                            onMouseEnter={() => setHoveredUserType('doctor')}
-                            onMouseLeave={() => setHoveredUserType(null)}
-                          >
-                            <FaUserMd style={styles.userTypeIcon} />
-                            Doctor
-                          </button>
-                          <button
-                            type="button"
-                            style={styles.userTypeButton('pharmacist')}
-                            onClick={() => handleUserTypeChange('pharmacist')}
-                            onMouseEnter={() => setHoveredUserType('pharmacist')}
-                            onMouseLeave={() => setHoveredUserType(null)}
-                          >
-                            <FaUserNurse style={styles.userTypeIcon} />
-                            Pharmacist
-                          </button>
+                type="button"
+                style={styles.userTypeButton('patient')}
+                onClick={() => handleUserTypeChange('patient')}
+                onMouseEnter={() => setHoveredUserType('patient')}
+                onMouseLeave={() => setHoveredUserType(null)}
+              >
+                <FaUser style={styles.userTypeIcon} />
+                Patient
+              </button>
+              <button
+                type="button"
+                style={styles.userTypeButton('doctor')}
+                onClick={() => handleUserTypeChange('doctor')}
+                onMouseEnter={() => setHoveredUserType('doctor')}
+                onMouseLeave={() => setHoveredUserType(null)}
+              >
+                <FaUserMd style={styles.userTypeIcon} />
+                Doctor
+              </button>
+              <button
+                type="button"
+                style={styles.userTypeButton('pharmacist')}
+                onClick={() => handleUserTypeChange('pharmacist')}
+                onMouseEnter={() => setHoveredUserType('pharmacist')}
+                onMouseLeave={() => setHoveredUserType(null)}
+              >
+                <FaUserNurse style={styles.userTypeIcon} />
+                Pharmacist
+              </button>
             </div>
           </div>
 
@@ -474,7 +564,7 @@ const RegistrationForm = () => {
                   id="firstName"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  style={getInputStyle(false)} // Pass false as default focus state
+                  style={getInputStyle()}
                   onFocus={(e) => (e.target.style.borderColor = styles.input['&:focus'].borderColor, e.target.style.boxShadow = styles.input['&:focus'].boxShadow)}
                   onBlur={(e) => (e.target.style.borderColor = styles.input.border.split(' ')[2], e.target.style.boxShadow = 'none')}
                   required
@@ -489,7 +579,7 @@ const RegistrationForm = () => {
                   id="lastName"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  style={getInputStyle(false)}
+                  style={getInputStyle()}
                   onFocus={(e) => (e.target.style.borderColor = styles.input['&:focus'].borderColor, e.target.style.boxShadow = styles.input['&:focus'].boxShadow)}
                   onBlur={(e) => (e.target.style.borderColor = styles.input.border.split(' ')[2], e.target.style.boxShadow = 'none')}
                   required
@@ -506,7 +596,7 @@ const RegistrationForm = () => {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                style={getInputStyle(false)}
+                style={getInputStyle()}
                 onFocus={(e) => (e.target.style.borderColor = styles.input['&:focus'].borderColor, e.target.style.boxShadow = styles.input['&:focus'].boxShadow)}
                 onBlur={(e) => (e.target.style.borderColor = styles.input.border.split(' ')[2], e.target.style.boxShadow = 'none')}
                 required
@@ -521,12 +611,22 @@ const RegistrationForm = () => {
                 type="password"
                 id="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={getInputStyle(false)}
+                onChange={handlePasswordChange}
+                style={getInputStyle()}
                 onFocus={(e) => (e.target.style.borderColor = styles.input['&:focus'].borderColor, e.target.style.boxShadow = styles.input['&:focus'].boxShadow)}
                 onBlur={(e) => (e.target.style.borderColor = styles.input.border.split(' ')[2], e.target.style.boxShadow = 'none')}
                 required
               />
+              {passwordStrength && (
+                <div style={styles.passwordStrengthContainer}>
+                  <div style={styles.passwordStrengthBar}>
+                    <div style={styles.passwordStrengthFill(passwordStrength)}></div>
+                  </div>
+                  <div style={styles.passwordStrengthText(passwordStrength)}>
+                    {passwordStrength}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div style={styles.inputGroup}>
@@ -538,7 +638,7 @@ const RegistrationForm = () => {
                 id="confirmPassword"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                style={getInputStyle(false)}
+                style={getInputStyle()}
                 onFocus={(e) => (e.target.style.borderColor = styles.input['&:focus'].borderColor, e.target.style.boxShadow = styles.input['&:focus'].boxShadow)}
                 onBlur={(e) => (e.target.style.borderColor = styles.input.border.split(' ')[2], e.target.style.boxShadow = 'none')}
                 required
@@ -558,10 +658,9 @@ const RegistrationForm = () => {
                 I agree to the <a href="/terms" style={styles.link}>Terms of Service</a> and{' '}
                 <a href="/privacy" style={styles.link}>Privacy Policy</a>
               </label>
+              {error && <p style={styles.error}>{error}</p>}
             </div>
-
-            {error && <p style={styles.error}>{error}</p>}
-
+            
             <button
               type="submit"
               style={styles.createAccountButton}
@@ -578,7 +677,6 @@ const RegistrationForm = () => {
         </div>
       </div>
 
-      {/* Footer */}
       <Footer />
     </div>
   );

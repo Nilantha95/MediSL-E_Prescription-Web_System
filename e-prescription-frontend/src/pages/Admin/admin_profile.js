@@ -4,7 +4,7 @@ import pic from '../Main_Interface_UI/images/Doctor.png'; // Using this as a pla
 import { IoIosArrowForward } from 'react-icons/io';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
-import { FaUserShield, FaUsers, FaCog, FaHome, FaUser, FaChartBar } from 'react-icons/fa'; // Admin-specific icons and FaChartBar
+import { FaUserShield, FaUsers, FaCog, FaHome, FaUser, FaChartBar, FaQuestionCircle } from 'react-icons/fa'; // Admin-specific icons and FaChartBar
 import { getAuth, onAuthStateChanged, updatePassword, updateProfile, signOut } from 'firebase/auth'; // Import signOut
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -522,6 +522,7 @@ const AdminProfilePage = () => {
                     </div>
                     {/* Admin-specific links */}
                     <Link to="/admin/dashboard" style={styles.sidebarLink}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
+                    <Link to="/user-inquiry" style={{ ...styles.sidebarLink}}><FaQuestionCircle style={styles.sidebarIcon} />User Inquiries</Link>
                     <Link to="/admin-report" style={styles.sidebarLink}><FaChartBar style={styles.sidebarIcon} />Reports</Link> {/* Added Reports link */}
                     <Link to="#" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaUser style={styles.sidebarIcon} />Profile</Link>
                 </aside>
