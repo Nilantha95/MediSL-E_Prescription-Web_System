@@ -1,9 +1,13 @@
+
+// https://www.youtube.com/watch?v=1nsnNLLnlrg used for email integration
+// used chatgpt and gemini ai for code enhancement
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { IoIosArrowForward } from 'react-icons/io';
 import { FaPhoneAlt, FaHome, FaQuestionCircle, FaChartBar, FaUser, FaTimesCircle, FaCheckCircle } from 'react-icons/fa';
 import logo from '../Main_Interface_UI/images/Logo01.png';
-import pic from '../Main_Interface_UI/images/Doctor.png'; // Make sure to import the default placeholder image
+import pic from '../Main_Interface_UI/images/Doctor.png'; 
 import Footer from '../Main_Interface_UI/Footer';
 
 import { db } from '../../firebase';
@@ -577,7 +581,7 @@ const UserInquiryPage = () => {
                     {inquiries.length === 0 ? (
                         <p>No inquiries found.</p>
                     ) : (
-                        <div>
+                         <div>
                             {inquiries.map((inquiry) => (
                                 <div
                                     key={inquiry.id}
@@ -587,7 +591,7 @@ const UserInquiryPage = () => {
                                     }}
                                     onClick={() => setViewingInquiry(inquiry)}
                                 >
-                                    <div style={styles.inquiryHeader}>
+                                     <div style={styles.inquiryHeader}>
                                         <span style={styles.inquirySender}>
                                             {inquiry.name}
                                             {inquiry.status === 'pending' && <span style={{ ...styles.statusBadge, ...styles.statusPending }}>Pending</span>}

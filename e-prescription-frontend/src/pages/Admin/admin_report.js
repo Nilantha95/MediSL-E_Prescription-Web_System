@@ -1,23 +1,18 @@
+// Used AI support for code enhancement
+
 import React, { useState, useEffect } from 'react';
 import { db } from '../../firebase';
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore'; 
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { Link, useNavigate } from 'react-router-dom';
-
-// Import jsPDF and jspdf-autotable correctly
 import jsPDF from 'jspdf';
 import { autoTable } from 'jspdf-autotable'; 
-
-// --- Imports for UI elements from DoctorDashboard (adapted for Admin) ---
 import logo from '../Main_Interface_UI/images/Logo01.png';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
 import {FaHome, FaChartBar, FaFilePdf, FaNotesMedical, FaUser, FaQuestionCircle } from 'react-icons/fa'; 
-import pic from '../Main_Interface_UI/images/Doctor.png'; // Placeholder for admin avatar, can be changed
+import pic from '../Main_Interface_UI/images/Doctor.png'; 
 import Footer from '../Main_Interface_UI/Footer';
-
-
-// Import charting library components
 import { PieChart, Pie, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 const AdminReportDashboard = () => {
@@ -29,7 +24,7 @@ const AdminReportDashboard = () => {
         lastName: '',
         email: '',
         userType: '',
-        photoURL: null, // For avatar display
+        photoURL: null, 
     });
     const [loadingAdminData, setLoadingAdminData] = useState(true); 
 
@@ -41,10 +36,10 @@ const AdminReportDashboard = () => {
     const [loadingReports, setLoadingReports] = useState(true);
     const [reportError, setReportError] = useState(null);
 
-    // Header and Logout Button Hover State
+    
     const [isLogoutHovered, setIsLogoutHovered] = useState(false);
 
-    // Responsive Styles State
+ 
     const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
     useEffect(() => {
@@ -110,7 +105,7 @@ const AdminReportDashboard = () => {
         return () => unsubscribe();
     }, [auth, navigate]);
 
-    // Function to fetch user counts and all user data
+    
     const fetchUserTypeCounts = async () => {
         try {
             const usersCollection = collection(db, 'users');
@@ -137,7 +132,7 @@ const AdminReportDashboard = () => {
         }
     };
 
-    // Function to fetch and process monthly prescription volume
+    
     const fetchMonthlyPrescriptionVolume = async () => {
         try {
             const prescriptionsCollection = collection(db, 'prescriptions');
@@ -190,51 +185,40 @@ const AdminReportDashboard = () => {
             prescriptionSnapshot.forEach(doc => {
                 const data = doc.data();
                 prescriptionsRaw.push({ id: doc.id, ...data });
-                // console.log(`Processing prescription ID: ${doc.id}`); // For debugging
-                // console.log(`  - doctorId: ${data.doctorId}`); // For debugging
-                // console.log(`  - patientName (from prescription): ${data.patientName}`); // For debugging
 
-                if (data.doctorId) doctorIds.add(data.doctorId); // Only add doctor ID
+                if (data.doctorId) doctorIds.add(data.doctorId); 
             });
 
             if (prescriptionsRaw.length === 0) {
                 console.log("No detailed prescription documents found.");
                 return; 
             }
-
-            // console.log("Unique doctor IDs collected:", Array.from(doctorIds)); // For debugging
-
-            // Fetch doctor details for all unique IDs
             const doctorDetails = {}; // Renamed from userDetails
             if (doctorIds.size > 0) {
                 const doctorPromises = Array.from(doctorIds).map(async (uid) => {
                     const userDoc = await getDoc(doc(db, 'users', uid));
                     if (userDoc.exists()) {
                         const userData = userDoc.data();
-                        // console.log(`  - Fetched doctor data for UID ${uid}:`, userData); // For debugging
                         doctorDetails[uid] = `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 'Unknown Doctor';
                     } else {
-                        // console.warn(`Doctor document not found for UID: ${uid}`); // For debugging
+                        
                         doctorDetails[uid] = 'Doctor Not Found';
                     }
                 });
                 await Promise.all(doctorPromises);
             }
 
-            // Combine prescription data with doctor name and include direct patientName and status
             const processedPrescriptions = prescriptionsRaw.map(p => {
                 const prescriptionDate = p.prescriptionDate ? p.prescriptionDate.toDate().toLocaleDateString() : 'N/A';
                 const doctorName = doctorDetails[p.doctorId] || 'Unknown Doctor'; // Use doctorDetails
-                const patientName = p.patientName || 'N/A'; // DIRECTLY USE patientName from prescription
+                const patientName = p.patientName || 'N/A'; 
                 const status = p.status || 'N/A'; 
-
-                // console.log(`  - Final resolved names for prescription ${p.id}: Doctor: "${doctorName}", Patient: "${patientName}", Status: "${status}"`); // For debugging
 
                 return {
                     id: p.id,
                     prescriptionDate,
                     doctorName,
-                    patientName, // Directly use this
+                    patientName, 
                     status, 
                 };
             });

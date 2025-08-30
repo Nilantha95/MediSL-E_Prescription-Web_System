@@ -11,7 +11,7 @@ import { IoIosArrowForward } from 'react-icons/io';
 
 // Import images
 import logo from '../Main_Interface_UI/images/Logo01.png';
-import doc from '../Main_Interface_UI/images/Doctor.png';
+import doc from '../Main_Interface_UI/images/doctor.jpg';
 import patient from './images/Patient.png';
 import phar from './images/pharmacist.png';
 import slide1 from './images/slide01.png';

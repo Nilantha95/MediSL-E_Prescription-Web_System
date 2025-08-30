@@ -1,26 +1,26 @@
-// src/pages/Patient_UIs/ViewPrescription.js
+// used chatgpt for code enhacements.
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
-import { db } from '../../firebase'; // Corrected relative path to firebase.js
+import { db } from '../../firebase'; 
 
 // Icons for the sidebar
 import { FaPhoneAlt, FaHome, FaHistory, FaUser, FaPrescriptionBottleAlt, FaArrowLeft } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
 
 // Assets
-import pic from '../Main_Interface_UI/images/Doctor.png';
+import pic from '../Main_Interface_UI/images/Patient.jpg';
 import Footer from '../Main_Interface_UI/Footer';
 import logo from '../Main_Interface_UI/images/Logo01.png';
 
-// Encryption Library (ensure SECRET_KEY is the same as in add_prescription.js)
+
 import CryptoJS from 'crypto-js';
 
-const SECRET_KEY = "your-super-secret-key-that-should-be-in-a-secure-place"; // <<< VERIFY THIS KEY CAREFULLY
+const SECRET_KEY = "your-super-secret-key-that-should-be-in-a-secure-place"; 
 
-// Modified decryptData to handle both plain encrypted strings and stringified JSON
+
 const decryptData = (encryptedData) => {
     if (!encryptedData) {
         console.warn("decryptData received null or empty data.");
@@ -47,12 +47,12 @@ const decryptData = (encryptedData) => {
 
     } catch (error) {
         console.error("Decryption error in decryptData:", error, "Encrypted data that failed:", encryptedData);
-        return 'Error Decrypting'; // Return a visible error for debugging if needed
+        return 'Error Decrypting'; 
     }
 };
 
 const ViewPrescription = () => {
-    const { prescriptionId } = useParams(); // Get ID from URL
+    const { prescriptionId } = useParams(); 
     const navigate = useNavigate();
     const auth = getAuth();
 
@@ -64,8 +64,8 @@ const ViewPrescription = () => {
         photoURL: null,
     });
     const [prescriptionDetails, setPrescriptionDetails] = useState(null);
-    const [loading, setLoading] = useState(true); // For patient data
-    const [loadingPrescription, setLoadingPrescription] = useState(true); // For prescription data
+    const [loading, setLoading] = useState(true); 
+    const [loadingPrescription, setLoadingPrescription] = useState(true); 
     const [error, setError] = useState('');
 
     const [isLogoutHovered, setIsLogoutHovered] = useState(false);
@@ -221,7 +221,7 @@ const ViewPrescription = () => {
             setError("Please log in to view prescription details.");
             setLoadingPrescription(false);
         }
-    }, [prescriptionId, patientData.email, loading]); // Dependencies for this useEffect
+    }, [prescriptionId, patientData.email, loading]); 
 
 
     const getInitials = (firstName, lastName) => {

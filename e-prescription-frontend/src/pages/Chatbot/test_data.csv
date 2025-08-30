@@ -1,0 +1,8 @@
+symptoms_input,expected_disease,expected_medicines
+"I have Lump, swelling and tingling.",Adenoid Cystic Carcinoma,
+"My legs are swollen and painful. I think it might be Thrombophlebitis.",Thrombophlebitis,
+"I have Fatigue,shortness of breath. and I feel that I have pale skin also.",Anemia
+"Sometimes I feel Severe headaches, nausea. And when I'm in the outdoor It feels like sensitivity to light and sound.",Migraine,
+"My hands and feet are itchy.",Gestational Cholestasis,
+"I have a Rash and itching on my body. And I feel difficulty breathing and swelling.",Food Allergy,
+"Sometimes I feel Severe headaches, nausea. And when I'm in the outdoor It feels like sensitivity to light and sound.",Migraine,

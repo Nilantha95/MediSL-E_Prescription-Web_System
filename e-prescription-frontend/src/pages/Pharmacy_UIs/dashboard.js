@@ -1,6 +1,7 @@
+// used AI tools to code enhacements and designing parts.
+
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-// **MODIFIED: Added faClock for the new card's icon**
 import { faQrcode, faCog, faHistory, faHome, faCheckCircle, faHourglassHalf, faBan, faClock } from '@fortawesome/free-solid-svg-icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaPhoneAlt } from 'react-icons/fa';
@@ -27,17 +28,17 @@ function PharmacyDashboard() {
         photoURL: pic,
     });
 
-    // **MODIFIED: State now includes a counter for the last 24 hours**
+    
     const [dashboardStats, setDashboardStats] = useState({
         fullyIssued: 0,
         partiallyIssued: 0,
         rejected: 0,
-        handledLast24Hours: 0, // New stat
+        handledLast24Hours: 0, 
     });
 
     const [isLogoutHovered, setIsLogoutHovered] = useState(false);
 
-    // Effect to get pharmacist's data
+    
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -282,7 +283,7 @@ function PharmacyDashboard() {
                     </div>
                     <Link to="/pharmacy/dashboard" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FontAwesomeIcon icon={faHome} style={styles.sidebarIcon} />Dashboard</Link>
                     <Link to="/pharmacy_history" style={styles.sidebarLink}><FontAwesomeIcon icon={faHistory} style={styles.sidebarIcon} />Prescription History</Link>
-                    <Link to="/pharprofile" style={styles.sidebarLink}><FontAwesomeIcon icon={faCog} style={styles.sidebarIcon} />Settings</Link>
+                    <Link to="/pharprofile" style={styles.sidebarLink}><FontAwesomeIcon icon={faCog} style={styles.sidebarIcon} />Profile</Link>
                 </aside>
 
                 <main style={styles.mainContentStyle}>

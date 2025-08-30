@@ -1,11 +1,11 @@
-// firebase.js (example)
+// firebase.js import
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  // Your Firebase config
+  // Firebase config key
   apiKey: "AIzaSyCSyFccixHchCiYKu5WwWjpXt9p6gpfoZU",
   authDomain: "medisl-ed07f.firebaseapp.com",
   projectId: "medisl-ed07f",
@@ -17,6 +17,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
-const storage = getStorage(app); // Initialized Cloud Functions
+const storage = getStorage(app); 
 
-export { db, auth, storage}; // Exported all services
+export { db, auth, storage}; 

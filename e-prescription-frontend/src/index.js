@@ -15,7 +15,7 @@ import Doctorprofile from './pages/Doctor_UIs/doc_profile';
 import Featurespage from './pages/Main_Interface_UI/featurespage';
 import PatientDashboard from './pages/Patient_UIs/dashboard';
 // --- NEW IMPORT FOR VIEW PRESCRIPTION ---
-import ViewPrescription from './pages/Doctor_UIs/View_prescription'; // Assuming this path
+import ViewPrescription from './pages/Doctor_UIs/View_prescription'; 
 import AboutUs from './pages/Main_Interface_UI/aboutus';
 
 // --- Pharmacy --- //
@@ -26,13 +26,13 @@ import PharmacyPrescriptionHistory from './pages/Pharmacy_UIs/pharmacy_history';
 import PharmacistProfilePage from './pages/Pharmacy_UIs/profilepage_pharmacy';
 
 // --- NEW IMPORTS FOR I18NEXT ---
-import './pages/Chatbot/i18n'; // Make sure this line is present to initialize i18next
+import './pages/Chatbot/i18n'; 
 import { I18nextProvider } from 'react-i18next';
-import i18n from './pages/Chatbot/i18n'; // Import the i18n instance
+import i18n from './pages/Chatbot/i18n'; 
 
 // --- Patient Portal --- //
-import PatientHealthRecords from './pages/Patient_UIs/patient_health_records'; // <<< NEW IMPORT
-import PatientProfilePage from './pages/Patient_UIs/patient_profile'; // Adjust path
+import PatientHealthRecords from './pages/Patient_UIs/patient_health_records';
+import PatientProfilePage from './pages/Patient_UIs/patient_profile'; 
 import MyPrescriptions from './pages/Patient_UIs/my_prescriptions';
 import PatientViewPrescription from './pages/Patient_UIs/patient_viewPrescription';
 
@@ -45,7 +45,6 @@ import UserInquiryPage from './pages/Admin/user_Inquiry';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    {/* Wrap your entire application (BrowserRouter and Routes) with I18nextProvider */}
     <I18nextProvider i18n={i18n}>
       <BrowserRouter>
         <Routes>

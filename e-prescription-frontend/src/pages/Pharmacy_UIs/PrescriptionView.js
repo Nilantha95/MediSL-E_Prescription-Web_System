@@ -1,15 +1,14 @@
+// used AI tools to code enhacements and designing parts.
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import CryptoJS from 'crypto-js';
-
-// --- FontAwesome Icons (make sure you have these installed) ---
-// npm install @fortawesome/react-fontawesome @fortawesome/free-solid-svg-icons
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faUser, faUserMd, faPills, faHistory, faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
 
-// **SECURITY WARNING**: Use the SAME secure key.
+
 const SECRET_KEY = "your-super-secret-key-that-should-be-in-a-secure-place";
 
 // Helper function for decryption
@@ -52,7 +51,7 @@ const PrescriptionView = () => {
                 if (prescriptionDocSnap.exists()) {
                     const prescriptionData = prescriptionDocSnap.data();
 
-                    // Decrypt medications as before
+                    
                     const decryptedMedications = decryptData(prescriptionData.medications);
                     if (!decryptedMedications) {
                         setError("Failed to decrypt prescription data.");
@@ -61,7 +60,7 @@ const PrescriptionView = () => {
                     }
                     setMedicines(decryptedMedications);
 
-                    // Step 2: Fetch the doctor's name using doctorId
+                    
                     let doctorName = 'N/A';
                     if (prescriptionData.doctorId) {
                         const doctorDocRef = doc(db, 'users', prescriptionData.doctorId);
@@ -73,7 +72,7 @@ const PrescriptionView = () => {
                         }
                     }
                     
-                    // Step 3: Set the state with all the combined data
+                    
                     setPrescription({ ...prescriptionData, doctorName: doctorName });
 
                 } else {
@@ -91,7 +90,7 @@ const PrescriptionView = () => {
     }, [prescriptionId]);
 
 
-    // --- Dynamic Styles ---
+    
     const styles = {
         pageContainer: {
             backgroundColor: '#d7f3d2',

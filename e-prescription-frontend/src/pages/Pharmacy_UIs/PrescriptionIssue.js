@@ -1,3 +1,6 @@
+// used AI tools to code enhacements and designing parts.
+
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -138,7 +141,14 @@ const PrescriptionIssue = () => {
                         }
                     }
                     
-                    setPrescription({ ...data, doctorName });
+                    // NEW: Get National ID and Patient Relationship
+                    setPrescription({
+                        ...data,
+                        doctorName,
+                        nationalId: data.nationalId, // Get National ID from the document
+                        patientRelationship: data.patientRelationship // Get Patient Relationship from the document
+                    });
+
                     setMedicines(initialMedicines);
                 } else {
                     setError("Prescription not found.");
@@ -285,6 +295,8 @@ const PrescriptionIssue = () => {
                     <p style={{ margin: 0 }}><strong>Diagnosis:</strong> {prescription?.diagnosis || 'N/A'}</p>
                     <p style={{ margin: 0 }}><strong>Doctor:</strong> {prescription?.doctorName || 'N/A'}</p>
                     <p style={{ margin: 0 }}><strong>Status:</strong> {prescription?.status || 'N/A'}</p>
+                    <p style={{ margin: 0 }}><strong>National ID (NIC):</strong> {prescription?.nationalId || 'N/A'}</p>
+                    <p style={{ margin: 0 }}><strong>Patient Relationship:</strong> {prescription?.patientRelationship || 'N/A'}</p>
                 </div>
 
                 <h3 style={{ marginTop: '30px', borderBottom: '2px solid #e2e8f0', paddingBottom: '10px', color: '#2d3748' }}>Medicines</h3>

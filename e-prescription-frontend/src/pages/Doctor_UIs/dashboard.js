@@ -1,9 +1,10 @@
+// used chatgpt and gemini ai for code enhancement
+
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { db } from '../../firebase';
 
-// --- Import Chart.js for the graph ---
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 
@@ -15,7 +16,6 @@ import { FaUserMd, FaPrescriptionBottleAlt, FaHistory, FaHome, FaEye } from 'rea
 import pic from '../Main_Interface_UI/images/Doctor.png';
 import Footer from '../Main_Interface_UI/Footer';
 
-// --- Register Chart.js components ---
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const DoctorDashboard = () => {
@@ -158,7 +158,6 @@ const DoctorDashboard = () => {
     };
 
     const styles = {
-        // --- Header Styles (omitted for brevity, no changes from previous version) ---
         header: {
             display: 'flex',
             justifyContent: 'space-between',
@@ -191,7 +190,7 @@ const DoctorDashboard = () => {
             color: '#2c3e50',
             whiteSpace: getResponsiveStyle('nowrap', 'nowrap', 'nowrap', 'normal'),
         },
-        tagline: { // Updated to match "Your Digital Healthcare Solution"
+        tagline: { 
             margin: 0,
             fontSize: getResponsiveStyle('13px', '13px', '12px', '11px'),
             color: '#7f8c8d',
@@ -265,7 +264,7 @@ const DoctorDashboard = () => {
         statsLayout: { display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '30px', alignItems: 'flex-start' },
         chartContainer: { padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' },
         
-        // --- Enhanced and New Styles for Table and Modal ---
+       
         statsTableContainer: { backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', overflow: 'hidden' },
         statsTable: { width: '100%', borderCollapse: 'collapse' },
         statsTableHeader: { backgroundColor: '#f1f3f5', padding: '12px 15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', color: '#495057', fontWeight: '600' },
@@ -273,7 +272,7 @@ const DoctorDashboard = () => {
         statsTableCell: { padding: '12px 15px', textAlign: 'left', color: '#495057' },
         actionButton: { backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', transition: 'background-color 0.2s ease' },
 
-        // --- Modal Styles ---
+        
         modalBackdrop: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0, 0, 0, 0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
         modalContent: { backgroundColor: 'white', padding: '25px', borderRadius: '8px', boxShadow: '0 5px 15px rgba(0,0,0,0.3)', width: '90%', maxWidth: '600px', position: 'relative' },
         modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #dee2e6', paddingBottom: '15px', marginBottom: '15px' },
@@ -336,7 +335,7 @@ const DoctorDashboard = () => {
                     </div>
                     <Link to="/doctor/dashboard" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
                     <Link to="/newprescription" style={styles.sidebarLink}><FaPrescriptionBottleAlt style={styles.sidebarIcon} />Create New Prescription</Link>
-                    <Link to="/prescriptionhistory" style={styles.sidebarLink}><FaHistory style={styles.sidebarIcon} />Prescriptions</Link>
+                    <Link to="/prescriptionhistory" style={styles.sidebarLink}><FaHistory style={styles.sidebarIcon} />Prescription History</Link>
                     <Link to="/docprofile" style={styles.sidebarLink}><FaUserMd style={styles.sidebarIcon} />Profile</Link>
                 </aside>
 

@@ -1,0 +1,51 @@
+--- Chatbot Accuracy Test Report ---
+
+Test Case Details:
+
+Test 1:
+  Symptoms: I have Lump, swelling and tingling.
+  Expected: Adenoid Cystic Carcinoma
+  Identified: Adenoid Cystic Carcinoma
+  Result: PASS
+
+Test 2:
+  Symptoms: My legs are swollen and painful. I think it might be Thrombophlebitis.
+  Expected: Thrombophlebitis
+  Identified: Hemorrhoids
+  Result: FAIL
+
+Test 3:
+  Symptoms: I have Fatigue,shortness of breath. and I feel that I have pale skin also.
+  Expected: Anemia
+  Identified: Anemia
+  Result: PASS
+
+Test 4:
+  Symptoms: Sometimes I feel Severe headaches, nausea. And when I'm in the outdoor It feels like sensitivity to light and sound.
+  Expected: Migraine
+  Identified: Migraine
+  Result: PASS
+
+Test 5:
+  Symptoms: My hands and feet are itchy.
+  Expected: Gestational Cholestasis
+  Identified: Flat Feet
+  Result: FAIL
+
+Test 6:
+  Symptoms: I have a Rash and itching on my body. And I feel difficulty breathing and swelling.
+  Expected: Food Allergy
+  Identified: Food Allergy
+  Result: PASS
+
+Test 7:
+  Symptoms: Sometimes I feel Severe headaches, nausea. And when I'm in the outdoor It feels like sensitivity to light and sound.
+  Expected: Migraine
+  Identified: Migraine
+  Result: PASS
+
+
+--- Test Summary ---
+Total Test Cases: 7
+Correct Diagnoses: 5
+Accuracy Score: 71.43%

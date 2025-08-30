@@ -1,3 +1,5 @@
+// used AI tools to code enhacements and designing parts.
+
 import React, { useState, useEffect } from 'react';
 import logo from '../Main_Interface_UI/images/Logo01.png';
 import { IoIosArrowForward } from 'react-icons/io';

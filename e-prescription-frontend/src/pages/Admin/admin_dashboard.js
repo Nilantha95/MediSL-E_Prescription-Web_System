@@ -1,16 +1,22 @@
+
+// Used chatgpt and gemini ai used for enhance the code. 
+
+
+
+
 import React, { useState, useEffect } from 'react';
-import { db } from '../../firebase'; // Adjust path if your firebase.js is elsewhere
+import { db } from '../../firebase'; 
 import { collection, getDocs, doc, deleteDoc, updateDoc, getDoc } from 'firebase/firestore';
-import { getFunctions, httpsCallable } from 'firebase/functions'; // For Cloud Functions
-import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth'; // For getting current user's UID and signOut
-import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate for redirection
+import { getFunctions, httpsCallable } from 'firebase/functions'; 
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth'; 
+import { Link, useNavigate } from 'react-router-dom'; 
 
 // --- Imports from DoctorDashboard for UI elements ---
 import logo from '../Main_Interface_UI/images/Logo01.png';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
-import {FaHome, FaChartBar, FaQuestionCircle, FaUser } from 'react-icons/fa'; // New icons for Admin
-import pic from '../Main_Interface_UI/images/Doctor.png'; // Placeholder for admin avatar, can be changed
+import {FaHome, FaChartBar, FaQuestionCircle, FaUser } from 'react-icons/fa'; 
+import pic from '../Main_Interface_UI/images/Doctor.png'; 
 import Footer from '../Main_Interface_UI/Footer';
 
 const AdminDashboard = () => {
@@ -24,20 +30,20 @@ const AdminDashboard = () => {
         userType: '',
         photoURL: null, // For avatar display
     });
-    const [loadingUser, setLoadingUser] = useState(true); // Loading state for user data
-    const [users, setUsers] = useState([]); // State for list of all users
-    const [loadingUsersList, setLoadingUsersList] = useState(true); // Loading state for users list
+    const [loadingUser, setLoadingUser] = useState(true); 
+    const [users, setUsers] = useState([]); 
+    const [loadingUsersList, setLoadingUsersList] = useState(true); 
     const [error, setError] = useState(null);
     const [editingUser, setEditingUser] = useState(null);
     const [editFormData, setEditFormData] = useState({});
 
     const functions = getFunctions();
-    const deleteUserFunction = httpsCallable(functions, 'deleteUserAccount'); // Name from Cloud Function
+    const deleteUserFunction = httpsCallable(functions, 'deleteUserAccount'); 
 
     // Header and Logout Button Hover State
     const [isLogoutHovered, setIsLogoutHovered] = useState(false);
 
-    // Responsive Styles State
+    
     const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
     useEffect(() => {
@@ -49,7 +55,7 @@ const AdminDashboard = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Responsive style utility function
+    
     const getResponsiveStyle = (desktopStyle, tabletStyle, mobileStyle, smallMobileStyle) => {
         if (screenWidth <= 575) {
             return smallMobileStyle;
@@ -61,7 +67,7 @@ const AdminDashboard = () => {
         return desktopStyle;
     };
 
-    // Fetch current admin user data and verify role
+    
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
@@ -77,36 +83,36 @@ const AdminDashboard = () => {
                                 lastName: data.lastName || 'User',
                                 email: currentUser.email || '',
                                 userType: data.userType || 'Admin',
-                                photoURL: data.photoURL || pic, // Use a default admin pic if available
+                                photoURL: data.photoURL || pic, 
                             });
-                            fetchUsers(); // Fetch all users only if admin
+                            fetchUsers(); 
                         } else {
                             setError("You don't have administrative privileges to access this page.");
-                            setLoadingUsersList(false); // Stop loading users list
-                            navigate('/'); // Redirect non-admins to home or signin
+                            setLoadingUsersList(false); 
+                            navigate('/'); 
                         }
                     } else {
                         console.log("No user document found for the logged-in UID.");
                         setError("User profile not found. Please log in again.");
-                        navigate('/signin'); // Redirect if no Firestore profile
+                        navigate('/signin'); 
                     }
                 } catch (err) {
                     console.error("Error fetching admin data:", err);
                     setError("Failed to verify admin status: " + err.message);
-                    navigate('/signin'); // Redirect on error
+                    navigate('/signin'); 
                 }
             } else {
                 setError("You must be logged in to view this page.");
-                navigate('/signin'); // Redirect if not logged in
+                navigate('/signin'); 
             }
-            setLoadingUser(false); // User data loading complete
+            setLoadingUser(false); 
         });
 
         return () => unsubscribe();
     }, [auth, navigate]);
 
 
-    // Fetch all users for management
+    // Fetch all users details for management
     const fetchUsers = async () => {
         setLoadingUsersList(true);
         setError(null);
@@ -126,11 +132,10 @@ const AdminDashboard = () => {
     const handleDeleteUser = async (userId, userEmail) => {
         if (window.confirm(`Are you sure you want to delete user: ${userEmail}? This action is irreversible.`)) {
             try {
-                // Call the Firebase Cloud Function to delete from Auth and Firestore
                 const result = await deleteUserFunction({ uid: userId });
                 console.log(result.data.message);
                 alert(result.data.message);
-                fetchUsers(); // Refresh the list
+                fetchUsers(); 
             } catch (err) {
                 console.error("Error deleting user:", err.message);
                 alert(`Failed to delete user: ${err.message}`);
@@ -140,7 +145,7 @@ const AdminDashboard = () => {
 
     const handleEditClick = (user) => {
         setEditingUser(user.id);
-        setEditFormData(user); // Pre-fill form with current user data
+        setEditFormData(user); 
     };
 
     const handleEditFormChange = (e) => {
@@ -153,9 +158,9 @@ const AdminDashboard = () => {
             const userDocRef = doc(db, 'users', editingUser);
             await updateDoc(userDocRef, editFormData);
             alert("User updated successfully!");
-            setEditingUser(null); // Exit edit mode
+            setEditingUser(null); 
             setEditFormData({});
-            fetchUsers(); // Refresh the list
+            fetchUsers(); 
         } catch (err) {
             console.error("Error updating user:", err);
             alert("Failed to update user: " + err.message);
@@ -170,7 +175,7 @@ const AdminDashboard = () => {
     const handleLogout = async () => {
         try {
             await signOut(auth);
-            navigate('/signin'); // Redirect to sign-in page after logout
+            navigate('/signin'); 
         } catch (error) {
             console.error("Error logging out:", error);
             alert("Failed to log out. Please try again.");
@@ -193,17 +198,17 @@ const AdminDashboard = () => {
             display: 'flex',
             flexDirection: 'column',
             minHeight: '100vh',
-            backgroundColor: '#f4f7f6', // Light background for the whole page
+            backgroundColor: '#f4f7f6', 
         },
         dashboardContainer: {
             display: 'flex',
             flex: 1, // Allow main content to grow
             padding: getResponsiveStyle('20px', '15px', '10px', '10px'),
             gap: getResponsiveStyle('20px', '15px', '10px', '10px'),
-            flexDirection: getResponsiveStyle('row', 'row', 'column', 'column'), // Stack on smaller screens
+            flexDirection: getResponsiveStyle('row', 'row', 'column', 'column'), 
         },
 
-        // --- Header Styles (Copied from DoctorDashboard) ---
+        
         header: {
             display: 'flex',
             justifyContent: 'space-between',
@@ -292,21 +297,21 @@ const AdminDashboard = () => {
             marginLeft: '5px',
         },
 
-        // --- Sidebar Styles (Copied and adapted) ---
+      
         sidebar: {
-            width: getResponsiveStyle('250px', '220px', '100%', '100%'), // Full width on small screens
+            width: getResponsiveStyle('250px', '220px', '100%', '100%'), 
             backgroundColor: '#f8f9fa',
             padding: getResponsiveStyle('20px', '15px', '15px', '10px'),
             borderRadius: '5px',
             boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
             display: 'flex',
-            flexDirection: getResponsiveStyle('column', 'column', 'row', 'row'), // Row on small screens for sidebar items
+            flexDirection: getResponsiveStyle('column', 'column', 'row', 'row'), 
             alignItems: getResponsiveStyle('center', 'center', 'flex-start', 'flex-start'),
-            gap: getResponsiveStyle('0', '0', '10px', '5px'), // Gap between sidebar items on small screens
-            flexShrink: 0, // Prevent sidebar from shrinking
-            marginBottom: getResponsiveStyle('0', '0', '20px', '20px'), // Space below sidebar on small screens
+            gap: getResponsiveStyle('0', '0', '10px', '5px'), 
+            flexShrink: 0, 
+            marginBottom: getResponsiveStyle('0', '0', '20px', '20px'), 
         },
-        sidebarItemsContainer: { // New container for sidebar links on small screens
+        sidebarItemsContainer: { 
             display: 'flex',
             flexDirection: getResponsiveStyle('column', 'column', 'row', 'row'),
             width: getResponsiveStyle('100%', '100%', 'auto', 'auto'),
@@ -344,7 +349,7 @@ const AdminDashboard = () => {
             width: getResponsiveStyle('80px', '70px', '60px', '50px'),
             height: getResponsiveStyle('80px', '70px', '60px', '50px'),
             borderRadius: '50%',
-            backgroundColor: '#00cba9', // Admin specific color
+            backgroundColor: '#00cba9', 
             color: '#fff',
             display: 'flex',
             alignItems: 'center',
@@ -360,12 +365,12 @@ const AdminDashboard = () => {
             flexDirection: 'column',
             alignItems: 'center',
             padding: getResponsiveStyle('15px 0', '12px 0', '10px 0', '8px 0'),
-            borderBottom: getResponsiveStyle('1px solid #eee', '1px solid #eee', 'none', 'none'), // No border on small screens
+            borderBottom: getResponsiveStyle('1px solid #eee', '1px solid #eee', 'none', 'none'), 
             backgroundColor: '#d7f3d2',
             borderRadius: '5px',
             marginBottom: getResponsiveStyle('20px', '15px', '0', '0'),
             width: '100%',
-            flexDirection: getResponsiveStyle('column', 'column', 'row', 'row'), // Row for avatar and text on small screens
+            flexDirection: getResponsiveStyle('column', 'column', 'row', 'row'), 
             gap: getResponsiveStyle('0', '0', '10px', '5px'),
             justifyContent: getResponsiveStyle('center', 'center', 'flex-start', 'flex-start'),
         },
@@ -382,7 +387,6 @@ const AdminDashboard = () => {
             margin: '5px 0 0 0'
         },
 
-        // --- Main Content Area for Admin Dashboard ---
         content: {
             flexGrow: 1,
             padding: getResponsiveStyle('20px', '15px', '10px', '10px'),
@@ -453,7 +457,7 @@ const AdminDashboard = () => {
             padding: getResponsiveStyle('8px', '7px', '6px', '5px'),
             borderRadius: '4px',
             border: '1px solid #ccc',
-            width: 'calc(100% - 10px)', // Adjust for padding
+            width: 'calc(100% - 10px)', 
             boxSizing: 'border-box',
             fontSize: 'inherit',
         },

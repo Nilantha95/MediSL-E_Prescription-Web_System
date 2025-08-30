@@ -1,16 +1,17 @@
+#--used chatgpt and gemini ai for code enhancement
+
 import pandas as pd
 import firebase_admin
 from firebase_admin import credentials, firestore
 import re
 import os
 
-# --- Configuration ---
-# IMPORTANT: Replace with the actual path to your Firebase service account key
+
 SERVICE_ACCOUNT_KEY_PATH = '../API_keys/medisl-ed07f-firebase-adminsdk-fbsvc-d2764a2e96.json'
 CSV_FILE_PATH = '../Dataset/diseases_medicines.csv'
-MEDICINE_DETAILS_COLLECTION = 'medicine_details' # New collection name for medicine details
+MEDICINE_DETAILS_COLLECTION = 'medicine_details'
 
-# --- Initialize Firebase Admin SDK ---
+
 try:
     cred = credentials.Certificate(SERVICE_ACCOUNT_KEY_PATH)
     firebase_admin.initialize_app(cred)
@@ -30,8 +31,8 @@ def preprocess_medicine_name(name):
     - Removes leading/trailing underscores
     """
     name = name.lower()
-    name = re.sub(r'[^a-z0-9]+', '_', name) # Replace non-alphanumeric with underscore
-    name = name.strip('_') # Remove leading/trailing underscores
+    name = re.sub(r'[^a-z0-9]+', '_', name) 
+    name = name.strip('_') 
     return name
 
 # --- Main Ingestion Logic ---
@@ -67,7 +68,7 @@ def ingest_medicine_details():
                 batch = db.batch() # Start a new batch
                 print(f"Committed {record_count} records so far...")
 
-        # Commit any remaining records in the last batch
+        
         if record_count % batch_size != 0 or record_count == 0:
             batch.commit()
             print(f"Finished committing all {record_count} records to Firestore.")

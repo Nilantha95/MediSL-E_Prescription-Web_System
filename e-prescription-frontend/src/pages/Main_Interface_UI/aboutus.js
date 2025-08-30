@@ -1,21 +1,20 @@
+// https://www.youtube.com/watch?v=-cla9sRkOAI&list=PLRheCL1cXHru3roCP2_-B3G19UnJXs6nK used to design and used chatgpt for enhacements.
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Footer from './Footer';
-
-// Import icons
 import { FaUsers, FaLightbulb, FaHeartbeat, FaRocket, FaShieldAlt, FaPhoneAlt, FaArrowRight } from 'react-icons/fa';
 import { FaFacebookF, FaTwitter, FaInstagram } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
 
 function AboutUs() {
-  // State for hover effects
   const [isRegisterHovered, setIsRegisterHovered] = useState(false);
   const [isGetInTouchHovered, setIsGetInTouchHovered] = useState(false);
   const [isConnectTeamHovered, setIsConnectTeamHovered] = useState(false);
   const [hoveredNavSocialIcon, setHoveredNavSocialIcon] = useState(null);
-  const [hoveredCoreValueCard, setHoveredCoreValueCard] = useState(null); // New state for core value card hover
+  const [hoveredCoreValueCard, setHoveredCoreValueCard] = useState(null); 
 
-  // State for responsive styles
+
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
   useEffect(() => {
@@ -53,7 +52,7 @@ function AboutUs() {
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: getResponsiveStyle('20px 50px', '15px 40px', '15px 30px', '15px 15px'),
-      backgroundColor: '#e0ffe0', // Consistent with other pages
+      backgroundColor: '#e0ffe0', 
       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
       flexWrap: 'wrap',
       flexDirection: getResponsiveStyle('row', 'row', 'column', 'column'),
@@ -159,7 +158,7 @@ function AboutUs() {
       padding: '5px 0',
     },
     navLinkActive: {
-      color: '#2ecc71', // Highlight for active page
+      color: '#2ecc71', 
     },
     socialNavIcons: {
       display: 'flex',

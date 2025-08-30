@@ -1,5 +1,4 @@
-// No changes needed here for the language feature itself.
-// The ActionProvider will now handle message translations.
+// used chatgpt and gemini ai for code enhancement
 
 class MessageParser {
   constructor(actionProvider, state) {
@@ -14,7 +13,7 @@ class MessageParser {
     // Check for restart command first, regardless of mode
     if (lowerCaseMessage === 'restart') {
       this.actionProvider.handleRestart();
-      return; // Stop further processing
+      return; 
     }
 
     // Get the current chatbot mode from the state
@@ -23,18 +22,14 @@ class MessageParser {
 
     switch (currentMode) {
       case 'initial_choice':
-        // If in initial choice mode, and user types something instead of clicking,
-        // it's an unknown input for this stage.
         this.actionProvider.handleUnknownInput();
         break;
 
       case 'medicine_details':
-        // If in medicine details mode, send the user's message as a medicine name
         this.actionProvider.processMedicineName(message);
         break;
 
       case 'symptoms_diagnosis':
-        // If in symptoms diagnosis mode, send the user's message as symptoms
         this.actionProvider.processSymptoms(message);
         break;
 

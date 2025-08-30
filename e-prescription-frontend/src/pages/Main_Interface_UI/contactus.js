@@ -1,3 +1,5 @@
+// used chatgpt for code enhacements.
+
 import React, { useState, useEffect } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { Link } from 'react-router-dom';
@@ -524,13 +526,13 @@ function ContactUs() {
                         <div style={styles.headquartersInfo}>
                             <h3 style={styles.subHeading}>Headquarters</h3>
                             <p style={styles.infoItem}>
-                                <FaMapMarkerAlt style={styles.infoItemIcon} /> 8863 - 9867 MILL ROAD, CAMBRIDGE, MG09 99HT.
+                                <FaMapMarkerAlt style={styles.infoItemIcon} /> 94 Mangala Mawatha, Kadawatha.
                             </p>
                             <p style={styles.infoItem}>
-                                <FaPhoneAlt style={styles.infoItemIcon} /> Telephone: +1 800 603 6035
+                                <FaPhoneAlt style={styles.infoItemIcon} /> Telephone: +94 75 7323 847
                             </p>
                             <p style={styles.infoItem}>
-                                <FaEnvelope style={styles.infoItemIcon} /> E-mail: <a href="mailto:mail@demolink.org" style={styles.infoLink}>mail@demolink.org</a>
+                                <FaEnvelope style={styles.infoItemIcon} /> E-mail: <a href="MediSL@gmail.com" style={styles.infoLink}>MediSL@gmail.com</a>
                             </p>
                         </div>
                     </div>
@@ -565,9 +567,9 @@ function ContactUs() {
                             <div style={styles.formGroup}>
                                 <textarea
                                     placeholder="Message"
-                                    name="message" // Added name attribute
-                                    value={formData.message} // Controlled component
-                                    onChange={handleInputChange} // Handle input changes
+                                    name="message" 
+                                    value={formData.message} 
+                                    onChange={handleInputChange} 
                                     style={styles.formTextarea(focusedInput === 'message')}
                                     required
                                     onFocus={() => setFocusedInput('message')}

@@ -1,3 +1,5 @@
+// used chatgpt and gemini ai for code enhancement
+
 import i18n from './i18n'; // Ensure this path is correct for your setup
 
 class ActionProvider {
@@ -6,10 +8,10 @@ class ActionProvider {
     this.createChatBotMessage = createChatBotMessage;
     this.setState = setStateFunc;
     this.createClientMessage = createClientMessage;
-    this.state = state; // Store the state received from the Chatbot component
+    this.state = state; 
   }
 
-  // Helper function to update the chatbot state with a new message
+  
   addMessageToState = (message) => {
     this.setState((prevState) => ({
       ...prevState,
@@ -17,7 +19,7 @@ class ActionProvider {
     }));
   };
 
-  // Helper to update the chatbot's internal mode
+  //update the chatbot's internal mode
   setChatbotMode = (mode) => {
     this.setState((prevState) => ({
       ...prevState,
@@ -25,7 +27,7 @@ class ActionProvider {
     }));
   };
 
-  // Helper to update the chatbot's language state
+  //update the chatbot's language state
   setChatbotLanguage = (lang) => {
     this.setState((prevState) => ({
       ...prevState,
@@ -33,13 +35,13 @@ class ActionProvider {
     }));
   };
 
-  // --- UPDATED: Helper for Text-to-Speech (TTS) using backend API ---
+  //Text-to-Speech (TTS) using backend API ---
   speakMessage = async (messageText) => {
     const backendUrl = 'http://127.0.0.1:5000/synthesize_speech';
-    const currentLanguage = this.state.language || 'en'; // Use current language from state
+    const currentLanguage = this.state.language || 'en'; 
 
-    console.log("Speaking text (from frontend):", messageText); // Debugging console.log
-    console.log("Requested language for speech (from frontend):", currentLanguage); // Debugging console.log
+    console.log("Speaking text (from frontend):", messageText); 
+    console.log("Requested language for speech (from frontend):", currentLanguage); 
 
     if (!messageText) {
       console.warn("No text provided to speakMessage.");
@@ -63,21 +65,18 @@ class ActionProvider {
         throw new Error(`Backend TTS error: ${errorData.error || response.statusText}`);
       }
 
-      // Get the audio blob from the response
       const audioBlob = await response.blob();
       const audioUrl = URL.createObjectURL(audioBlob);
 
-      // Create and play an audio element
       const audio = new Audio(audioUrl);
       audio.play();
 
       audio.onended = () => {
-        URL.revokeObjectURL(audioUrl); // Clean up the object URL after playing
+        URL.revokeObjectURL(audioUrl); 
       };
 
     } catch (error) {
       console.error('Error in speakMessage (Google Cloud TTS):', error);
-      // Fallback to browser's built-in speech synthesis if backend fails
       if ('speechSynthesis' in window) {
         console.log("Falling back to browser's built-in speech synthesis.");
         const utterance = new SpeechSynthesisUtterance(messageText);
@@ -95,13 +94,12 @@ class ActionProvider {
   handleLanguageSelected = (lang) => {
     this.setChatbotLanguage(lang);
     const message = this.createChatBotMessage(i18n.t('welcomeMessage'), {
-      widget: 'optionChooser', // Re-display options after language selection
+      widget: 'optionChooser', 
     });
     this.addMessageToState(message);
-    this.speakMessage(i18n.t('welcomeMessage')); // Speak welcome message
+    this.speakMessage(i18n.t('welcomeMessage')); 
   };
 
-  // --- Initial Choice Handlers ---
   handleMedicineDetailsStart = (lang) => {
     const message = this.createChatBotMessage(i18n.t('medicineDetailsMode'));
     this.addMessageToState(message);
@@ -116,7 +114,6 @@ class ActionProvider {
     this.setChatbotLanguage(lang);
   };
 
-  // --- Health Tips Handler ---
   async handleHealthTipsStart(lang) {
     const backendUrl = 'http://127.0.0.1:5000/get_health_tip';
     this.addMessageToState(this.createChatBotMessage(i18n.t('loadingMessage')));
@@ -145,7 +142,7 @@ class ActionProvider {
       this.addMessageToState(this.createChatBotMessage(data.disclaimer));
 
       const fullHealthTipText = data.message + " " + data.disclaimer;
-      this.speakMessage(fullHealthTipText); // Call the updated speakMessage
+      this.speakMessage(fullHealthTipText); 
 
     } catch (error) {
       console.error('Error in handleHealthTipsStart:', error);
@@ -256,7 +253,7 @@ class ActionProvider {
       ],
       chatbotMode: 'initial_choice',
     }));
-    this.speakMessage(i18n.t('welcomeMessage')); // Speak welcome message on restart
+    this.speakMessage(i18n.t('welcomeMessage')); 
   };
 
   // --- Handle Unknown Input ---

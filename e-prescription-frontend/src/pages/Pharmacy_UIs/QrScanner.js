@@ -1,3 +1,5 @@
+// used AI tools to code enhacements and designing parts in the qr code scanning interface.
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QrReader } from 'react-qr-reader';
@@ -22,11 +24,11 @@ const QrScanner = () => {
         if (result && result.text && !scanned) {
             let prescriptionId;
             try {
-                // Attempt to parse the QR code data as a JSON object
+                
                 const parsedData = JSON.parse(result.text);
                 console.log("QR Code data parsed successfully:", parsedData);
                 
-                // Extract the prescriptionId from the parsed object
+                
                 if (parsedData.prescriptionId) {
                     prescriptionId = parsedData.prescriptionId;
                 } else {
