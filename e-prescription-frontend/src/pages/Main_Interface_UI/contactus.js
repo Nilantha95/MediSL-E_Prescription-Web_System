@@ -1,3 +1,5 @@
+// used chatgpt for code enhacements.
+
 import React, { useState, useEffect } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { Link } from 'react-router-dom';
@@ -565,9 +567,9 @@ function ContactUs() {
                             <div style={styles.formGroup}>
                                 <textarea
                                     placeholder="Message"
-                                    name="message" // Added name attribute
-                                    value={formData.message} // Controlled component
-                                    onChange={handleInputChange} // Handle input changes
+                                    name="message" 
+                                    value={formData.message} 
+                                    onChange={handleInputChange} 
                                     style={styles.formTextarea(focusedInput === 'message')}
                                     required
                                     onFocus={() => setFocusedInput('message')}

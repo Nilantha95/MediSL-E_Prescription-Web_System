@@ -1,3 +1,6 @@
+// used AI tools to code enhacements and designing parts.
+
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';

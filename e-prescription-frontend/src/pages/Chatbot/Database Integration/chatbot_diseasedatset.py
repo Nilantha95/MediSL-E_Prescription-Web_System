@@ -1,3 +1,5 @@
+# -- used chatgpt and gemini ai for code enhancement--
+
 import firebase_admin
 from firebase_admin import credentials, firestore
 import pandas as pd
@@ -5,7 +7,6 @@ import os
 import re
 
 # --- Configuration ---
-# !!! REPLACE THIS WITH THE ACTUAL PATH TO YOUR DOWNLOADED JSON KEY FILE !!!
 SERVICE_ACCOUNT_KEY_PATH = '../API_keys/medisl-ed07f-firebase-adminsdk-fbsvc-4f8682039f.json'
 
 # Collection name in Firestore
@@ -22,7 +23,6 @@ except Exception as e:
     print("Please ensure your SERVICE_ACCOUNT_KEY_PATH is correct and the JSON file is valid.")
     exit()
 
-# --- Helper function to sanitize string for Firestore Document ID ---
 def sanitize_for_firestore_id(text):
     text = re.sub(r'[\\/#\[\]*`]', '_', text)
     text = re.sub(r'[\s_]+', '_', text)
@@ -48,11 +48,11 @@ def upload_disease_data(csv_file_path):
 
             doc_ref = db.collection(DISEASE_COLLECTION).document(disease_firestore_id)
             
-            # Prepare the data dictionary
+            
             data = {
                 'name': original_disease_name,
-                'symptoms': row['symptoms'].split(','), # Split symptoms string into a list
-                'treatments': row['treatments'].split(',') # Split treatments string into a list
+                'symptoms': row['symptoms'].split(','), 
+                'treatments': row['treatments'].split(',') 
             }
             
             batch.set(doc_ref, data)

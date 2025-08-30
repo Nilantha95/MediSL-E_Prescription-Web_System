@@ -1,23 +1,22 @@
+// used ai for code enhancement
+
+
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
 i18n
-  // detect user language
-  // learn more: https://github.com/i18next/i18next-browser-languageDetector
+ 
   .use(LanguageDetector)
-  // pass the i18n instance to react-i18next.
   .use(initReactI18next)
-  // init i18next
-  // for all options read: https://www.i18next.com/overview/configuration-options
+ 
   .init({
-    debug: true, // Set to false in production for less console output
-    fallbackLng: 'en', // Fallback language if a translation is missing
+    debug: true, 
+    fallbackLng: 'en', 
     interpolation: {
-      escapeValue: false, // react already escapes by default
+      escapeValue: false, 
     },
     resources: {
-      // English translations
       en: {
         translation: {
           // General UI messages
@@ -32,7 +31,7 @@ i18n
           // Option Chooser Widget
           getMedicineDetails: "Get Medicine Details",
           diagnoseDisease: "Diagnose Disease by Symptoms",
-          getHealthTip: "Get a Health Tip", // NEW
+          getHealthTip: "Get a Health Tip", 
           goBack: "You can type 'restart' to go back to the main menu.",
           initialChoicePrompt: "What would you like to do?",
           
@@ -42,12 +41,12 @@ i18n
           healthTipsMode: "Here's a daily health tip for you!", // NEW
           noHealthTipsFound: "Sorry, I couldn't find any health tips right now. Please try again later.", // NEW
           
-          // Backend Response Messages (frontend will display what backend sends, but these are for default/static text)
+          // Backend Response Messages (frontend will display what backend sends, but these are for default text)
           noDiseaseFound: "Sorry, I'm having trouble diagnosing your symptoms right now. Please try again later.",
           noMedicineFound: "Sorry, I couldn't get details for \"{{medicineName}}\". Please try again or check the spelling.",
           genericError: "An error occurred while processing your request. Please try again later.",
           
-          // Disclaimer
+          
           disclaimer: "This chatbot provides general information and is not a substitute for professional medical advice. Always consult a qualified healthcare professional for diagnosis and treatment."
         },
       },

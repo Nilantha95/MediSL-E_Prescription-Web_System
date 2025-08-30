@@ -1,3 +1,5 @@
+// used chatgpt for code enhacements.
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
@@ -10,8 +12,6 @@ import pic from '../Main_Interface_UI/images/Patient.jpg';
 import ChatBotToggle from "../Chatbot/ChatBotToggle";
 import Footer from '../Main_Interface_UI/Footer';
 import { IoIosArrowForward } from 'react-icons/io';
-
-// Chart.js imports - ALL IMPORTS SHOULD BE AT THE TOP OF THE FILE
 import { Line } from 'react-chartjs-2';
 import CryptoJS from 'crypto-js';
 import {
@@ -23,10 +23,10 @@ import {
     Title,
     Tooltip,
     Legend,
-    BarElement // If you prefer a Bar chart
+    BarElement 
 } from 'chart.js';
 
-// Register the components needed for your chart. This also needs to be after imports.
+
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -35,11 +35,11 @@ ChartJS.register(
     Title,
     Tooltip,
     Legend,
-    BarElement // Register if using Bar chart
+    BarElement 
 );
 
-// Encryption Library and SECRET_KEY should come AFTER all import statements.
-const SECRET_KEY = "your-super-secret-key-that-should-be-in-a-secure-place"; // <<< VERIFY THIS KEY CAREFULLY
+// Encryption Library.
+const SECRET_KEY = "your-super-secret-key-that-should-be-in-a-secure-place"; 
 
 const decryptData = (encryptedData) => {
     if (!encryptedData) return '';
@@ -218,7 +218,7 @@ const PatientDashboard = () => {
 
     const chartOptions = {
         responsive: true,
-        maintainAspectRatio: false, // Allows you to set height/width of container
+        maintainAspectRatio: false, 
         plugins: {
             legend: {
                 position: 'top',

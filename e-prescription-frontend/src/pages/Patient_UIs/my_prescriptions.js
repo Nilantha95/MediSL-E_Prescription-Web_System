@@ -1,4 +1,4 @@
-// src/pages/Patient_UIs/MyPrescriptions.js
+// Used AI tools for code enhacements.
 
 import React, { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
@@ -15,10 +15,10 @@ import pic from '../Main_Interface_UI/images/Patient.jpg';
 import Footer from '../Main_Interface_UI/Footer';
 import logo from '../Main_Interface_UI/images/Logo01.png';
 
-// Encryption Library (ensure SECRET_KEY is the same as in Dashboard)
+// Encryption Library 
 import CryptoJS from 'crypto-js';
 
-const SECRET_KEY = "your-super-secret-key-that-should-be-in-a-secure-place"; // <<< VERIFY THIS KEY CAREFULLY
+const SECRET_KEY = "your-super-secret-key-that-should-be-in-a-secure-place"; 
 
 const decryptData = (encryptedData) => {
     if (!encryptedData) return '';

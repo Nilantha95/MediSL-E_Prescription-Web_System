@@ -1,3 +1,5 @@
+// used chatgpt and gemini ai for code enhancement
+
 import React, { useState } from "react";
 import Chatbot from "react-chatbot-kit";
 import "react-chatbot-kit/build/main.css";
@@ -15,7 +17,6 @@ const ChatBotToggle = () => {
 
   return (
     <div>
-      {/* Floating Icon at bottom right */}
       <div
         style={{
           position: "fixed",
@@ -37,8 +38,6 @@ const ChatBotToggle = () => {
       >
         {showChat ? <FaTimes size={28} /> : <FaComments size={28} />}
       </div>
-
-      {/* Chatbot Panel, shown when showChat is true */}
       {showChat && (
         <div
           style={{
@@ -46,7 +45,6 @@ const ChatBotToggle = () => {
             bottom: "100px",
             right: "30px",
             zIndex: 1001,
-            // Add a black border and set border-radius to 0 for square corners
             border: "2px solid black",
             borderRadius: "0",
           }}

@@ -1,3 +1,5 @@
+// used chatgpt for code enhacements.
+
 import React, { useState, useEffect } from 'react';
 import logo from '../Main_Interface_UI/images/Logo01.png';
 import pic from '../Main_Interface_UI/images/Patient.jpg'; // Using this as a placeholder for a default profile pic

@@ -1,24 +1,24 @@
+// used AI tools to code enhacements and designing parts.
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { collection, query, getDocs, doc, getDoc } from 'firebase/firestore'; // Removed where
 import { db } from '../../firebase';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import Footer from '../Main_Interface_UI/Footer';
-
-// --- Import Icons ---
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCog, faHistory, faHome } from '@fortawesome/free-solid-svg-icons';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
 import logo from '../Main_Interface_UI/images/Logo01.png';
-// import pic from './Images/phar01.jpg'; // REMOVED: Default pharmacist picture
 
-// --- Main Component ---
+
+
 function PharmacyHistory() {
     const navigate = useNavigate();
     const auth = getAuth();
 
-    // --- STATE MANAGEMENT ---
+    
     const [allPrescriptions, setAllPrescriptions] = useState([]);
     const [filteredPrescriptions, setFilteredPrescriptions] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -26,7 +26,7 @@ function PharmacyHistory() {
 
     const [pharmacistData, setPharmacistData] = useState({
         name: 'Loading...',
-        photoURL: null, // UPDATED: Default photo removed
+        photoURL: null, 
     });
 
     // UI State
@@ -41,8 +41,6 @@ function PharmacyHistory() {
     const [currentPage, setCurrentPage] = useState(1);
     const prescriptionsPerPage = 10;
 
-
-    // --- EFFECTS ---
 
     // Handle screen resize for responsive design
     useEffect(() => {

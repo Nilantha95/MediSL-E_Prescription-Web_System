@@ -1,3 +1,5 @@
+// used chatgpt and gemini ai for code enhancement
+
 import React, { useState, useEffect, useRef } from 'react';
 import logo from '../Main_Interface_UI/images/Logo01.png';
 import pic from '../Main_Interface_UI/images/Doctor.png';
@@ -7,15 +9,14 @@ import { Link } from 'react-router-dom';
 import { FaUserMd, FaPrescriptionBottleAlt, FaHistory, FaHome } from 'react-icons/fa';
 import Footer from '../Main_Interface_UI/Footer';
 
-// Encryption Library
+// Encryption Library implement
 import CryptoJS from 'crypto-js';
 
-// Firebase Imports
+// Firebase 
 import { db, storage } from '../../firebase';
 import { collection, addDoc, Timestamp, doc, updateDoc, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
-// Import Firebase Functions to call the backend email service
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
 // UI Components
@@ -80,10 +81,10 @@ const NewPrescriptionForm = () => {
     });
     const [loadingDoctorInfo, setLoadingDoctorInfo] = useState(true);
 
-    // Header and Logout Button Hover State
+    
     const [isLogoutHovered, setIsLogoutHovered] = useState(false);
 
-    // Responsive Styles State
+
     const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
     useEffect(() => {
@@ -107,7 +108,7 @@ const NewPrescriptionForm = () => {
         return desktopStyle;
     };
 
-    // Fetch doctor's data from Firebase for the sidebar
+    
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -140,14 +141,14 @@ const NewPrescriptionForm = () => {
         return () => unsubscribe();
     }, [auth]);
 
-    // Function to get initials from a name (used if photoURL is not available)
+    
     const getInitials = (firstName, lastName) => {
         const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
         const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : '';
         return `${firstInitial}${lastInitial}`;
     };
 
-    // Fetch patients from Firestore on component mount
+    
     useEffect(() => {
         const fetchPatients = async () => {
             try {
@@ -172,7 +173,7 @@ const NewPrescriptionForm = () => {
         fetchPatients();
     }, []);
 
-    // Update patient details when a patient email is selected from the dropdown
+    
     useEffect(() => {
         const fetchPatientDetails = async () => {
             if (selectedPatientId) {
@@ -248,8 +249,8 @@ const NewPrescriptionForm = () => {
         }
     };
     
-    // --- UPDATED FUNCTION ---
-    // This function now calls the backend Cloud Function to send the QR code email.
+    
+    // backend Cloud Function to send the QR code email.
     const sendQRCodeEmail = async (patientEmail, qrCodeImageUrl, patientName) => {
         if (!patientEmail) {
             console.log("No patient email provided, skipping email send.");
@@ -257,18 +258,18 @@ const NewPrescriptionForm = () => {
         }
 
         try {
-            // 1. Initialize the connection to Cloud Functions
+            //connection to Cloud Functions
             const functions = getFunctions();
-            // 2. Get a reference to the specific function by its name
+            //Get a reference to the specific function by its name
             const sendQrCodeEmailCallable = httpsCallable(functions, 'sendQrCodeEmail');
 
             console.log(`Requesting to send QR code email to: ${patientEmail}`);
 
-            // 3. Call the function with the required payload
+            //Call the function with the required payload
             const result = await sendQrCodeEmailCallable({
                 to: patientEmail,
                 qrCodeImageUrl: qrCodeImageUrl,
-                patientName: patientName // Pass the patient's name
+                patientName: patientName 
             });
 
             // 4. Log the success message from the backend

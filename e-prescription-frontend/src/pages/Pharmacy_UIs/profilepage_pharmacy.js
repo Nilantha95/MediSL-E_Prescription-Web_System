@@ -1,3 +1,5 @@
+// used AI tools to code enhacements and designing parts.
+
 import { faCog, faHistory, faHome } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { getAuth, onAuthStateChanged, signOut, updatePassword, updateProfile } from 'firebase/auth';
@@ -7,12 +9,12 @@ import { useEffect, useState } from 'react';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
-import { db, storage } from '../../firebase'; // Adjust path if needed
+import { db, storage } from '../../firebase'; 
 import Footer from '../Main_Interface_UI/Footer';
 import logo from '../Main_Interface_UI/images/Logo01.png';
-import pic from './Images/phar01.jpg'; // Default pharmacist profile picture
+import pic from './Images/phar01.jpg'; 
 
-// --- Main Pharmacist Profile Page Component ---
+
 const PharmacistProfilePage = () => {
     const navigate = useNavigate();
     const auth = getAuth();
@@ -60,7 +62,7 @@ const PharmacistProfilePage = () => {
                             lastName: data.lastName || '',
                             email: currentUser.email,
                             userType: data.userType || 'Pharmacist',
-                            photoURL: data.photoURL || pic, // Use Firestore photoURL first
+                            photoURL: data.photoURL || pic, 
                         });
                     } else {
                         setStatusMessage("User profile not found.");
@@ -100,7 +102,7 @@ const PharmacistProfilePage = () => {
                 firstName: pharmacistData.firstName,
                 lastName: pharmacistData.lastName,
             });
-            // Also update the display name in Firebase Auth if desired
+            
             await updateProfile(user, { displayName: `${pharmacistData.firstName} ${pharmacistData.lastName}` });
             setStatusMessage('Profile updated successfully!');
         } catch (error) {
@@ -164,7 +166,7 @@ const PharmacistProfilePage = () => {
     };
 
     const styles = {
-        // Using similar styling from your provided files for consistency
+        
         header: {
             display: 'flex',
             justifyContent: 'space-between',

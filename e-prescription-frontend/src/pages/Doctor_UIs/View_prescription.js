@@ -1,3 +1,5 @@
+// Enhanced the code from the useing AI tools.
+
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';

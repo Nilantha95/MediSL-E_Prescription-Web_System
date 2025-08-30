@@ -1,23 +1,27 @@
+
+// https://www.youtube.com/watch?v=KrAS6_s-goY FOR profile page design
+// Used chagpt to enhance the code. 
+
 import React, { useState, useEffect } from 'react';
 import logo from '../Main_Interface_UI/images/Logo01.png';
-import pic from '../Main_Interface_UI/images/Doctor.png'; // Using this as a placeholder for a default profile pic
+import pic from '../Main_Interface_UI/images/Doctor.png'; 
 import { IoIosArrowForward } from 'react-icons/io';
 import { FaPhoneAlt } from 'react-icons/fa';
-import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
-import { FaUserShield, FaUsers, FaCog, FaHome, FaUser, FaChartBar, FaQuestionCircle } from 'react-icons/fa'; // Admin-specific icons and FaChartBar
-import { getAuth, onAuthStateChanged, updatePassword, updateProfile, signOut } from 'firebase/auth'; // Import signOut
+import { Link, useNavigate } from 'react-router-dom'; 
+import { FaUserShield, FaUsers, FaCog, FaHome, FaUser, FaChartBar, FaQuestionCircle } from 'react-icons/fa'; 
+import { getAuth, onAuthStateChanged, updatePassword, updateProfile, signOut } from 'firebase/auth'; 
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../../firebase'; // adjust path if needed
+import { db, storage } from '../../firebase'; 
 import Footer from '../Main_Interface_UI/Footer';
 
 const AdminProfilePage = () => {
     const auth = getAuth();
-    const navigate = useNavigate(); // Initialize navigate
+    const navigate = useNavigate(); 
 
     // State for user data and form inputs
     const [user, setUser] = useState(null);
-    const [adminData, setAdminData] = useState({ // Renamed from userData to adminData
+    const [adminData, setAdminData] = useState({ 
         firstName: '',
         lastName: '',
         email: '',
@@ -31,10 +35,10 @@ const AdminProfilePage = () => {
     const [isPasswordChangeVisible, setIsPasswordChangeVisible] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    // Header and Logout Button Hover State
+    
     const [isLogoutHovered, setIsLogoutHovered] = useState(false);
 
-    // Responsive Styles State
+  
     const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
     useEffect(() => {
@@ -46,7 +50,7 @@ const AdminProfilePage = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Responsive style utility function
+    
     const getResponsiveStyle = (desktopStyle, tabletStyle, mobileStyle, smallMobileStyle) => {
         if (screenWidth <= 575) {
             return smallMobileStyle;
@@ -79,33 +83,33 @@ const AdminProfilePage = () => {
                                 // Removed address from here
                             });
                         } else {
-                            // If not an admin, redirect them
+                            
                             alert("You do not have administrative privileges to view this page.");
-                            navigate('/'); // Redirect to homepage or other appropriate page
+                            navigate('/'); 
                         }
                     } else {
                         console.log("No such document for user profile!");
-                        // Handle case where user document doesn't exist
-                        navigate('/signin'); // Redirect to sign-in
+                        
+                        navigate('/signin'); 
                     }
                 } catch (error) {
                     console.error("Error fetching admin data:", error);
                     setStatusMessage('Error fetching admin data.');
-                    navigate('/signin'); // Redirect on error
+                    navigate('/signin'); 
                 }
             } else {
                 setUser(null);
-                // Removed address from initial state as well
+                
                 setAdminData({ firstName: '', lastName: '', email: '', userType: '', photoURL: null });
-                navigate('/signin'); // Redirect if not logged in
+                navigate('/signin'); 
             }
             setLoading(false);
         });
 
         return () => unsubscribe();
-    }, [auth, navigate]); // Added navigate to dependency array
+    }, [auth, navigate]); 
 
-    // Handle profile information update
+    
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
         setStatusMessage('');
@@ -120,7 +124,7 @@ const AdminProfilePage = () => {
             await updateDoc(docRef, {
                 firstName: adminData.firstName,
                 lastName: adminData.lastName,
-                // Removed address field from update
+                
             });
             setStatusMessage('Profile updated successfully!');
         } catch (error) {
@@ -156,7 +160,7 @@ const AdminProfilePage = () => {
         }
     };
 
-    // Handle profile picture upload
+    
     const handlePhotoChange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -170,7 +174,7 @@ const AdminProfilePage = () => {
             await updateProfile(user, { photoURL });
 
             const docRef = doc(db, 'users', user.uid);
-            await updateDoc(docRef, { photoURL }); // Also update in Firestore user document
+            await updateDoc(docRef, { photoURL }); 
 
             setAdminData(prev => ({ ...prev, photoURL }));
             setStatusMessage('Profile picture updated successfully!');
@@ -184,21 +188,21 @@ const AdminProfilePage = () => {
     const handleLogout = async () => {
         try {
             await signOut(auth);
-            navigate('/signin'); // Redirect to sign-in page after logout
+            navigate('/signin'); 
         } catch (error) {
             console.error("Error logging out:", error);
             alert("Failed to log out. Please try again.");
         }
     };
 
-    // Utility to get initials for avatar
+    
     const getInitials = (firstName, lastName) => {
         const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
         const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : '';
         return `${firstInitial}${lastInitial}`;
     };
 
-    // Consolidated Styles
+    
     const styles = {
         dashboardPage: {
             fontFamily: 'Roboto, sans-serif',
@@ -507,10 +511,9 @@ const AdminProfilePage = () => {
 
             {/* Dashboard Content */}
             <div style={styles.dashboardContainer}>
-                {/* Sidebar (Adapted for Admin) */}
                 <aside style={styles.sidebar}>
-                    <div style={styles.adminInfo}> {/* Changed to adminInfo */}
-                        <div style={styles.adminAvatar}> {/* Changed to adminAvatar */}
+                    <div style={styles.adminInfo}> 
+                        <div style={styles.adminAvatar}> 
                             {adminData.photoURL ? (
                                 <img src={adminData.photoURL} alt="Admin Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                             ) : (
@@ -518,16 +521,14 @@ const AdminProfilePage = () => {
                             )}
                         </div>
                         <p style={styles.adminName}>{`${adminData.firstName} ${adminData.lastName}`}</p> {/* Changed to adminName */}
-                        <p style={styles.adminType}>{adminData.userType}</p> {/* Changed to adminType */}
+                        <p style={styles.adminType}>{adminData.userType}</p> 
                     </div>
-                    {/* Admin-specific links */}
                     <Link to="/admin/dashboard" style={styles.sidebarLink}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
                     <Link to="/user-inquiry" style={{ ...styles.sidebarLink}}><FaQuestionCircle style={styles.sidebarIcon} />User Inquiries</Link>
                     <Link to="/admin-report" style={styles.sidebarLink}><FaChartBar style={styles.sidebarIcon} />Reports</Link> {/* Added Reports link */}
                     <Link to="#" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaUser style={styles.sidebarIcon} />Profile</Link>
                 </aside>
 
-                {/* Profile Page Content */}
                 <div style={styles.profileContainer}>
                     <h2 style={styles.h2}>Admin Profile</h2>
                     <p style={styles.subHeading}>Manage your personal information and security settings.</p>
@@ -538,7 +539,6 @@ const AdminProfilePage = () => {
                         </div>
                     )}
 
-                    {/* Profile Picture Section */}
                     <div style={styles.profileSection}>
                         <h3 style={styles.sectionHeading}>Profile Picture</h3>
                         <div style={styles.photoContainer}>
@@ -550,7 +550,6 @@ const AdminProfilePage = () => {
                         </div>
                     </div>
 
-                    {/* Personal Information Section */}
                     <div style={styles.profileSection}>
                         <h3 style={styles.sectionHeading}>Personal Information</h3>
                         <form onSubmit={handleUpdateProfile}>
@@ -589,13 +588,9 @@ const AdminProfilePage = () => {
                                 </div>
                             </div>
 
-                            {/* Removed Editable Address Field */}
-
                             <button type="submit" style={styles.saveButton}>Save Changes</button>
                         </form>
                     </div>
-
-                    {/* Password Change Section */}
                     <div style={styles.profileSection}>
                         <h3 style={styles.sectionHeading}>Change Password</h3>
                         {!isPasswordChangeVisible ? (

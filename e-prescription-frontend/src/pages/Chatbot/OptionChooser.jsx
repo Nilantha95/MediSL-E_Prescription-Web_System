@@ -1,3 +1,5 @@
+// used chatgpt and gemini ai for code enhancement
+
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import './OptionChooser.css';

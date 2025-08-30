@@ -1,3 +1,5 @@
+// used AI tools to code enhacements and designing parts and register format.
+
 import React, { useState, useEffect } from 'react';
 import logo from '../Main_Interface_UI/images/Logo01.png';
 import { IoIosArrowForward } from 'react-icons/io';
@@ -38,12 +40,12 @@ const RegistrationForm = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Password strength check utility function
+  
   const checkPasswordStrength = (pwd) => {
     let score = 0;
     if (!pwd) return '';
 
-    // Award points for different criteria
+    
     if (pwd.length > 7) score++;
     if (pwd.match(/[a-z]+/)) score++;
     if (pwd.match(/[A-Z]+/)) score++;
@@ -73,7 +75,7 @@ const RegistrationForm = () => {
     setPasswordStrength(checkPasswordStrength(newPassword));
   };
 
-  // Responsive style utility function
+ 
   const getResponsiveStyle = (desktopStyle, tabletStyle, mobileStyle, smallMobileStyle) => {
     if (screenWidth <= 575) {
       return smallMobileStyle;

@@ -1,14 +1,17 @@
+// https://www.youtube.com/watch?v=KrAS6_s-goY used to design profile page
+// used chatgpt and gemini ai for code enhancement
+
 import React, { useState, useEffect } from 'react';
 import logo from '../Main_Interface_UI/images/Logo01.png';
-import pic from '../Main_Interface_UI/images/Doctor.png'; // Using this as a placeholder for a default profile pic
+import pic from '../Main_Interface_UI/images/Doctor.png'; 
 import { IoIosArrowForward } from 'react-icons/io';
 import { FaPhoneAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import { FaUserMd, FaPrescriptionBottleAlt, FaHistory, FaHome } from 'react-icons/fa'; // Removed unused icons like FaCalendarAlt, FaCog
+import { FaUserMd, FaPrescriptionBottleAlt, FaHistory, FaHome } from 'react-icons/fa'; 
 import { getAuth, onAuthStateChanged, updatePassword, updateProfile } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../../firebase'; // adjust path if needed
+import { db, storage } from '../../firebase'; 
 import Footer from '../Main_Interface_UI/Footer';
 
 const ProfilePage = () => {

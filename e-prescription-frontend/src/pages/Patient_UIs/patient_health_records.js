@@ -1,3 +1,5 @@
+// used chatgpt for code enhacements.
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
