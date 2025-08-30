@@ -282,7 +282,7 @@ function PharmacyDashboard() {
                     </div>
                     <Link to="/pharmacy/dashboard" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FontAwesomeIcon icon={faHome} style={styles.sidebarIcon} />Dashboard</Link>
                     <Link to="/pharmacy_history" style={styles.sidebarLink}><FontAwesomeIcon icon={faHistory} style={styles.sidebarIcon} />Prescription History</Link>
-                    <Link to="/pharprofile" style={styles.sidebarLink}><FontAwesomeIcon icon={faCog} style={styles.sidebarIcon} />Settings</Link>
+                    <Link to="/pharprofile" style={styles.sidebarLink}><FontAwesomeIcon icon={faCog} style={styles.sidebarIcon} />Profile</Link>
                 </aside>
 
                 <main style={styles.mainContentStyle}>

@@ -25,7 +25,6 @@ import TextField from '@mui/material/TextField';
 // QR Code Imports
 import QRCodeLib from 'qrcode';
 
-// **SECURITY WARNING**: This is for demonstration.
 // The key must be securely managed in a real application.
 const SECRET_KEY = "your-super-secret-key-that-should-be-in-a-secure-place";
 
@@ -709,7 +708,7 @@ const NewPrescriptionForm = () => {
                     </div>
                     <Link to="/doctor/dashboard" style={styles.sidebarLink}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
                     <Link to="/newprescription" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaPrescriptionBottleAlt style={styles.sidebarIcon} />Create New Prescription</Link>
-                    <Link to="/prescriptionhistory" style={styles.sidebarLink}><FaHistory style={styles.sidebarIcon} />Prescriptions</Link>
+                    <Link to="/prescriptionhistory" style={styles.sidebarLink}><FaHistory style={styles.sidebarIcon} />Prescription History</Link>
                     <Link to="/docprofile" style={styles.sidebarLink}><FaUserMd style={styles.sidebarIcon} />Profile</Link>
                 </aside>
 

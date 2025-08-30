@@ -14,8 +14,7 @@ import { FaUserMd, FaPrescriptionBottleAlt, FaHistory, FaHome } from 'react-icon
 import pic from '../Main_Interface_UI/images/Doctor.png'; // Assuming a default doctor image
 import Footer from '../Main_Interface_UI/Footer';
 
-// The key must be securely managed in a real application.
-// It must be the SAME KEY as the one used for encryption.
+//Encryption Method Key
 const SECRET_KEY = "your-super-secret-key-that-should-be-in-a-secure-place";
 
 // Helper function to decrypt data
@@ -168,7 +167,7 @@ const PrescriptionView = () => {
     };
 
     const handleAddMedicine = () => {
-        setMedicines([...medicines, { name: '', dosage: '', frequency: '', duration: '' }]);
+        setMedicines([...medicines, { name: '', dosage: '', frequency: '', duration: '', status: 'Not Issued' }]);
     };
 
     const handleRemoveMedicine = (index) => {
@@ -509,6 +508,8 @@ const PrescriptionView = () => {
         return <div style={styles.errorText}>{error}</div>;
     }
 
+    const isEditable = prescription?.status === 'active' || prescription?.status === 'partially_issued';
+
     return (
         <div style={{ fontFamily: 'sans-serif' }}>
             {/* Navigation Bar */}
@@ -555,7 +556,7 @@ const PrescriptionView = () => {
                     </div>
                     <Link to="/doctor/dashboard" style={styles.sidebarLink}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
                     <Link to="/newprescription" style={styles.sidebarLink}><FaPrescriptionBottleAlt style={styles.sidebarIcon} />Create New Prescription</Link>
-                    <Link to="#" style={{ ...styles.sidebarLink }}><FaHistory style={styles.sidebarIcon} />Prescriptions</Link>
+                    <Link to="/prescriptionhistory" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaHistory style={styles.sidebarIcon} />Prescription History</Link>
                     <Link to="/docprofile" style={styles.sidebarLink}><FaUserMd style={styles.sidebarIcon} />Profile</Link>
                 </aside>
 
@@ -578,6 +579,46 @@ const PrescriptionView = () => {
                                     {prescription?.prescriptionDate?.toDate ? new Date(prescription.prescriptionDate.toDate()).toLocaleDateString() : 'N/A'}
                                 </p>
                                 <p style={styles.infoText}><strong>Prescription ID:</strong> {prescriptionId}</p>
+                            </div>
+
+                            {/* New section for prescription status and notes */}
+                            <div style={styles.section}>
+                                <h3 style={{ color: '#007bff' }}>Prescription Status</h3>
+                                <p style={{ ...styles.infoText, fontWeight: 'bold' }}>
+                                    Status: {prescription?.status}
+                                </p>
+                                {/* Display rejection reason if rejected */}
+                                {prescription?.status === 'Rejected' && (
+                                    <div style={{ marginTop: '10px', padding: '15px', backgroundColor: '#fff0f0', border: '1px solid #e53e3e', borderRadius: '8px' }}>
+                                        <p style={{ margin: 0, color: '#e53e3e', fontWeight: 'bold' }}>
+                                            Rejection Reason:
+                                        </p>
+                                        <p style={{ margin: 0, color: '#e53e3e', fontStyle: 'italic' }}>
+                                            "{prescription.rejectionReason}"
+                                        </p>
+                                        <p style={{ margin: '5px 0 0 0', color: '#e53e3e', fontSize: '0.9em' }}>
+                                            Rejected By: {prescription.rejectedBy} on{' '}
+                                            {prescription.rejectedAt?.toDate ? new Date(prescription.rejectedAt.toDate()).toLocaleDateString() : 'N/A'}
+                                        </p>
+                                    </div>
+                                )}
+                                {/* Display partially issued details if partially issued */}
+                                {prescription?.status === 'partially_issued' && (
+                                    <div style={{ marginTop: '10px', padding: '15px', backgroundColor: '#e6f2ff', border: '1px solid #007bff', borderRadius: '8px' }}>
+                                        <p style={{ margin: 0, color: '#007bff', fontWeight: 'bold' }}>
+                                            Partially Issued Details:
+                                        </p>
+                                        <ul style={{ margin: '10px 0 0 20px', padding: 0 }}>
+                                            {prescription.medicines?.filter(med => med.status === 'Issued').length > 0 ? (
+                                                prescription.medicines.filter(med => med.status === 'Issued').map((med, index) => (
+                                                    <li key={index} style={{ color: '#007bff', marginBottom: '5px' }}>{med.name} has been issued.</li>
+                                                ))
+                                            ) : (
+                                                <li style={{ color: '#007bff' }}>No medicines have been issued yet.</li>
+                                            )}
+                                        </ul>
+                                    </div>
+                                )}
                             </div>
 
                             <div style={styles.section}>
@@ -604,6 +645,7 @@ const PrescriptionView = () => {
                                                             value={med.name}
                                                             onChange={(e) => handleMedicineChange(index, 'name', e.target.value)}
                                                             required
+                                                            disabled={!isEditable || med.status === 'Issued'}
                                                         />
                                                     </td>
                                                     <td style={styles.tableCell}>
@@ -614,6 +656,7 @@ const PrescriptionView = () => {
                                                             value={med.dosage}
                                                             onChange={(e) => handleMedicineChange(index, 'dosage', e.target.value)}
                                                             required
+                                                            disabled={!isEditable || med.status === 'Issued'}
                                                         />
                                                     </td>
                                                     <td style={styles.tableCell}>
@@ -622,6 +665,7 @@ const PrescriptionView = () => {
                                                             value={med.frequency}
                                                             onChange={(e) => handleMedicineChange(index, 'frequency', e.target.value)}
                                                             required
+                                                            disabled={!isEditable || med.status === 'Issued'}
                                                         >
                                                             <option value="">Select Frequency</option>
                                                             <option value="Once Daily">Once Daily</option>
@@ -639,6 +683,7 @@ const PrescriptionView = () => {
                                                             value={med.duration}
                                                             onChange={(e) => handleMedicineChange(index, 'duration', e.target.value)}
                                                             required
+                                                            disabled={!isEditable || med.status === 'Issued'}
                                                         />
                                                     </td>
                                                     <td style={styles.tableCell}>
@@ -646,6 +691,7 @@ const PrescriptionView = () => {
                                                             type="button"
                                                             onClick={() => handleRemoveMedicine(index)}
                                                             style={styles.removeBtn}
+                                                            disabled={!isEditable || med.status === 'Issued'}
                                                         >
                                                             <FaTrashAlt />
                                                         </button>
@@ -654,14 +700,18 @@ const PrescriptionView = () => {
                                             ))}
                                         </tbody>
                                     </table>
-                                    <div style={styles.buttonContainer}>
-                                        <button type="button" onClick={handleAddMedicine} style={styles.addBtn}>
-                                            <FaPlus /> Add Medicine
+                                    {isEditable && (
+                                        <div style={styles.buttonContainer}>
+                                            <button type="button" onClick={handleAddMedicine} style={styles.addBtn}>
+                                                <FaPlus /> Add Medicine
+                                            </button>
+                                        </div>
+                                    )}
+                                    {isEditable && (
+                                        <button type="submit" style={styles.saveBtn} disabled={isSaving}>
+                                            {isSaving ? 'Saving...' : 'Save Changes'}
                                         </button>
-                                    </div>
-                                    <button type="submit" style={styles.saveBtn} disabled={isSaving}>
-                                        {isSaving ? 'Saving...' : 'Save Changes'}
-                                    </button>
+                                    )}
                                 </form>
                             </div>
                         </div>

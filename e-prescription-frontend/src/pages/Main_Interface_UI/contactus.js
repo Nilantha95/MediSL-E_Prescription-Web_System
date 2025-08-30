@@ -524,13 +524,13 @@ function ContactUs() {
                         <div style={styles.headquartersInfo}>
                             <h3 style={styles.subHeading}>Headquarters</h3>
                             <p style={styles.infoItem}>
-                                <FaMapMarkerAlt style={styles.infoItemIcon} /> 8863 - 9867 MILL ROAD, CAMBRIDGE, MG09 99HT.
+                                <FaMapMarkerAlt style={styles.infoItemIcon} /> 94 Mangala Mawatha, Kadawatha.
                             </p>
                             <p style={styles.infoItem}>
-                                <FaPhoneAlt style={styles.infoItemIcon} /> Telephone: +1 800 603 6035
+                                <FaPhoneAlt style={styles.infoItemIcon} /> Telephone: +94 75 7323 847
                             </p>
                             <p style={styles.infoItem}>
-                                <FaEnvelope style={styles.infoItemIcon} /> E-mail: <a href="mailto:mail@demolink.org" style={styles.infoLink}>mail@demolink.org</a>
+                                <FaEnvelope style={styles.infoItemIcon} /> E-mail: <a href="MediSL@gmail.com" style={styles.infoLink}>MediSL@gmail.com</a>
                             </p>
                         </div>
                     </div>

@@ -287,7 +287,7 @@ const PharmacistProfilePage = () => {
                         <FontAwesomeIcon icon={faHistory} style={styles.sidebarIcon}/>Prescription History
                     </Link>
                     <Link to="/pharmacy/settings" style={{...styles.sidebarLink, ...styles.sidebarLinkActive}}>
-                        <FontAwesomeIcon icon={faCog} style={styles.sidebarIcon}/>Settings
+                        <FontAwesomeIcon icon={faCog} style={styles.sidebarIcon}/>Profile
                     </Link>
                 </aside>
                 

@@ -7,7 +7,7 @@ import { FaPhoneAlt, FaSignOutAlt, FaHome, FaHistory, FaUser, FaPrescriptionBott
 import { IoIosArrowForward } from 'react-icons/io';
 
 import logo from '../Main_Interface_UI/images/Logo01.png';
-import pic from '../Main_Interface_UI/images/Doctor.png';
+import pic from '../Main_Interface_UI/images/Patient.jpg';
 import ChatBotToggle from "../Chatbot/ChatBotToggle";
 import Footer from '../Main_Interface_UI/Footer';
 

@@ -231,7 +231,7 @@ function PharmacyHistory() {
                     </div>
                     <Link to="/pharmacy/dashboard" style={styles.sidebarLink}><FontAwesomeIcon icon={faHome} style={styles.sidebarIcon} />Dashboard</Link>
                     <Link to="/pharmacy/history" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FontAwesomeIcon icon={faHistory} style={styles.sidebarIcon} />Prescription History</Link>
-                    <Link to="/pharprofile" style={styles.sidebarLink}><FontAwesomeIcon icon={faCog} style={styles.sidebarIcon} />Settings</Link>
+                    <Link to="/pharprofile" style={styles.sidebarLink}><FontAwesomeIcon icon={faCog} style={styles.sidebarIcon} />Profile</Link>
                 </aside>
 
                 {/* Main Content */}

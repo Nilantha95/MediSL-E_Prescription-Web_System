@@ -11,7 +11,7 @@ import { FaPhoneAlt, FaSignOutAlt, FaHome, FaHistory, FaUser, FaPrescriptionBott
 import { IoIosArrowForward } from 'react-icons/io';
 
 // Assets
-import pic from '../Main_Interface_UI/images/Doctor.png';
+import pic from '../Main_Interface_UI/images/Patient.jpg';
 import Footer from '../Main_Interface_UI/Footer';
 import logo from '../Main_Interface_UI/images/Logo01.png';
 

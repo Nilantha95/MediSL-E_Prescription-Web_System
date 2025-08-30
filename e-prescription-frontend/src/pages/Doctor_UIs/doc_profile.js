@@ -424,7 +424,7 @@ const ProfilePage = () => {
                     </div>
                     <Link to="/doctor/dashboard" style={styles.sidebarLink}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
                     <Link to="/newprescription" style={styles.sidebarLink}><FaPrescriptionBottleAlt style={styles.sidebarIcon} />Create New Prescription</Link>
-                    <Link to="/prescriptionhistory" style={styles.sidebarLink}><FaHistory style={styles.sidebarIcon} />My Prescriptions</Link>
+                    <Link to="/prescriptionhistory" style={styles.sidebarLink}><FaHistory style={styles.sidebarIcon} />Prescription History</Link>
                     <Link to="#" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaUserMd style={styles.sidebarIcon} />Profile</Link>
                 </aside>
 

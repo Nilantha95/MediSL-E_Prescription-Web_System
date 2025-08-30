@@ -21,12 +21,12 @@ const RegistrationForm = () => {
   const [error, setError] = useState('');
   const [passwordStrength, setPasswordStrength] = useState('');
 
-  // Header and Button Hover States
+
   const [isHomeHovered, setIsHomeHovered] = useState(false);
   const [isSubmitButtonHovered, setIsSubmitButtonHovered] = useState(false);
   const [hoveredUserType, setHoveredUserType] = useState(null);
 
-  // Responsive Styles State
+
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
   useEffect(() => {

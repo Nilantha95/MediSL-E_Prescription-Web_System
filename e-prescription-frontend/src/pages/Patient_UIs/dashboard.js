@@ -6,7 +6,7 @@ import { db } from '../../firebase';
 import logo from '../Main_Interface_UI/images/Logo01.png';
 import { FaPhoneAlt, FaSignOutAlt, FaHome, FaHistory, FaUser, FaPrescriptionBottleAlt } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
-import pic from '../Main_Interface_UI/images/Doctor.png';
+import pic from '../Main_Interface_UI/images/Patient.jpg';
 import ChatBotToggle from "../Chatbot/ChatBotToggle";
 import Footer from '../Main_Interface_UI/Footer';
 import { IoIosArrowForward } from 'react-icons/io';
@@ -595,10 +595,6 @@ const PatientDashboard = () => {
 
                 <main style={styles.content}>
                     <div style={styles.dashboardHeader}>
-                        <div style={styles.headerCard}>
-                            <p style={styles.headerCardTitle}>Active Prescriptions</p>
-                            <p style={styles.headerCardValue}>{activePrescriptionsCount}</p>
-                        </div>
                         <div style={styles.headerCard}>
                             <p style={styles.headerCardTitle}>Total Prescriptions</p>
                             <p style={styles.headerCardValue}>{totalPrescriptionsCount}</p>

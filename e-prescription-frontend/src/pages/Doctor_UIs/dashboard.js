@@ -336,7 +336,7 @@ const DoctorDashboard = () => {
                     </div>
                     <Link to="/doctor/dashboard" style={{ ...styles.sidebarLink, ...styles.sidebarLinkActive }}><FaHome style={styles.sidebarIcon} />Dashboard</Link>
                     <Link to="/newprescription" style={styles.sidebarLink}><FaPrescriptionBottleAlt style={styles.sidebarIcon} />Create New Prescription</Link>
-                    <Link to="/prescriptionhistory" style={styles.sidebarLink}><FaHistory style={styles.sidebarIcon} />Prescriptions</Link>
+                    <Link to="/prescriptionhistory" style={styles.sidebarLink}><FaHistory style={styles.sidebarIcon} />Prescription History</Link>
                     <Link to="/docprofile" style={styles.sidebarLink}><FaUserMd style={styles.sidebarIcon} />Profile</Link>
                 </aside>
 

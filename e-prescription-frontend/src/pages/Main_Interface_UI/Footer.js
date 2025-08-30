@@ -196,15 +196,15 @@ const Footer = () => {
           <ul style={styles.list}>
             <li style={styles.listItem}>
               <span style={styles.iconStyle}>📞</span>
-              <span>+94 11 234 5678</span>
+              <span>+94 (011) 519-51919</span>
             </li>
             <li style={styles.listItem}>
               <span style={styles.iconStyle}>✉️</span>
-              <span>info@medisllanka.com</span>
+              <span>MediSL@gmail.com</span>
             </li>
             <li style={styles.listItem}>
               <span style={styles.iconStyle}>📍</span>
-              <span>Colombo, Sri Lanka</span>
+              <span>Kadawatha, Sri Lanka</span>
             </li>
           </ul>
         </div>

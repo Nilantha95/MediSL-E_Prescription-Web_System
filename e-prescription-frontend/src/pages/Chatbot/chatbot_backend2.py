@@ -15,6 +15,7 @@ from google.cloud import translate_v3 as translate
 from google.cloud import texttospeech
 import google.generativeai as genai
 from datetime import datetime
+from thefuzz import fuzz
 
 # Set GOOGLE_APPLICATION_CREDENTIALS environment variable
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./API_keys/medisl-ed07f-982237833623.json"
@@ -36,7 +37,7 @@ except Exception as e:
 
 # --- Configuration ---
 SERVICE_ACCOUNT_KEY_PATH = './API_keys/medisl-ed07f-firebase-adminsdk-fbsvc-4f8682039f.json'
-SYMPTOMS_DISEASES_COLLECTION = 'diseases_symptoms'
+SYMPTOMS_DISEASES_COLLECTION = 'diseases'  # UPDATED TO 'diseases' COLLECTION
 DISEASES_MEDICINES_COLLECTION = 'diseases_medicines'
 MEDICINE_DETAILS_COLLECTION = 'medicine_details'
 HEALTH_TIPS_COLLECTION = 'health_tips'
@@ -68,25 +69,32 @@ tts_client = texttospeech.TextToSpeechClient()
 print("Google Cloud Text-to-Speech Client initialized successfully.")
 
 # --- Initialize Google Generative AI Client ---
-GEMINI_API_KEY = "AIzaSyC7kHULBvqhtIY8GROGspCXINViBU67zLc"
+GEMINI_API_KEY = "AIzaSyC7kHULBvqhtIY8GROGspCXINViBU67zLc" #---API KEY---
 
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    print("Google Generative AI Client (Gemini 1.5 Flash) initialized successfully.")
+    # UPDATED: Add a GenerationConfig with a higher temperature for more randomness
+    generation_config = genai.GenerationConfig(
+        temperature=1.2,  # Increased temperature for more diverse outputs
+        max_output_tokens=100
+    )
+    model = genai.GenerativeModel('gemini-1.5-flash', generation_config=generation_config)
+    print("Google Generative AI Client (Gemini 1.5 Flash) initialized successfully with GenerationConfig.")
 else:
     model = None
     print("Gemini model not initialized due to missing API key.")
 
-# --- Initialize NLP tools ---
+# ---NLP tools ---
 lemmatizer = WordNetLemmatizer()
 stop_words = set(stopwords.words('english'))
 
 # --- GLOBAL VARIABLES FOR TF-IDF ---
 tfidf_vectorizer = None
 disease_symptom_vectors = []
+# --- NEW GLOBAL: List of all medicine IDs for fuzzy matching ---
+all_medicine_ids = []
 
-# --- NEW GLOBAL: Synonym and phrase mapping for symptoms ---
+# ---Synonym and phrase mapping for symptoms ---
 SYMPTOM_SYNONYM_MAP = {
     'sore joint': 'joint_pain',
     'aching joint': 'joint_pain',
@@ -99,7 +107,7 @@ SYMPTOM_SYNONYM_MAP = {
     'fatigued': 'fatigue'
 }
 
-# --- NEW GLOBAL: Manual weights for symptoms to prioritize unique ones ---
+# ---Manual weights for symptoms to prioritize unique ones ---
 SYMPTOM_WEIGHTS = {
     'joint_pain': 1.5,
     'swelling': 1.8,
@@ -115,7 +123,7 @@ SYMPTOM_WEIGHTS = {
     'fatigue': 1.0
 }
 
-# --- NEW GLOBAL: TTS Language Configuration ---
+# --- TTS Language Configuration ---
 TTS_LANG_CONFIG = {
     'en': {'language_code': 'en-US', 'voice_name': 'en-US-Standard-C'},
     'si': {'language_code': 'si-LK', 'voice_name': 'si-LK-Standard-A'},
@@ -188,8 +196,9 @@ def load_and_vectorize_symptoms_data():
 
         for doc in all_diseases_docs:
             disease_data = doc.to_dict()
-            disease_id = disease_data.get('diseaseNameId')
-            disease_display = disease_data.get('diseaseNameDisplay')
+            # The new collection uses 'name' and 'symptoms' fields.
+            disease_id = doc.id
+            disease_display = disease_data.get('name')
             db_symptoms = disease_data.get('symptoms', [])
 
             symptoms_string = " ".join(db_symptoms)
@@ -221,14 +230,52 @@ def load_and_vectorize_symptoms_data():
         print(f"Error loading or vectorizing English symptom data: {e}")
         pass
 
-load_and_vectorize_symptoms_data()
+def load_all_medicine_ids():
+    global all_medicine_ids
+    print("\n--- Loading all medicine IDs for fuzzy matching ---")
+    try:
+        medicines_ref = db.collection(MEDICINE_DETAILS_COLLECTION)
+        all_docs = medicines_ref.stream()
+        all_medicine_ids = [doc.id for doc in all_docs]
+        print(f"Successfully loaded {len(all_medicine_ids)} medicine IDs.")
+    except Exception as e:
+        print(f"Error loading medicine IDs: {e}")
+        all_medicine_ids = []
 
-# --- Chatbot Endpoint for Disease Diagnosis ---
+# --- New helper function for fuzzy matching ---
+def find_best_medicine_match(user_input_id, all_db_ids, threshold=70):
+    best_match = None
+    best_score = 0
+    
+    # Check for direct match first for efficiency
+    if user_input_id in all_db_ids:
+        print(f"Direct match found: {user_input_id}")
+        return user_input_id, 100
+
+    for db_id in all_db_ids:
+        # Using fuzz.token_set_ratio for better handling of different word orders/subsets
+        score = fuzz.token_set_ratio(user_input_id, db_id)
+        if score > best_score:
+            best_score = score
+            best_match = db_id
+    
+    if best_score >= threshold:
+        print(f"Fuzzy match found for '{user_input_id}': '{best_match}' with score {best_score}")
+        return best_match, best_score
+    
+    print(f"No fuzzy match found for '{user_input_id}' above threshold {threshold}. Best match was '{best_match}' with score {best_score}")
+    return None, 0
+
+# Initial data loading on app start
+load_and_vectorize_symptoms_data()
+load_all_medicine_ids()
+
+# --- Chatbot Configuration for Disease Diagnosis ---
 @app.route('/chat', methods=['POST'])
 def chat():
     data = request.get_json()
     patient_symptoms_paragraph = data.get('symptoms', '').strip()
-    user_selected_lang = data.get('language', 'en') 
+    user_selected_lang = data.get('language', 'en')
 
     disclaimer_message_en = 'This chatbot provides general information and is not a substitute for professional medical advice. Always consult a qualified healthcare professional for diagnosis and treatment.'
 
@@ -259,6 +306,7 @@ def chat():
     identified_disease_id = 'Unknown'
     identified_disease_display_en = 'Unknown'
     suggested_medicines_en = []
+    suggested_treatments_en = []
     response_message_en = "I couldn't identify a specific disease based on your symptoms. Please try rephrasing or provide more details, or consult a doctor."
 
     try:
@@ -304,7 +352,6 @@ def chat():
 
             similarity = cosine_similarity(weighted_patient_vector, disease_vector)[0][0]
 
-            # Print scores for debugging purposes
             if similarity > 0:
                 print(f"Checking for {disease_display_en}: Similarity Score = {similarity:.4f}")
 
@@ -318,11 +365,25 @@ def chat():
             identified_disease_id = best_match_disease_id
             identified_disease_display_en = best_match_disease_display_en
 
-            # --- UPDATED CODE ---
-            # Calculate the percentage and format the response message
             confidence_percentage = round(max_similarity_score * 100)
             response_message_en = f"Based on your symptoms, you might have: {identified_disease_display_en.title()} (Confidence: {confidence_percentage}%)."
 
+            # Query for treatments from diseases collection
+            treatments_doc_ref = db.collection(SYMPTOMS_DISEASES_COLLECTION).document(identified_disease_id)
+            treatments_doc = treatments_doc_ref.get()
+
+            if treatments_doc.exists:
+                treatments_data = treatments_doc.to_dict()
+                suggested_treatments_en = [t.title() for t in treatments_data.get('treatments', [])]
+                if suggested_treatments_en:
+                    treatments_list_text = ', and '.join(suggested_treatments_en)
+                    response_message_en += f" Suggested treatments (informational only): {treatments_list_text}."
+                else:
+                    response_message_en += " I don't have specific treatment suggestions for this condition in my database."
+            else:
+                response_message_en += " I don't have specific treatment suggestions for this condition in my database."
+
+            # Query for medicines from diseases_medicines collection
             medicines_doc_ref = db.collection(DISEASES_MEDICINES_COLLECTION).document(identified_disease_id)
             medicines_doc = medicines_doc_ref.get()
 
@@ -330,9 +391,8 @@ def chat():
                 medicines_data = medicines_doc.to_dict()
                 suggested_medicines_en = [m.title() for m in medicines_data.get('medicines', [])]
                 if suggested_medicines_en:
-                    # MODIFIED TO USE "AND" INSTEAD OF NEWLINES
                     medicines_list_text = ', and '.join(suggested_medicines_en)
-                    response_message_en += f" Suggested medicines (informational only): {medicines_list_text}"
+                    response_message_en += f" Suggested medicines (informational only): {medicines_list_text}."
                 else:
                     response_message_en += " I don't have specific medicine suggestions for this condition in my database."
             else:
@@ -354,10 +414,16 @@ def chat():
         translate_text(med_name_en, user_selected_lang, 'en')
         for med_name_en in suggested_medicines_en
     ]
+    
+    suggested_treatments_translated = [
+        translate_text(treat_name_en, user_selected_lang, 'en')
+        for treat_name_en in suggested_treatments_en
+    ]
 
     return jsonify({
         'disease': identified_disease_display_translated.title(),
         'medicines': suggested_medicines_translated,
+        'treatments': suggested_treatments_translated,
         'message': final_response_message,
         'disclaimer': final_disclaimer
     })
@@ -393,36 +459,40 @@ def get_medicine_details():
                  'disclaimer': translate_text(disclaimer_message_en, user_selected_lang, 'en')
                 }), 500
 
-    medicine_id_for_lookup = preprocess_medicine_name(input_for_lookup_en)
-    print(f"Original medicine input ({user_selected_lang}): '{medicine_name_input}'")
-    print(f"Processed English ID for lookup: '{medicine_id_for_lookup}'")
-
+    # ---Use fuzzy matching to find the best medicine ID from dataset ---
+    preprocessed_input = preprocess_medicine_name(input_for_lookup_en)
+    best_match_id, score = find_best_medicine_match(preprocessed_input, all_medicine_ids)
+    
     medicine_details_en = {}
     response_message_en = ""
 
     try:
-        medicine_doc_ref = db.collection(MEDICINE_DETAILS_COLLECTION).document(medicine_id_for_lookup)
-        medicine_doc = medicine_doc_ref.get()
+        if best_match_id:
+            medicine_doc_ref = db.collection(MEDICINE_DETAILS_COLLECTION).document(best_match_id)
+            medicine_doc = medicine_doc_ref.get()
 
-        if medicine_doc.exists:
-            medicine_details_en = medicine_doc.to_dict()
-            
-            # UPDATED CODE: Removed bold markdown and replaced newlines with periods
-            medicine_name = medicine_details_en.get('medicineNameRaw', 'N/A').title()
-            composition = medicine_details_en.get('composition', 'N/A')
-            uses = medicine_details_en.get('uses', 'N/A')
-            side_effects = medicine_details_en.get('sideEffects', 'N/A')
-            manufacturer = medicine_details_en.get('manufacturer', 'N/A')
+            if medicine_doc.exists:
+                medicine_details_en = medicine_doc.to_dict()
+                
+                medicine_name = medicine_details_en.get('medicineNameRaw', 'N/A').title()
+                composition = medicine_details_en.get('composition', 'N/A')
+                uses = medicine_details_en.get('uses', 'N/A')
+                side_effects = medicine_details_en.get('sideEffects', 'N/A')
+                manufacturer = medicine_details_en.get('manufacturer', 'N/A')
 
-            response_message_en = (
-                f"Here are the details for {medicine_name}: "
-                f"Composition: {composition}. "
-                f"Uses: {uses}. "
-                f"Side Effects: {side_effects}. "
-                f"Manufacturer: {manufacturer}."
-            )
+                response_message_en = (
+                    f"Here are the details for {medicine_name}: "
+                    f"Composition: {composition}. "
+                    f"Uses: {uses}. "
+                    f"Side Effects: {side_effects}. "
+                    f"Manufacturer: {manufacturer}."
+                )
+            else:
+                 # This case should ideally not be reached if find_best_medicine_match is working
+                 print(f"Fuzzy matched ID '{best_match_id}' did not exist in the database.")
+                 response_message_en = f"Sorry, I could not find details for '{medicine_name_input}'. Please check the spelling or try another medicine."
         else:
-            print(f"Medicine '{medicine_name_input}' (ID: '{medicine_id_for_lookup}') not found in English database.")
+            print(f"Medicine '{medicine_name_input}' (ID: '{preprocessed_input}') not found in English database.")
             response_message_en = f"Sorry, I could not find details for '{medicine_name_input}'. Please check the spelling or try another medicine."
 
     except Exception as e:
@@ -449,7 +519,7 @@ def get_medicine_details():
     })
 
 
-# --- ENDPOINT: Get Health Tip ---
+# --- Gemini AI for Get Health Tip ---
 @app.route('/get_health_tip', methods=['POST'])
 def get_health_tip():
     data = request.get_json()
@@ -461,19 +531,28 @@ def get_health_tip():
         if not model:
             raise Exception("Gemini model not initialized. API key might be missing.")
 
-        # --- UPDATED: Add a dynamic element to the prompt for variability ---
-        timestamp = datetime.now().isoformat()
-        prompt = f"Provide a single, short, random, and general health tip. The tip should be a concise sentence or two, easy to understand, and not specific to any particular disease or medicine. The tone should be positive and encouraging. Timestamp: {timestamp}"
+        
+        prompts = [
+            "Provide a brief, general health tip on diet and nutrition.",
+            "Offer a concise health tip related to physical activity or exercise.",
+            "Give a simple health tip about the importance of sleep and rest.",
+            "Share a quick health tip about mental well-being or stress reduction.",
+            "Provide a general health tip on hygiene or disease prevention.",
+            "Offer a short and simple tip for maintaining healthy habits."
+        ]
+        
+        #--Select a random prompt from the list--
+        prompt = random.choice(prompts)
         
         response = model.generate_content(prompt)
         
-        # Check if the response is valid and get the text
+        # --Check if the response is valid and get the text--
         if response and response.text:
             tip_content_en = response.text.strip()
         else:
             raise Exception("Gemini AI did not return a valid health tip.")
 
-        # Translate the generated tip to the user's language
+        # --Translate the generated tip to the user's language--
         tip_content_translated = translate_text(tip_content_en, user_selected_lang, 'en')
 
         return jsonify({
@@ -490,7 +569,7 @@ def get_health_tip():
             'disclaimer': translate_text(disclaimer_message_en, user_selected_lang, 'en')
         }), 500
 
-# --- NEW: Google Cloud TTS Endpoint ---
+# ---Google Cloud TTS Endpoint ---
 @app.route('/synthesize_speech', methods=['POST'])
 def synthesize_speech():
     data = request.get_json()
@@ -536,7 +615,9 @@ def synthesize_speech():
         )
 
     except Exception as e:
-        app.logger.error(f"Google Cloud...")
+        app.logger.error(f"Google Cloud TTS Error: {e}")
+        return jsonify({"error": "Failed to synthesize speech."}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
