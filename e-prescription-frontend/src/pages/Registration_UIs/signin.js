@@ -14,7 +14,7 @@ import { auth, db } from '../../firebase';
 import Footer from '../Main_Interface_UI/Footer';
 
 const SignInForm = () => {
-  const [userType, setUserType] = useState('patient');
+  const [userType, setUserType] = useState(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);

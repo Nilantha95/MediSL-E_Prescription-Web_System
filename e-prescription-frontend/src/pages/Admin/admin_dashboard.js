@@ -2,8 +2,6 @@
 // Used chatgpt and gemini ai used for enhance the code. 
 
 
-
-
 import React, { useState, useEffect } from 'react';
 import { db } from '../../firebase'; 
 import { collection, getDocs, doc, deleteDoc, updateDoc, getDoc } from 'firebase/firestore';
