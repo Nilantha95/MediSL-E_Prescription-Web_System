@@ -529,7 +529,7 @@ function ContactUs() {
                                 <FaMapMarkerAlt style={styles.infoItemIcon} /> 94 Mangala Mawatha, Kadawatha.
                             </p>
                             <p style={styles.infoItem}>
-                                <FaPhoneAlt style={styles.infoItemIcon} /> Telephone: +94 75 7323 847
+                                <FaPhoneAlt style={styles.infoItemIcon} /> Telephone: +94 (011) 519-51919
                             </p>
                             <p style={styles.infoItem}>
                                 <FaEnvelope style={styles.infoItemIcon} /> E-mail: <a href="MediSL@gmail.com" style={styles.infoLink}>MediSL@gmail.com</a>

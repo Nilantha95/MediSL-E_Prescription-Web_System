@@ -183,7 +183,7 @@ def translate_text(text, target_language_code, source_language_code=None):
         print(f"Translation Error for text '{text[:50]}...': {e}")
         return text
 
-# --- Function to load and vectorize symptoms from Firestore ---
+# --- Function to load and vectorize symptoms from Firebase ---
 def load_and_vectorize_symptoms_data():
     global tfidf_vectorizer, disease_symptom_vectors
     print("\n--- Loading and Vectorizing English Symptoms Data for Chatbot ---")

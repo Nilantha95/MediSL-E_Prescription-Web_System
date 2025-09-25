@@ -32,11 +32,11 @@ import Footer from '../Main_Interface_UI/Footer';
 
 // Imports from DoctorDashboard.js for the sidebar
 import { doc, getDoc } from 'firebase/firestore';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged} from 'firebase/auth';
 import { FaUserMd, FaPrescriptionBottleAlt, FaHistory, FaHome } from 'react-icons/fa';
 
 // Firebase Imports
-import { collection, query, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, getDocs, orderBy, where } from 'firebase/firestore';
 import { db } from '../../firebase'; // Adjust the path to your firebaseConfig file
 
 const PrescriptionHistory = () => {
@@ -133,19 +133,21 @@ const PrescriptionHistory = () => {
 
     // Fetch prescription data from Firebase when the component mounts
     useEffect(() => {
-        const fetchPrescriptions = async () => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (user) {
             setIsLoading(true);
             try {
-                const q = query(collection(db, 'prescriptions'), orderBy('prescriptionDate', 'desc'));
+                const q = query(
+                    collection(db, 'prescriptions'),
+                    where('doctorId', '==', user.uid),
+                    orderBy('prescriptionDate', 'desc')
+                );
                 const querySnapshot = await getDocs(q);
 
                 const prescriptionsList = await Promise.all(querySnapshot.docs.map(async docSnapshot => {
                     const data = docSnapshot.data();
-                    // console.log("Raw prescription data:", data); // Keep for debugging if needed
+                    let patientName = data.patientName || 'N/A';
 
-                    let patientName = data.patientName || 'N/A'; // Default to existing patientName field
-
-                    // If patientUID exists, try to get patient's full name from 'users' collection
                     if (data.patientUID) {
                         const patientDocRef = doc(db, 'users', data.patientUID);
                         try {
@@ -153,21 +155,17 @@ const PrescriptionHistory = () => {
                             if (patientDocSnap.exists()) {
                                 const patientData = patientDocSnap.data();
                                 patientName = `${patientData.firstName || ''} ${patientData.lastName || ''}`.trim() || patientName;
-                            } else {
-                                console.warn("Patient document not found for UID:", data.patientUID);
                             }
-                        } catch (patientFetchError) {
-                            console.error("Error fetching patient profile for UID:", data.patientUID, patientFetchError);
+                        } catch (err) {
+                            console.error("Error fetching patient profile:", err);
                         }
-                    } else {
-                        console.warn("Prescription ID:", docSnapshot.id, "is missing patientUID.");
                     }
 
                     return {
                         id: docSnapshot.id,
                         ...data,
                         issuedDate: data.prescriptionDate ? data.prescriptionDate.toDate().toLocaleDateString('en-CA') : 'N/A',
-                        patientName: patientName,
+                        patientName,
                     };
                 }));
 
@@ -177,10 +175,13 @@ const PrescriptionHistory = () => {
             } finally {
                 setIsLoading(false);
             }
-        };
+        } else {
+            setPrescriptions([]); // No user logged in
+        }
+    });
 
-        fetchPrescriptions();
-    }, []);
+    return () => unsubscribe();
+}, [auth]);
 
     // Filters for Active Prescriptions Table
     const filteredPrescriptions = prescriptions.filter(
